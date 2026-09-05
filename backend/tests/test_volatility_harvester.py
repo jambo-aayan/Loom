@@ -51,6 +51,19 @@ def test_add_on_weakness_always_requires_manual_approval():
     assert add_ons[0].requires_manual_approval_override is True
 
 
+def test_add_on_weakness_stops_once_max_add_ons_is_reached():
+    strategy = VolatilityHarvester()
+    market_data = MarketData(histories={"TSLA": InstrumentHistory("TSLA", _bars_with_deep_pullback())})
+    # add_count=2 means the opening buy plus one add already happened; default max_add_ons=1.
+    account = AccountState(
+        cash=10_000, positions=(PositionSnapshot("TSLA", 10, 101.0, book_id="b1", add_count=2),)
+    )
+
+    signals = strategy.generate_signals(market_data, account, account)
+
+    assert not [s for s in signals if s.instrument == "TSLA" and s.action == "add"]
+
+
 def test_trims_on_bounce_back_to_mean():
     strategy = VolatilityHarvester()
     # A small, non-zero-variance oscillation around 100 (so the z-score is defined), ending

@@ -49,6 +49,10 @@ class PositionSnapshot:
     quantity: float
     average_price: float
     book_id: str
+    # Number of separate buy/add fills making up this position — lets a strategy like
+    # Volatility Harvester cap how many times it adds to a losing position (story 22's
+    # "bounded by a max position size" reads as a fill-count cap here, not just a £ cap).
+    add_count: int = 1
 
 
 @dataclass(frozen=True)

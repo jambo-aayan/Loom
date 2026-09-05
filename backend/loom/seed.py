@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 from loom.config_versions import create_draft, promote
 from loom.models import Strategy as StrategyModel
 from loom.models import StrategyStyle
-from loom.strategies.low_vol_compounder import DEFAULT_PARAMS
 from loom.strategies.low_vol_compounder import DEFAULT_PARAMS as COMPOUNDER_PARAMS
 from loom.strategies.trend_follower import DEFAULT_PARAMS as TREND_FOLLOWER_PARAMS
 from loom.strategies.value_quality_dip_buyer import DEFAULT_PARAMS as DIP_BUYER_PARAMS
@@ -37,7 +36,7 @@ def _seed_one(session: Session, key: str, name: str, style: StrategyStyle, param
 
 
 def seed_low_vol_compounder(session: Session) -> StrategyModel:
-    return _seed_one(session, "low_vol_compounder", "Low-Vol Compounder", StrategyStyle.trading, DEFAULT_PARAMS)
+    return _seed_one(session, "low_vol_compounder", "Low-Vol Compounder", StrategyStyle.trading, COMPOUNDER_PARAMS)
 
 
 def seed_all_strategies(session: Session) -> list[StrategyModel]:

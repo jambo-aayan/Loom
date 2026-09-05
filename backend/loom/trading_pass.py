@@ -69,25 +69,28 @@ def book_positions(session: Session, book_id: str) -> tuple[PositionSnapshot, ..
         .scalars()
         .all()
     )
-    lots: dict[str, list[float]] = {}  # instrument -> [quantity, avg_price]
+    lots: dict[str, list[float]] = {}  # instrument -> [quantity, avg_price, add_count]
     for order in orders:
         signal = session.get(Signal, order.signal_id)
         side = "sell" if signal and signal.action == "sell" else "buy"
         instrument = signal.instrument if signal else None
         if instrument is None:
             continue
-        qty, price = lots.get(instrument, [0.0, 0.0])
+        qty, price, add_count = lots.get(instrument, [0.0, 0.0, 0.0])
         if side == "buy":
             new_qty = qty + order.quantity
             price = (price * qty + (order.fill_price or 0.0) * order.quantity) / new_qty if new_qty else 0.0
+            # A fresh position (qty was 0) starts its first lot; an "add" onto an existing
+            # position is a further fill (story 22's fill-count cap for Volatility Harvester).
+            add_count = 1.0 if qty <= 1e-9 else add_count + 1.0
             qty = new_qty
         else:
             qty = max(0.0, qty - order.quantity)
-        lots[instrument] = [qty, price]
+        lots[instrument] = [qty, price, add_count]
 
     return tuple(
-        PositionSnapshot(instrument=i, quantity=q, average_price=p, book_id=book_id)
-        for i, (q, p) in lots.items()
+        PositionSnapshot(instrument=i, quantity=q, average_price=p, book_id=book_id, add_count=int(c))
+        for i, (q, p, c) in lots.items()
         if q > 1e-9
     )
 

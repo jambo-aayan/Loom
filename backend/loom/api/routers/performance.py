@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from loom.api.deps import get_db, get_fundamentals_provider, get_market_data_source
 from loom.correlation import compute_correlation_matrix
 from loom.evaluation import compute_metrics, equity_and_benchmark_curve
-from loom.fundamentals import FundamentalsProvider, safe_sector_for
+from loom.fundamentals import FundamentalsProvider, filter_by_sector
 from loom.market_data.base import MarketDataSource
 from loom.models import Book, Environment
 from loom.trade_reconstruction import ClosedTrade, reconstruct_closed_trades
@@ -19,15 +19,11 @@ def _filter_trades(
     sector: str | None,
     fundamentals: FundamentalsProvider,
 ) -> list[ClosedTrade]:
-    """Slices closed trades by instrument and/or sector/industry (story 72) — sector is looked
-    up per distinct instrument in the trade set, not per trade, to keep it to one lookup each."""
+    """Slices closed trades by instrument and/or sector/industry (story 72)."""
     if instrument:
         trades = [t for t in trades if t.instrument == instrument]
     if sector:
-        sector_by_instrument = {
-            i: safe_sector_for(i, fundamentals) for i in {t.instrument for t in trades}
-        }
-        trades = [t for t in trades if sector_by_instrument.get(t.instrument) == sector]
+        trades = filter_by_sector(trades, lambda t: t.instrument, sector, fundamentals)
     return trades
 
 

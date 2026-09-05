@@ -78,7 +78,9 @@ class VolatilityHarvester(Strategy):
             change_pct = (latest_price - position.average_price) / position.average_price
             if z >= p["exit_z_score"] or change_pct >= p["profit_target_pct"] or change_pct <= -p["stop_loss_pct"]:
                 signals.append(_exit_signal(instrument, latest_price, "mean reversion / exit plan"))
-            elif z <= p["add_on_weakness_z_score"]:
+            elif z <= p["add_on_weakness_z_score"] and position.add_count - 1 < p["max_add_ons"]:
+                # add_count includes the opening buy, so "adds so far" is add_count - 1 —
+                # bounded by max_add_ons (story 22's "bounded by a max position size").
                 signals.append(_add_on_weakness_signal(instrument, latest_price, z, p, account))
 
         return signals

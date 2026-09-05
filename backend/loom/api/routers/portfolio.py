@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from loom.api.deps import get_broker, get_db, get_fundamentals_provider
 from loom.api.schemas import OverviewOut, PositionOut, SignalOut
-from loom.fundamentals import FundamentalsProvider, safe_sector_for
+from loom.fundamentals import FundamentalsProvider, filter_by_sector
 from loom.models import Book, Environment, Signal, SignalStatus
 from loom.trading_pass import book_positions
 
@@ -60,10 +60,9 @@ def history(
     )
     if instrument:
         query = query.where(Signal.instrument == instrument)
-    signals = session.execute(query).scalars().all()
+    signals = list(session.execute(query).scalars().all())
 
     if sector:
-        sector_by_instrument = {i: safe_sector_for(i, fundamentals) for i in {s.instrument for s in signals}}
-        signals = [s for s in signals if sector_by_instrument.get(s.instrument) == sector]
+        signals = filter_by_sector(signals, lambda s: s.instrument, sector, fundamentals)
 
     return signals
