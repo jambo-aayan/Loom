@@ -17,9 +17,18 @@ cp .env.example .env   # optional — every value has a safe local-dev fallback
 
 Zero external credentials are required for local dev: with no `.env`, the app falls back to a
 sqlite file DB, an in-memory fake Trading 212 broker, bundled synthetic (fixture) market data,
-and canned Insight commentary instead of a real Anthropic call (`loom/api/deps.py`,
-`loom/settings.py`). Set the real env vars (see `.env.example`) to point at Neon, real Trading
-212 Demo/Live keys, Twelve Data, and Anthropic once you have them.
+canned Insight commentary instead of a real Anthropic call, and in-memory fake Web Push/email
+senders that just record what they would have sent (`loom/api/deps.py`, `loom/settings.py`). Set
+the real env vars (see `.env.example`) to point at Neon, real Trading 212 Demo/Live keys, Twelve
+Data, Anthropic, VAPID, and SMTP once you have them.
+
+For Web Push (ticket #39), generate a VAPID key pair once with:
+
+```bash
+python scripts/generate_vapid_keys.py
+```
+
+and paste the printed `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` into `.env`.
 
 ### Run migrations
 
@@ -51,9 +60,11 @@ loom screen-insights --environment demo                      # story 30/52: its 
 ### Tests, lint, types
 
 ```bash
-pytest                # 37 tests: strategy contract, backtest engine (no-lookahead), risk/sizing,
-                       # kill switch, trading pass, approval pipeline via real HTTP (FastAPI
-                       # TestClient), counterfactual simulation, config version lifecycle
+pytest                # strategy contract, backtest engine (no-lookahead), risk/sizing, kill
+                       # switch, trading pass, approval pipeline via real HTTP (FastAPI
+                       # TestClient), counterfactual simulation, config version lifecycle,
+                       # confidence calibration, evaluation metrics, Web Push, signed email
+                       # action links, daily loss limit, insight digest/chart
 ruff check loom tests
 mypy loom
 ```
@@ -73,8 +84,11 @@ loom/
   backtest/                    # simulated portfolio/fill engine + counterfactual simulation
   insight/                      # LLM screening tier (FakeInsightGenerator / AnthropicInsightGenerator)
   config_versions.py             # draft -> promoted lifecycle, param diffing
-  api/                             # FastAPI service (routers, schemas, DI)
-  cli/                              # `loom backtest`, `loom trade-pass`
-alembic/                             # migrations
+  notifications/                  # Web Push, email, signed action links, dispatch (M3)
+  daily_loss.py                    # daily loss limit check + kill switch wiring (M3)
+  api/                               # FastAPI service (routers, schemas, DI)
+  cli/                                # `loom backtest`, `loom trade-pass`
+alembic/                               # migrations
+scripts/                                # one-off setup scripts (VAPID key generation)
 tests/
 ```

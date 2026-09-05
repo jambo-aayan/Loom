@@ -62,6 +62,39 @@ export interface Overview {
   positions: Position[];
 }
 
+export interface DigestEntry {
+  signal_id: string;
+  strategy_name: string | null;
+  instrument: string;
+  action: string;
+  confidence: number;
+  status: string;
+  insight: string;
+  created_at: string;
+}
+
+export interface Digest {
+  environment: string;
+  period: "daily" | "weekly";
+  since: string;
+  fired: DigestEntry[];
+  still_watching: DigestEntry[];
+}
+
+export interface ChartBar {
+  date: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+}
+
+export interface SignalChart {
+  instrument: string;
+  bars: ChartBar[];
+  trigger: { date: string; price: number; action: string; reasoning: string | null };
+}
+
 export interface ConfigVersion {
   id: string;
   version_number: number | null;
@@ -159,6 +192,20 @@ export const api = {
     request<{ books: { id: string; name: string }[]; matrix: (number | null)[][] }>(
       `/performance/correlation?environment=${environment}`,
     ),
+
+  vapidPublicKey: () => request<{ public_key: string | null }>("/push/vapid-public-key"),
+  pushSubscribe: (body: { endpoint: string; p256dh: string; auth: string; environment?: Environment }) =>
+    request<{ id: string; status: string }>("/push/subscribe", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  pushUnsubscribe: (endpoint: string) =>
+    request<{ status: string }>(`/push/unsubscribe?endpoint=${encodeURIComponent(endpoint)}`, { method: "POST" }),
+
+  digest: (environment: Environment = "demo", period: "daily" | "weekly" = "daily") =>
+    request<Digest>(`/insights/digest?environment=${environment}&period=${period}`),
+  signalChart: (signalId: string, windowDays = 30) =>
+    request<SignalChart>(`/insights/signals/${signalId}/chart?window_days=${windowDays}`),
 };
 
 export interface Metrics {

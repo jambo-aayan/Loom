@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { api, Insight, Signal } from "@/lib/api";
 
-export default function ApprovalsPage() {
+function ApprovalsList() {
   const [signals, setSignals] = useState<Signal[]>([]);
   const [insights, setInsights] = useState<Record<string, Insight[]>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const highlightedSignalId = useSearchParams().get("signal");
 
   async function load() {
     try {
@@ -22,6 +24,11 @@ export default function ApprovalsPage() {
   useEffect(() => {
     load();
   }, []);
+
+  useEffect(() => {
+    if (!highlightedSignalId) return;
+    document.getElementById(`signal-${highlightedSignalId}`)?.scrollIntoView({ block: "center" });
+  }, [highlightedSignalId, signals]);
 
   async function screen(signalId: string) {
     const insight = await api.screenSignal(signalId);
@@ -47,7 +54,15 @@ export default function ApprovalsPage() {
       )}
       <div className="space-y-3">
         {signals.map((signal) => (
-          <div key={signal.id} className="rounded-2xl border border-black/10 dark:border-white/10 p-4 space-y-3">
+          <div
+            key={signal.id}
+            id={`signal-${signal.id}`}
+            className={`rounded-2xl border p-4 space-y-3 ${
+              signal.id === highlightedSignalId
+                ? "border-indigo dark:border-indigo-dark ring-2 ring-indigo/40 dark:ring-indigo-dark/40"
+                : "border-black/10 dark:border-white/10"
+            }`}
+          >
             <div className="flex items-start justify-between">
               <div>
                 <p className="font-medium">
@@ -104,5 +119,13 @@ export default function ApprovalsPage() {
         ))}
       </div>
     </div>
+  );
+}
+
+export default function ApprovalsPage() {
+  return (
+    <Suspense fallback={null}>
+      <ApprovalsList />
+    </Suspense>
   );
 }
