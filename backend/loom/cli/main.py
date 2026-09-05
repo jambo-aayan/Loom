@@ -7,14 +7,17 @@ import json
 import click
 from sqlalchemy import select
 
-from loom import calibration, db, strategies  # noqa: F401  (registers strategies)
-from loom.api.deps import get_broker, get_insight_generator, get_market_data_source
+from loom import calibration, db, killswitch, strategies  # noqa: F401  (registers strategies)
+from loom.api.deps import get_broker, get_email_sender, get_insight_generator, get_market_data_source, get_push_sender
 from loom.backtest.engine import run_backtest
 from loom.config_versions import current_promoted
+from loom.daily_loss import check_daily_loss_limit
 from loom.insight.screening import run_screening_job
 from loom.models import BacktestRun, Environment
 from loom.models import Strategy as StrategyModel
+from loom.notifications.dispatch import notify_daily_loss_limit, notify_failed_auto_approvals, notify_new_signals
 from loom.seed import seed_all_strategies
+from loom.settings import get_settings
 from loom.trading_pass import STRATEGY_REGISTRY, run_trading_pass
 
 
@@ -95,7 +98,21 @@ def trade_pass(environment: str, universe: tuple[str, ...]):
     source = get_market_data_source()
     resolved_universe = list(universe) or getattr(source, "universe", lambda: ["VUSA.L", "VWRL.L", "TSLA", "NVDA"])()
 
+    settings = get_settings()
+    email_sender = get_email_sender()
+    push_sender = get_push_sender()
+
+    was_engaged = killswitch.is_engaged(env)
+    breached, loss_pct = check_daily_loss_limit(session, env, broker)
+    if breached and not was_engaged:
+        killswitch.engage(session, env, actor="daily-loss-limit")
+        notify_daily_loss_limit(email_sender, settings.notify_email, env, loss_pct)
+        click.echo(f"Daily loss limit breached ({loss_pct:.2%}); kill switch engaged.")
+
     signals = run_trading_pass(env, session, broker, source, universe=resolved_universe)
+    notify_new_signals(session, signals, push_sender, email_sender, settings.notify_email)
+    notify_failed_auto_approvals(session, signals, env, email_sender, settings.notify_email)
+
     click.echo(f"Generated {len(signals)} signal(s) for {environment}:")
     for s in signals:
         click.echo(

@@ -235,3 +235,46 @@ class ConfidenceCalibration(Base):
     buckets: Mapped[list] = mapped_column(JSON)  # [{min, max, win_rate, expectancy, num_trades}, ...]
     source_backtest_run_id: Mapped[str | None] = mapped_column(ForeignKey("backtest_runs.id"), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+
+class PushSubscription(Base):
+    """A per-device Web Push subscription (story 60, ticket #39) — VAPID keys sign what Loom
+    sends; the endpoint/keys here are what the browser's push service needs to route it."""
+
+    __tablename__ = "push_subscriptions"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    environment: Mapped[Environment] = mapped_column(Enum(Environment))
+    endpoint: Mapped[str] = mapped_column(String, unique=True)
+    p256dh: Mapped[str] = mapped_column(String)
+    auth: Mapped[str] = mapped_column(String)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+
+class SignedActionLink(Base):
+    """A single-use, short-expiry email action link (story 64, ticket #41) — clicking it hits
+    the same approve/reject path as the dashboard, re-checked server-side, no login required."""
+
+    __tablename__ = "signed_action_links"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    token: Mapped[str] = mapped_column(String, unique=True)
+    signal_id: Mapped[str] = mapped_column(ForeignKey("signals.id"))
+    action: Mapped[str] = mapped_column(String)  # "approve" | "reject"
+    expires_at: Mapped[datetime] = mapped_column(DateTime)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+
+class DailyAccountSnapshot(Base):
+    """The account's total value at the start of a trading day, per Environment — the baseline
+    `loom.risk.daily_loss_breached` compares the current value against (story 24, ADR-0011)."""
+
+    __tablename__ = "daily_account_snapshots"
+    __table_args__ = (UniqueConstraint("environment", "date", name="uq_snapshot_environment_date"),)
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    environment: Mapped[Environment] = mapped_column(Enum(Environment))
+    date: Mapped[str] = mapped_column(String)  # ISO date, "YYYY-MM-DD"
+    starting_value: Mapped[float] = mapped_column(Float)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)

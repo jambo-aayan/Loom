@@ -2,12 +2,16 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from loom.api.deps import get_broker, get_db, get_insight_generator, get_market_data_source
+from loom import killswitch
+from loom.api.deps import get_broker, get_db, get_email_sender, get_insight_generator, get_market_data_source
 from loom.api.schemas import InsightOut, SignalDecisionIn, SignalOut
 from loom.insight.generator import InsightGenerator
 from loom.insight.screening import generate_screening_insight, run_screening_job
 from loom.market_data.base import MarketDataSource
-from loom.models import Environment, Insight, Signal, SignalStatus
+from loom.models import Environment, Insight, OrderStatus, Signal, SignalStatus
+from loom.notifications.dispatch import notify_order_failed
+from loom.notifications.email import EmailSender
+from loom.settings import get_settings
 from loom.trading_pass import approve_signal, reject_signal
 
 router = APIRouter(prefix="/signals", tags=["signals"])
@@ -66,14 +70,22 @@ def screen_pending(
 
 
 @router.post("/{signal_id}/approve", response_model=SignalOut)
-def approve(signal_id: str, body: SignalDecisionIn, session: Session = Depends(get_db)):
+def approve(
+    signal_id: str,
+    body: SignalDecisionIn,
+    session: Session = Depends(get_db),
+    email_sender: EmailSender = Depends(get_email_sender),
+):
     signal = session.get(Signal, signal_id)
     if signal is None:
         raise HTTPException(404, "signal not found")
     if signal.status not in (SignalStatus.pending_approval, SignalStatus.proposed):
         raise HTTPException(409, f"signal is already {signal.status.value}")
     broker = get_broker(signal.environment)  # the signal's own environment decides the broker
-    approve_signal(session, signal, broker, note=body.note)
+    order = approve_signal(session, signal, broker, note=body.note)
+
+    if order.status == OrderStatus.failed and not killswitch.is_engaged(signal.environment):
+        notify_order_failed(email_sender, get_settings().notify_email, signal, "risk/sizing check rejected the order")
     return signal
 
 

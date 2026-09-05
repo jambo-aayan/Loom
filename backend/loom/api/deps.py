@@ -16,6 +16,8 @@ from loom.insight.generator import FakeInsightGenerator, InsightGenerator
 from loom.market_data.base import MarketDataSource
 from loom.market_data.fixture import FixtureMarketDataSource
 from loom.models import Environment
+from loom.notifications.email import EmailSender
+from loom.notifications.push import PushSender
 from loom.settings import get_settings
 
 _fake_brokers: dict[Environment, FakeBrokerClient] = {}
@@ -70,3 +72,43 @@ def get_fundamentals_provider() -> FundamentalsProvider:
     from loom.market_data.yfinance_source import YFinanceSource
 
     return YFinanceSource()
+
+
+_fake_push_sender: PushSender | None = None
+_fake_email_sender: EmailSender | None = None
+
+
+def get_push_sender() -> PushSender:
+    settings = get_settings()
+    if settings.vapid_private_key:
+        from loom.notifications.push import WebPushSender
+
+        return WebPushSender(settings.vapid_private_key, settings.vapid_subject)
+
+    global _fake_push_sender
+    if _fake_push_sender is None:
+        from loom.notifications.push import FakePushSender
+
+        _fake_push_sender = FakePushSender()
+    return _fake_push_sender
+
+
+def get_email_sender() -> EmailSender:
+    settings = get_settings()
+    if settings.smtp_host:
+        from loom.notifications.email import SmtpEmailSender
+
+        return SmtpEmailSender(
+            settings.smtp_host,
+            settings.smtp_port,
+            settings.smtp_username,
+            settings.smtp_password,
+            settings.smtp_from_email,
+        )
+
+    global _fake_email_sender
+    if _fake_email_sender is None:
+        from loom.notifications.email import FakeEmailSender
+
+        _fake_email_sender = FakeEmailSender()
+    return _fake_email_sender
