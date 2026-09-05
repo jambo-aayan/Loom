@@ -109,6 +109,11 @@ class InsightOut(BaseModel):
     created_at: datetime
 
 
+class AskIn(BaseModel):
+    question: str
+    instrument: str | None = None
+
+
 class PositionOut(BaseModel):
     book_id: str
     book_name: str

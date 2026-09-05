@@ -89,6 +89,55 @@ function DigestSection({ title, entries }: { title: string; entries: DigestEntry
   );
 }
 
+function AskBox() {
+  const [question, setQuestion] = useState("");
+  const [instrument, setInstrument] = useState("");
+  const [answer, setAnswer] = useState<string | null>(null);
+  const [asking, setAsking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    if (!question.trim()) return;
+    setAsking(true);
+    setError(null);
+    try {
+      const result = await api.ask(question.trim(), instrument.trim() || undefined);
+      setAnswer(result.answer);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setAsking(false);
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-black/10 dark:border-white/10 p-4 space-y-3">
+      <h2 className="text-lg">Ask about a stock or topic</h2>
+      <input
+        placeholder="e.g. What's driving semiconductor stocks this week?"
+        value={question}
+        onChange={(e) => setQuestion(e.target.value)}
+        className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-1.5 text-sm"
+      />
+      <input
+        placeholder="Optional ticker (e.g. NVDA)"
+        value={instrument}
+        onChange={(e) => setInstrument(e.target.value)}
+        className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-1.5 text-sm"
+      />
+      <button
+        onClick={submit}
+        disabled={asking || !question.trim()}
+        className="px-4 py-1.5 rounded-full bg-indigo text-white text-sm disabled:opacity-50"
+      >
+        {asking ? "Asking…" : "Ask"}
+      </button>
+      {error && <p className="text-danger text-sm">{error}</p>}
+      {answer && <p className="text-sm bg-black/5 dark:bg-white/5 rounded-xl p-3">{answer}</p>}
+    </div>
+  );
+}
+
 export default function InsightsPage() {
   const [period, setPeriod] = useState<"daily" | "weekly">("daily");
   const [digest, setDigest] = useState<Digest | null>(null);
@@ -119,6 +168,9 @@ export default function InsightsPage() {
           ))}
         </div>
       </div>
+
+      <AskBox />
+
       {error && <p className="text-danger text-sm">{error}</p>}
       {digest && (
         <>

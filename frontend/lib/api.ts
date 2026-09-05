@@ -210,6 +210,11 @@ export const api = {
     request<SignalChart>(`/insights/signals/${signalId}/chart?window_days=${windowDays}`),
   positionCommentary: (bookId: string, instrument: string) =>
     request<Insight>(`/insights/positions/${bookId}/${encodeURIComponent(instrument)}`, { method: "POST" }),
+  ask: (question: string, instrument?: string) =>
+    request<{ question: string; instrument: string | null; answer: string }>("/insights/ask", {
+      method: "POST",
+      body: JSON.stringify({ question, instrument: instrument || undefined }),
+    }),
 };
 
 export interface Metrics {

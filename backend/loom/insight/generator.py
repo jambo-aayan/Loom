@@ -25,6 +25,12 @@ class InsightGenerator(ABC):
         for a `Manual` holding or another strategy's Book just as well as the bot's own."""
         raise NotImplementedError
 
+    @abstractmethod
+    def answer_question(self, question: str, instrument: str | None = None) -> str:
+        """On-demand "ask about this stock / this macro topic" research (story 51) — free-form,
+        not tied to any Signal or position. Never returns anything actionable (story 53)."""
+        raise NotImplementedError
+
 
 class FakeInsightGenerator(InsightGenerator):
     """Deterministic canned commentary — the faked LLM boundary used in tests and as a
@@ -45,6 +51,10 @@ class FakeInsightGenerator(InsightGenerator):
             f"{book_name} holds {quantity:g} {instrument} at an average price of "
             f"{average_price:.2f}. No strategy signal is currently attached to this position."
         )
+
+    def answer_question(self, question: str, instrument: str | None = None) -> str:
+        scope = f" about {instrument}" if instrument else ""
+        return f"(fake research{scope}) You asked: {question!r}. No web search performed."
 
 
 class AnthropicInsightGenerator(InsightGenerator):
@@ -79,3 +89,18 @@ class AnthropicInsightGenerator(InsightGenerator):
             f"in the '{book_name}' book. No advice to act, no price target."
         )
         return self._complete(prompt)
+
+    def answer_question(self, question: str, instrument: str | None = None) -> str:
+        scope = f" The question concerns {instrument}." if instrument else ""
+        prompt = (
+            f"Research this question using web search where useful, then answer factually and "
+            f"concisely (a short paragraph).{scope} Advisory only — never recommend a specific "
+            f"trade or action. Question: {question}"
+        )
+        response = self._client.messages.create(
+            model=self._model,
+            max_tokens=1024,
+            tools=[{"type": "web_search_20250305", "name": "web_search"}],
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return "".join(block.text for block in response.content if hasattr(block, "text"))

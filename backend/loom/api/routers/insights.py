@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from loom.api.deps import get_broker, get_db, get_insight_generator, get_market_data_source
-from loom.api.schemas import InsightOut
+from loom.api.schemas import AskIn, InsightOut
 from loom.insight.generator import InsightGenerator
 from loom.market_data.base import MarketDataSource
 from loom.models import Book, Environment, Insight, InsightTier, Signal, SignalStatus
@@ -95,6 +95,15 @@ def position_commentary(
     session.commit()
     session.refresh(insight)
     return insight
+
+
+@router.post("/ask")
+def ask(body: AskIn, generator: InsightGenerator = Depends(get_insight_generator)):
+    """On-demand "ask about this stock / this macro topic" research (story 51) — free-form,
+    advisory-only, structurally incapable of becoming an order (story 53): purely a generated
+    answer, no Signal, Order, or approval-pipeline side effect of any kind."""
+    answer = generator.answer_question(body.question, body.instrument)
+    return {"question": body.question, "instrument": body.instrument, "answer": answer}
 
 
 @router.get("/signals/{signal_id}/chart")
