@@ -95,7 +95,9 @@ def signal_chart(
                 (
                     i.content
                     for i in session.execute(
-                        select(Insight).where(Insight.signal_id == signal_id, Insight.tier == InsightTier.screening)
+                        select(Insight)
+                        .where(Insight.signal_id == signal_id, Insight.tier == InsightTier.screening)
+                        .order_by(Insight.created_at.desc())
                     ).scalars()
                 ),
                 None,

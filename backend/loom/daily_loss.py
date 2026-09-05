@@ -40,6 +40,10 @@ def _get_or_create_snapshot(session: Session, environment: Environment, account_
         )
     ).scalar_one_or_none()
     if snapshot is None:
+        # Check-then-insert against a unique (environment, date) constraint: a real race here
+        # (two concurrent trading passes on the same day/environment) would raise IntegrityError
+        # rather than silently double-baseline. Acceptable for v1's single-process CLI/API usage;
+        # would need a retry-on-conflict if this ever runs from multiple workers.
         snapshot = DailyAccountSnapshot(environment=environment, date=today, starting_value=account_value)
         session.add(snapshot)
         session.commit()

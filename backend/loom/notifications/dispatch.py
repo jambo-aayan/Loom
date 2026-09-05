@@ -36,9 +36,15 @@ def notify_new_signals(
     if not pending:
         return
 
-    subscriptions = session.execute(
-        select(PushSubscription).where(PushSubscription.environment == pending[0].environment)
-    ).scalars().all()
+    environments = {s.environment for s in pending}
+    subscriptions_by_environment = {
+        environment: session.execute(
+            select(PushSubscription).where(PushSubscription.environment == environment)
+        )
+        .scalars()
+        .all()
+        for environment in environments
+    }
 
     for signal in pending:
         send_pending_approval_email(session, email_sender, to_email, signal)
@@ -46,7 +52,7 @@ def notify_new_signals(
         strategy = session.get(StrategyModel, signal.strategy_id)
         if strategy is not None and signal.confidence >= strategy.notify_threshold:
             payload = build_signal_push_payload(signal.id, signal.instrument, signal.action, signal.confidence)
-            for sub in subscriptions:
+            for sub in subscriptions_by_environment[signal.environment]:
                 push_sender.send(PushTarget(sub.endpoint, sub.p256dh, sub.auth), payload)
 
 

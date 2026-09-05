@@ -53,11 +53,16 @@ class SmtpEmailSender(EmailSender):
         message["From"] = self.from_email
         message["To"] = to
 
-        with smtplib.SMTP(self.host, self.port) as smtp:
-            smtp.starttls()
-            if self.username:
-                smtp.login(self.username, self.password)
-            smtp.sendmail(self.from_email, [to], message.as_string())
+        try:
+            with smtplib.SMTP(self.host, self.port) as smtp:
+                smtp.starttls()
+                if self.username:
+                    smtp.login(self.username, self.password)
+                smtp.sendmail(self.from_email, [to], message.as_string())
+        except (smtplib.SMTPException, OSError) as exc:
+            # A transient SMTP outage shouldn't turn a successful trading pass, approval, or
+            # kill-switch action into a 500 — mirrors WebPushSender's per-target isolation below.
+            logger.warning("email to %s failed: %s", to, exc)
 
 
 def generate_action_link(session: Session, signal_id: str, action: str, ttl_hours: int = DEFAULT_LINK_TTL_HOURS) -> str:
@@ -80,7 +85,14 @@ class ActionLinkError(Exception):
 
 def consume_action_link(session: Session, token: str) -> SignedActionLink:
     """Marks the link used and returns it — raises if it's already been used or has expired
-    (ticket #41 AC: a second use is rejected, expiry is enforced)."""
+    (ticket #41 AC: a second use is rejected, expiry is enforced).
+
+    Known v1 simplification: this is a check-then-act read/commit, not a `SELECT ... FOR UPDATE`
+    or atomic conditional update — two near-simultaneous hits on the same token (e.g. an email
+    security scanner's link pre-fetch racing the user's actual click) could both pass the
+    `used_at is None` check before either commits. Low-likelihood for a single-user v1 deployment,
+    but a real gap worth closing (e.g. an atomic `UPDATE ... WHERE used_at IS NULL RETURNING`)
+    before this is exposed to untrusted recipients."""
     link = session.execute(select(SignedActionLink).where(SignedActionLink.token == token)).scalar_one_or_none()
     if link is None:
         raise ActionLinkError("unknown action link")

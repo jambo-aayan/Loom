@@ -71,6 +71,30 @@ def test_push_only_fires_above_notify_threshold(session):
     assert len(push_sender.sent) == len(signals)
 
 
+def test_push_subscriptions_are_scoped_per_environment(session):
+    """A live-environment push subscriber must not receive pushes for demo signals, and vice
+    versa (code review finding: notify_new_signals previously queried subscriptions using only
+    the first pending signal's environment, silently dropping cross-environment subscribers)."""
+    _seed(session, approval_mode=ApprovalMode.manual, notify_threshold=0.0)
+    session.add(
+        PushSubscription(environment=Environment.live, endpoint="https://push.example/live", p256dh="k", auth="a")
+    )
+    session.commit()
+    source = FixtureMarketDataSource()
+    demo_signals = run_trading_pass(
+        Environment.demo, session, FakeBrokerClient(), source, universe=source.universe(), as_of="2023-08-01"
+    )
+    live_signals = run_trading_pass(
+        Environment.live, session, FakeBrokerClient(), source, universe=source.universe(), as_of="2023-08-01"
+    )
+    email_sender, push_sender = FakeEmailSender(), FakePushSender()
+
+    notify_new_signals(session, demo_signals + live_signals, push_sender, email_sender, "user@example.com")
+
+    assert len(push_sender.sent) == len(live_signals)  # only the live subscriber gets pushed
+    assert len(email_sender.sent) == len(demo_signals) + len(live_signals)
+
+
 def test_notify_failed_auto_approvals_skips_when_kill_switch_engaged(session, tmp_path, monkeypatch):
     monkeypatch.setattr(
         "loom.killswitch.get_settings",
