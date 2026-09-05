@@ -57,7 +57,7 @@ class FakeBrokerClient(BrokerClient):
             return self._submitted_keys[idempotency_key]  # retried request: no duplicate fill
 
         price = self.fill_price
-        if side == "buy":
+        if side in ("buy", "add"):  # "add" (Volatility Harvester's add-on-weakness) buys more
             cost = price * quantity
             if cost > self.cash:
                 result = OrderResult(broker_order_id=f"fake-{idempotency_key}", status="failed")

@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from loom import killswitch
+from loom import calibration, killswitch
 from loom.execution.broker import BrokerClient
 from loom.market_data.base import MarketDataSource
 from loom.models import (
@@ -36,7 +36,6 @@ from loom.strategy import (
     PositionSnapshot,
     ProposedSignal,
     Strategy,
-    StrategyConfig,
 )
 
 STRATEGY_REGISTRY: dict[str, type[Strategy]] = {}
@@ -213,14 +212,20 @@ def run_trading_pass(
 
         book = get_or_create_book(session, strategy_row.id, environment, f"{strategy_row.name} · {environment.value}")
         account = account_state_for_book(session, book.id, broker)
-        strategy_impl = strategy_cls(StrategyConfig(params=config_version.params))
+        strategy_impl = strategy_cls.from_config(config_version.params)
         proposed = strategy_impl.generate_signals(market_data, account, account)
 
         for p in proposed:
+            confidence = p.confidence
+            if p.signal_type == "entry" and p.strength is not None:
+                calibrated = calibration.get_confidence(session, strategy_row.id, config_version.id, p.strength)
+                if calibrated is not None:
+                    confidence = calibrated
+
             status, requires_manual = (
                 (SignalStatus.auto_approved, False)
                 if auto_approve_all
-                else _decide_approval(strategy_row, p.confidence, p.requires_manual_approval_override)
+                else _decide_approval(strategy_row, confidence, p.requires_manual_approval_override)
             )
             signal = Signal(
                 strategy_id=strategy_row.id,
@@ -230,7 +235,7 @@ def run_trading_pass(
                 instrument=p.instrument,
                 signal_type=p.signal_type,
                 action=p.action,
-                confidence=p.confidence,
+                confidence=confidence,
                 exit_plan=p.exit_plan.as_dict(),
                 quantity=p.quantity_hint,
                 reference_price=p.reference_price,

@@ -89,6 +89,7 @@ class LowVolCompounder(Strategy):
                     ),
                     reference_price=latest.close,
                     quantity_hint=(account.cash * p["position_cash_fraction"]) / latest.close,
+                    strength=headroom,
                     reasoning=(
                         f"{instrument}: {vol_window}d realized volatility {realized_vol:.4f} is "
                         f"below the {p['volatility_threshold']:.4f} threshold and price is at or "

@@ -219,3 +219,19 @@ class BacktestRun(Base):
     starting_capital: Mapped[float] = mapped_column(Float)
     results: Mapped[dict] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+
+class ConfidenceCalibration(Base):
+    """Confidence calibration buckets (story 20, ADR-0009, ticket #36): historical entry-type
+    signals from a backtest run, bucketed by strength, each bucket's realized win rate/expectancy
+    — the source a live entry-type signal's confidence is looked up from (loom.calibration)."""
+
+    __tablename__ = "confidence_calibrations"
+    __table_args__ = (UniqueConstraint("strategy_id", "config_version_id", name="uq_calibration_strategy_version"),)
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    strategy_id: Mapped[str] = mapped_column(ForeignKey("strategies.id"))
+    config_version_id: Mapped[str] = mapped_column(ForeignKey("strategy_config_versions.id"))
+    buckets: Mapped[list] = mapped_column(JSON)  # [{min, max, win_rate, expectancy, num_trades}, ...]
+    source_backtest_run_id: Mapped[str | None] = mapped_column(ForeignKey("backtest_runs.id"), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_now)

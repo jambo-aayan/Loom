@@ -35,6 +35,8 @@ class TradeRecord:
     exit_date: str | None = None
     exit_price: float | None = None
     exit_reason: str | None = None
+    entry_strength: float | None = None  # the ProposedSignal.strength that opened this trade —
+    # confidence calibration (loom.calibration) buckets historical trades by this.
 
     @property
     def is_open(self) -> bool:
@@ -75,6 +77,7 @@ class BacktestResult:
                     "instrument": t.instrument,
                     "entry_date": t.entry_date,
                     "entry_price": t.entry_price,
+                    "entry_strength": t.entry_strength,
                     "quantity": t.quantity,
                     "exit_date": t.exit_date,
                     "exit_price": t.exit_price,
@@ -209,6 +212,7 @@ def run_backtest(
                     entry_price=bar.close,
                     quantity=order.quantity,
                     exit_plan=signal.exit_plan,
+                    entry_strength=signal.strength,
                 )
 
         equity_now = cash + sum(

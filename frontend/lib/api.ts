@@ -124,7 +124,12 @@ export const api = {
     request<Signal>(`/signals/${signalId}/reject`, { method: "POST", body: JSON.stringify({ note }) }),
 
   overview: (environment: Environment = "demo") => request<Overview>(`/overview?environment=${environment}`),
-  history: (environment: Environment = "demo") => request<Signal[]>(`/history?environment=${environment}`),
+  history: (environment: Environment = "demo", filters?: { instrument?: string; sector?: string }) =>
+    request<Signal[]>(
+      `/history?environment=${environment}${filters?.instrument ? `&instrument=${encodeURIComponent(filters.instrument)}` : ""}${
+        filters?.sector ? `&sector=${encodeURIComponent(filters.sector)}` : ""
+      }`,
+    ),
 
   killSwitch: (environment: Environment = "demo") =>
     request<{ environment: string; engaged: boolean }>(`/settings/kill-switch?environment=${environment}`),
@@ -139,4 +144,43 @@ export const api = {
 
   runTradingPass: (environment: Environment = "demo") =>
     request<Signal[]>(`/trading-pass/run?environment=${environment}`, { method: "POST" }),
+
+  books: (environment: Environment = "demo") =>
+    request<{ id: string; name: string; strategy_id: string | null; strategy_key: string | null }[]>(
+      `/books?environment=${environment}`,
+    ),
+  performance: (environment: Environment = "demo", filters?: { instrument?: string; sector?: string }) =>
+    request<AggregatePerformance>(
+      `/performance?environment=${environment}${filters?.instrument ? `&instrument=${encodeURIComponent(filters.instrument)}` : ""}${
+        filters?.sector ? `&sector=${encodeURIComponent(filters.sector)}` : ""
+      }`,
+    ),
+  correlation: (environment: Environment = "demo") =>
+    request<{ books: { id: string; name: string }[]; matrix: (number | null)[][] }>(
+      `/performance/correlation?environment=${environment}`,
+    ),
 };
+
+export interface Metrics {
+  num_trades: number;
+  win_rate: number | null;
+  profit_factor: number | null;
+  expectancy_pct: number | null;
+  max_drawdown_pct: number | null;
+  sharpe_ratio: number | null;
+  sortino_ratio: number | null;
+  rolling_sharpe: (number | null)[];
+}
+
+export interface CurvePoint {
+  date: string;
+  cumulative_return_pct: number;
+  benchmark_return_pct: number | null;
+}
+
+export interface AggregatePerformance {
+  environment: string;
+  aggregate_metrics: Metrics;
+  aggregate_curve: CurvePoint[];
+  per_book: { book_id: string; book_name: string; strategy_key: string | null; metrics: Metrics }[];
+}

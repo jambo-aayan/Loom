@@ -23,7 +23,6 @@ from loom.models import (
     StrategyConfigVersion,
 )
 from loom.models import Strategy as StrategyModel
-from loom.strategy import StrategyConfig
 from loom.trading_pass import STRATEGY_REGISTRY, get_or_create_book
 
 router = APIRouter(prefix="/strategies", tags=["strategies"])
@@ -143,7 +142,7 @@ def draft_backtest_and_compare(
         raise HTTPException(400, f"no strategy implementation registered for key={strategy.key!r}")
 
     result = run_backtest(
-        strategy=strategy_cls(StrategyConfig(params=body.draft_params)),
+        strategy=strategy_cls.from_config(body.draft_params),
         source=source,
         universe=body.universe,
         start=body.start,

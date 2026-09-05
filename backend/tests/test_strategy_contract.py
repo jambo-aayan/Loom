@@ -1,35 +1,41 @@
 """Shared contract test suite every Strategy implementation must pass (story 19): deterministic
-given fixed inputs, always emits confidence + an exit plan, never mutates external state."""
+given fixed inputs, always emits confidence + an exit plan, never mutates external state. Run
+against `loom.strategies.ALL_STRATEGIES` — the single source of truth for the roster — so a new
+strategy is covered automatically the moment it's registered, never rebuilt per strategy."""
 
 import copy
+import random
 
 import pytest
 
-from loom.strategies.low_vol_compounder import LowVolCompounder
-from loom.strategy import AccountState, Bar, InstrumentHistory, MarketData
-
-ALL_STRATEGIES = [LowVolCompounder]
+from loom.strategies import ALL_STRATEGIES
+from loom.strategy import AccountState, Bar, InstrumentHistory, MarketData, PositionSnapshot
 
 
 def _sample_market_data() -> MarketData:
-    bars = tuple(
-        Bar(
-            date=f"2024-01-{i + 1:02d}",
-            open=100 + i * 0.1,
-            high=100.5 + i * 0.1,
-            low=99.5 + i * 0.1,
-            close=100 + i * 0.1,
-        )
-        for i in range(60)
-    )
-    return MarketData(histories={"VUSA.L": InstrumentHistory("VUSA.L", bars)})
+    # 260 bars (~a year of trading days) with a seeded pseudo-random walk — deterministic (fixed
+    # once, not regenerated per call) but varied enough to exercise every strategy's longer
+    # lookback windows (Trend Follower's 200d MA, Breakout's 60d squeeze lookback, etc).
+    rng = random.Random("contract-suite-fixture")
+    price = 100.0
+    bars = []
+    for i in range(260):
+        price = max(1.0, price * (1 + rng.gauss(0.0003, 0.012)))
+        d = f"2024-{(i // 28) + 1:02d}-{(i % 28) + 1:02d}"
+        bars.append(Bar(date=d, open=price, high=price * 1.01, low=price * 0.99, close=price))
+    return MarketData(histories={"VUSA.L": InstrumentHistory("VUSA.L", tuple(bars))})
+
+
+def _account_with_position() -> AccountState:
+    return AccountState(cash=10_000, positions=(PositionSnapshot("VUSA.L", 5, 100.0, book_id="b1"),))
 
 
 @pytest.mark.parametrize("strategy_cls", ALL_STRATEGIES)
-def test_deterministic_given_fixed_inputs(strategy_cls):
+@pytest.mark.parametrize("account_factory", [lambda: AccountState(cash=10_000), _account_with_position])
+def test_deterministic_given_fixed_inputs(strategy_cls, account_factory):
     strategy = strategy_cls()
     market_data = _sample_market_data()
-    account = AccountState(cash=10_000)
+    account = account_factory()
 
     first = strategy.generate_signals(market_data, account, account)
     second = strategy.generate_signals(market_data, account, account)
@@ -38,9 +44,11 @@ def test_deterministic_given_fixed_inputs(strategy_cls):
 
 
 @pytest.mark.parametrize("strategy_cls", ALL_STRATEGIES)
-def test_every_signal_has_confidence_and_exit_plan(strategy_cls):
+@pytest.mark.parametrize("account_factory", [lambda: AccountState(cash=10_000), _account_with_position])
+def test_every_signal_has_confidence_and_exit_plan(strategy_cls, account_factory):
     strategy = strategy_cls()
-    signals = strategy.generate_signals(_sample_market_data(), AccountState(cash=10_000), AccountState(cash=10_000))
+    account = account_factory()
+    signals = strategy.generate_signals(_sample_market_data(), account, account)
 
     for signal in signals:
         assert 0.0 <= signal.confidence <= 1.0
@@ -48,10 +56,11 @@ def test_every_signal_has_confidence_and_exit_plan(strategy_cls):
 
 
 @pytest.mark.parametrize("strategy_cls", ALL_STRATEGIES)
-def test_never_mutates_inputs(strategy_cls):
+@pytest.mark.parametrize("account_factory", [lambda: AccountState(cash=10_000), _account_with_position])
+def test_never_mutates_inputs(strategy_cls, account_factory):
     strategy = strategy_cls()
     market_data = _sample_market_data()
-    account = AccountState(cash=10_000)
+    account = account_factory()
     before_md, before_acc = copy.deepcopy(market_data), copy.deepcopy(account)
 
     strategy.generate_signals(market_data, account, account)

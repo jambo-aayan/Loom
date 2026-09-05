@@ -7,15 +7,14 @@ import json
 import click
 from sqlalchemy import select
 
-from loom import db, strategies  # noqa: F401  (registers strategies)
+from loom import calibration, db, strategies  # noqa: F401  (registers strategies)
 from loom.api.deps import get_broker, get_insight_generator, get_market_data_source
 from loom.backtest.engine import run_backtest
 from loom.config_versions import current_promoted
 from loom.insight.screening import run_screening_job
 from loom.models import BacktestRun, Environment
 from loom.models import Strategy as StrategyModel
-from loom.seed import seed_low_vol_compounder
-from loom.strategy import StrategyConfig
+from loom.seed import seed_all_strategies
 from loom.trading_pass import STRATEGY_REGISTRY, run_trading_pass
 
 
@@ -36,7 +35,7 @@ def backtest(strategy_key: str, universe: tuple[str, ...], start: str, end: str,
     default (story 41) or a real Twelve Data key if configured."""
     db.init_db()
     session = next(db.get_session())
-    seed_low_vol_compounder(session)
+    seed_all_strategies(session)
 
     strategy_row = session.execute(select(StrategyModel).where(StrategyModel.key == strategy_key)).scalar_one_or_none()
     if strategy_row is None:
@@ -50,7 +49,7 @@ def backtest(strategy_key: str, universe: tuple[str, ...], start: str, end: str,
     resolved_universe = list(universe) or getattr(source, "universe", lambda: ["VUSA.L", "VWRL.L", "TSLA", "NVDA"])()
 
     result = run_backtest(
-        strategy=strategy_cls(StrategyConfig(params=version.params)),
+        strategy=strategy_cls.from_config(version.params),
         source=source,
         universe=resolved_universe,
         start=start,
@@ -61,6 +60,7 @@ def backtest(strategy_key: str, universe: tuple[str, ...], start: str, end: str,
     click.echo(json.dumps(result.stats, indent=2, default=str))
     click.echo(f"{len(result.trades)} trades over {len(result.equity_curve)} trading days.")
 
+    run_id = None
     if save:
         run = BacktestRun(
             strategy_id=strategy_row.id,
@@ -74,7 +74,11 @@ def backtest(strategy_key: str, universe: tuple[str, ...], start: str, end: str,
         )
         session.add(run)
         session.commit()
+        run_id = run.id
         click.echo(f"Saved backtest run {run.id}")
+
+    calib = calibration.save_calibration(session, strategy_row.id, version.id, result.trades, run_id)
+    click.echo(f"Confidence calibration: {len(calib.buckets)} bucket(s) from this run's closed trades.")
 
 
 @cli.command("trade-pass")
@@ -84,7 +88,7 @@ def trade_pass(environment: str, universe: tuple[str, ...]):
     """Run one full fetch -> evaluate -> size -> execute trading pass (story 11)."""
     db.init_db()
     session = next(db.get_session())
-    seed_low_vol_compounder(session)
+    seed_all_strategies(session)
 
     env = Environment(environment)
     broker = get_broker(env)

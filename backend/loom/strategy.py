@@ -79,12 +79,19 @@ class ProposedSignal:
     instrument: str
     signal_type: str  # "entry" | "exit"
     action: str  # "buy" | "sell" | "add"
-    confidence: float  # 0.0-1.0
+    confidence: float  # 0.0-1.0; a placeholder for entry signals until confidence calibration
+    # (#36) overrides it from backtested win-rate buckets — see loom.calibration. Exit signals
+    # keep this value as-is; it's arithmetic-confidence-by-construction, not a forecast.
     exit_plan: ExitPlan
     reference_price: float
     quantity_hint: float = 0.0
     requires_manual_approval_override: bool | None = None
     reasoning: str = ""
+    # A raw, strategy-specific "how strong is this entry setup" number (e.g. z-score distance
+    # past threshold, price-dip percentage) — the input `loom.calibration` buckets by, per
+    # strategy, to replace `confidence` with a realized win rate. None for exit signals, which
+    # aren't calibrated (story 21: exit-type signals stay high-confidence by construction).
+    strength: float | None = None
 
 
 @dataclass(frozen=True)
@@ -98,6 +105,14 @@ class Strategy(ABC):
 
     def __init__(self, config: StrategyConfig):
         self.config = config
+
+    @classmethod
+    def from_config(cls, params: dict) -> Strategy:
+        """The uniform construction path every call site (trading_pass, backtest CLI/API) uses:
+        `STRATEGY_REGISTRY[key].from_config(config_version.params)`. Every strategy works with
+        just this; a strategy needing an extra collaborator (e.g. Dip-Buyer's fundamentals
+        provider) overrides this rather than forcing a special case into the generic call sites."""
+        return cls(StrategyConfig(params=params))
 
     @abstractmethod
     def generate_signals(

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from loom import calibration
 from loom.api.deps import get_db, get_market_data_source
 from loom.api.schemas import BacktestOut, BacktestRequest
 from loom.backtest.engine import run_backtest
@@ -9,7 +10,6 @@ from loom.config_versions import current_promoted
 from loom.market_data.base import MarketDataSource
 from loom.models import BacktestRun, StrategyConfigVersion
 from loom.models import Strategy as StrategyModel
-from loom.strategy import StrategyConfig
 from loom.trading_pass import STRATEGY_REGISTRY
 
 router = APIRouter(prefix="/backtests", tags=["backtests"])
@@ -42,7 +42,7 @@ def create_backtest(
         raise HTTPException(400, f"no strategy implementation registered for key={strategy.key!r}")
 
     result = run_backtest(
-        strategy=strategy_cls(StrategyConfig(params=version.params)),
+        strategy=strategy_cls.from_config(version.params),
         source=source,
         universe=body.universe,
         start=body.start,
@@ -62,4 +62,6 @@ def create_backtest(
     )
     session.add(run)
     session.commit()
+
+    calibration.save_calibration(session, strategy.id, version.id, result.trades, run.id)
     return run

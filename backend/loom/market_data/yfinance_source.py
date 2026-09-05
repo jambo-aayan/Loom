@@ -6,11 +6,12 @@ supplement the CLI backtest's acceptance criteria calls out."""
 
 from __future__ import annotations
 
+from loom.fundamentals import FundamentalsProvider
 from loom.market_data.base import MarketDataSource
 from loom.strategy import Bar, InstrumentHistory
 
 
-class YFinanceSource(MarketDataSource):
+class YFinanceSource(MarketDataSource, FundamentalsProvider):
     def get_history(self, instrument: str, start: str, end: str) -> InstrumentHistory:
         import yfinance as yf
 

@@ -4,9 +4,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from loom import db, strategies  # noqa: F401  (strategies import registers the strategy registry)
-from loom.api.routers import backtests, portfolio, settings, signals, trading
+from loom.api.routers import backtests, performance, portfolio, settings, signals, trading
 from loom.api.routers import strategies as strategies_router
-from loom.seed import seed_low_vol_compounder
+from loom.seed import seed_all_strategies
 
 
 @asynccontextmanager
@@ -14,7 +14,7 @@ async def lifespan(_: FastAPI):
     db.init_db()
     session = next(db.get_session())
     try:
-        seed_low_vol_compounder(session)
+        seed_all_strategies(session)
     finally:
         session.close()
     yield
@@ -41,3 +41,4 @@ app.include_router(portfolio.router)
 app.include_router(settings.router)
 app.include_router(backtests.router)
 app.include_router(trading.router)
+app.include_router(performance.router)

@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from loom import db
 from loom.execution.broker import BrokerClient, FakeBrokerClient
+from loom.fundamentals import FundamentalsProvider
 from loom.insight.generator import FakeInsightGenerator, InsightGenerator
 from loom.market_data.base import MarketDataSource
 from loom.market_data.fixture import FixtureMarketDataSource
@@ -60,3 +61,12 @@ def get_insight_generator() -> InsightGenerator:
 
         return AnthropicInsightGenerator(api_key=settings.anthropic_api_key)
     return FakeInsightGenerator()
+
+
+def get_fundamentals_provider() -> FundamentalsProvider:
+    """yfinance needs no API key (unlike Twelve Data/Trading 212/Anthropic), so this always
+    returns the real source — callers (loom.fundamentals.safe_sector_for) wrap lookups so a
+    network failure degrades to "sector unknown" rather than breaking the endpoint."""
+    from loom.market_data.yfinance_source import YFinanceSource
+
+    return YFinanceSource()

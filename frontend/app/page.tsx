@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api, Overview } from "@/lib/api";
 
@@ -37,13 +38,18 @@ export default function OverviewPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl">Overview</h1>
-        <button
-          onClick={runPass}
-          disabled={running}
-          className="px-3 py-1.5 rounded-full bg-indigo text-white text-sm disabled:opacity-50"
-        >
-          {running ? "Running…" : "Run trading pass"}
-        </button>
+        <div className="flex items-center gap-2">
+          <Link href="/performance" className="px-3 py-1.5 rounded-full bg-black/10 dark:bg-white/10 text-sm">
+            Performance
+          </Link>
+          <button
+            onClick={runPass}
+            disabled={running}
+            className="px-3 py-1.5 rounded-full bg-indigo text-white text-sm disabled:opacity-50"
+          >
+            {running ? "Running…" : "Run trading pass"}
+          </button>
+        </div>
       </div>
 
       {error && <p className="text-danger text-sm">{error}</p>}

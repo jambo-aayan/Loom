@@ -67,7 +67,7 @@ class Trading212Client(BrokerClient):
             "/equity/orders/market",
             json={
                 "ticker": instrument,
-                "quantity": quantity if side == "buy" else -quantity,
+                "quantity": quantity if side in ("buy", "add") else -quantity,
                 "clientOrderId": idempotency_key,
             },
         )
