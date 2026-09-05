@@ -42,6 +42,9 @@ A `Strategy` may generate an advisory `Insight` about a position in *any* `Book`
 
 Kill switch and account-level exposure/risk limits are computed across the whole `Environment` (every `Book` plus `Manual`), since ISA cash and exposure are genuinely shared — a per-`Book` capital allocation limit is a separate, additional layer on top, not a replacement for the account-level check.
 
+**Notify threshold**
+A per-`Strategy` setting, separate from `Approval mode`'s auto-above-threshold bar, controlling which `Signal`s are worth interrupting the user for via a push notification or notification-style email (see `docs/adr/0012-mobile-and-notifications.md`) — e.g. "notify me for anything ≥ 0.85 confidence." Distinct from `Approval mode`: a `Signal` can require manual approval *and* be worth an immediate push (the common case this exists for), or be low enough confidence that it's fine to just pile up in the Approvals queue unnoticed until the user next opens the app.
+
 **Environment**
 `demo` or `live` — which Trading 212 account (and therefore which base URL/API key) a given `Signal`, `Order`, or `Position` belongs to. Not a phase or a one-time deployment setting: both environments are always available side by side, and the UI has an explicit switch between them (comparable to an exchange's testnet/live toggle), so the user can test any `Strategy` against `demo` at any time independent of what's currently running on `live`.
 
