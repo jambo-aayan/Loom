@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply bg-ground-light text-neutral-900;
+  }
+  html.dark {
+    @apply bg-ground-dark text-neutral-100;
+  }
+  body {
+    @apply font-body;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-heading;
+  }
+  .font-numeric {
+    @apply font-mono tabular-nums;
+  }
+}
