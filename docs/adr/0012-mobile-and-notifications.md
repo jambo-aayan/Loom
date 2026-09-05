@@ -39,6 +39,13 @@ bar and the "History/Settings need their own pass" deferral from the original mo
 superseded — full mobile navigation (including a sensible way to reach History and Settings,
 whether that's a sixth tab or a different pattern) is v1 scope, not a later nice-to-have.
 
+**Resolved** (was open at the time this ADR was first accepted): the pattern is a 5-item bottom
+tab bar for primary nav (Overview/Approvals/Strategies/Backtest/Insights) plus two small header
+icon buttons, present on every mobile screen, for History and Settings — not a sixth tab, and not
+a generic "more" menu. This keeps every screen at most one tap from either primary nav or
+History/Settings, without crowding the tab bar past five items. Settled by building and reviewing
+the actual mobile mockups, not re-opened as a separate decision.
+
 ### Installable PWA as the delivery mechanism
 
 The Next.js frontend ships a web app manifest and service worker, making it installable to the
