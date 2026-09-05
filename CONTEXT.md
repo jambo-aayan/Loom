@@ -9,7 +9,12 @@ The output of the strategy/idea-generation layer: a proposed trade, before risk/
 
 A `Signal` becomes a sized `Order` after the risk/sizing layer approves and scales it. An `Order` becomes a `Position` once filled.
 
-A `Signal`'s lifecycle: `proposed` → (`auto-approved` or `pending-approval`, per its `Strategy`'s `Approval mode`) → (`approved` or `rejected`) → `executed`.
+A `Signal`'s lifecycle: `proposed` → (`auto-approved` or `pending-approval`, per its `Strategy`'s `Approval mode`) → (`approved` or `rejected`, or `expired` if left un-actioned) → `executed`.
+
+Every `Signal` is retained permanently, regardless of outcome — approved, rejected, expired, or auto-executed. A rejected or expired `Signal` is not a dead record: it's evaluated after the fact via its `Counterfactual outcome` (see below), which is the entire point of keeping it. At the moment of `approved`/`rejected`, the user may optionally attach a free-text `Note` explaining their reasoning — this is what makes `History` a genuine trade journal, not just a log.
+
+**Counterfactual outcome**
+For a `Signal` that was rejected or expired (never became a real `Order`), Loom keeps simulating it forward as a shadow position — same simulated-fill mechanics the backtest engine already uses, starting from the `Signal`'s proposed entry and applying the originating `Strategy`'s own exit logic against real subsequent market data — until that shadow position would have exited (target/stop hit) or a max horizon is reached. The result (hypothetical P&L, still-open, or hit-target/hit-stop) is attached back to the `Signal` record, so `History` can show "you rejected this — it would have gained +6.2%" next to "you approved this — it's up 3.1%," across every strategy and every decision, not just the ones that were acted on. This is a deliberate learning tool: the goal is to see whether your own approve/reject judgment is adding value or subtracting it.
 
 **Confidence**
 A 0–1 score a `Strategy` attaches to each `Signal` it proposes, expressing how strongly it believes in that trade (continuous, not a binary confident/not-confident flag — e.g. 0.2, 0.4, 0.6...). Drives `Approval mode` when a strategy is set to `auto-above-threshold`.
@@ -26,6 +31,9 @@ A pluggable component that generates `Signal`s from market data, current positio
 A `Strategy` has `live-enabled` (bool, default `false`): whether it's permitted to place real-money orders at all. This is a one-way-until-you-say-otherwise permission gate, not a phase it moves through — a `Strategy` can always be run against the `demo` `Environment` regardless of its `live-enabled` value; enabling it only additionally allows `live` orders. Promotion is a manual decision the user makes after reviewing the strategy's track record; there's no auto-promotion.
 
 A `Strategy` also has a **style**: `trading` (shorter hold, technical, exits are frequent) or `investment` (longer hold, conviction-based, benefits most from deep `Insight` research). This is descriptive metadata, not a behavioral gate — it informs which strategies get the deeper research tier and how their `Book`'s performance should be read, not a hard rule enforced by the system.
+
+**Strategy config version**
+A `Strategy`'s parameters (thresholds, windows, sizing rules) are not just "whatever's in the code" — each change is a new numbered version. Every `Signal` and every backtest run records which version of its `Strategy` produced it, so a parameter tweak ("move the RSI threshold from 4 to 3") is a traceable, comparable event: you can see exactly what changed and how the strategy's real and backtested performance differed before and after, not just that performance changed at some point.
 
 **Book**
 A named, software-level ledger bucket that owns a set of `Position` lots, scoped to one `Environment`, for P&L attribution. Every `Strategy` gets exactly one `Book` per `Environment` (e.g. "Low-Vol Compounder · Live"); there's also a `Manual` `Book` per `Environment` for anything the user trades themselves — directly in Trading 212's own app, or via a manual-trade action in Loom. A position is assigned to a `Book` at the moment `Loom` executes the order that opened it; anything found in the real account that isn't tagged to a `Strategy`'s `Book` (including pre-existing Trading 212 Pies the user already had before adopting Loom) is `Manual` by default, inferred automatically through reconciliation against the live Trading 212 API — the user never has to declare it.
