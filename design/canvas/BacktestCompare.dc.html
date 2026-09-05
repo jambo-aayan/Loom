@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'IBM Plex Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #6C7BFA; } a:hover { color: #4F5FE0; }
+    .h { font-family: 'Space Grotesk', system-ui, sans-serif; }
+    .m { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; }
+  </style>
+</helmet>
+<div style="width: 1440px; height: 960px; padding: 20px 28px 28px; display: flex; flex-direction: column; gap: 18px; background: {{t.frame}}; color: {{t.textOnLight}};">
+
+  <div style="height: 56px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <svg width="30" height="30" viewBox="0 0 64 64" fill="none"><path d="M4,56 C24,56 32,26 58,12" stroke="#6C7BFA" stroke-opacity="0.3" stroke-width="4" stroke-linecap="round"/><path d="M4,46 C22,46 32,30 58,12" stroke="#6C7BFA" stroke-opacity="0.5" stroke-width="4" stroke-linecap="round"/><path d="M4,34 C24,34 30,32 58,12" stroke="#6C7BFA" stroke-opacity="0.75" stroke-width="4" stroke-linecap="round"/><path d="M4,20 C26,20 34,26 58,12" stroke="#6C7BFA" stroke-width="4" stroke-linecap="round"/><circle cx="58" cy="12" r="4" fill="#6C7BFA"/></svg>
+        <span style="font-family: 'Tiro Bangla', Georgia, serif; font-size: 27px; line-height: 1;">loom</span>
+      </div>
+      <div style="width: 1px; height: 24px; background: {{t.cardLightBorder}};"></div>
+      <div style="display: flex; align-items: center; gap: 6px; font-size: 13.5px; color: {{t.subOnLight}};">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18 L9 12 L15 6"/></svg>
+        <span>Backtest</span><span style="color: {{t.textOnLight}}; font-weight: 500;">/ Compare runs</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+        <div style="padding: 6px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 600; background: {{t.navPillBg}}; color: {{t.navPillText}};">Demo</div>
+        <div style="padding: 6px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 500; color: {{t.navText}};">Live</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 7px; height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(242,85,90,0.45); color: #F2555A; font-size: 12.5px; font-weight: 600; background: {{t.cardLight}};">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F2555A" stroke-width="2.4" stroke-linecap="round"><path d="M12 2 V11"/><path d="M7 5.5 A9 9 0 1 0 17 5.5"/></svg>
+        <span>Kill switch</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="border-radius: 22px; padding: 20px 24px 14px; background: {{t.cardDark}}; border: 1px solid {{t.cardDarkBorder}}; color: {{t.textOnDark}};">
+    <div style="display: flex; align-items: center; gap: 22px; font-size: 12.5px;">
+      <span style="display: flex; align-items: center; gap: 7px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #7FF5CC;"></span>v3 · tighter stop · 3Y <span class="m" style="color: {{t.pos}}; margin-left: 4px;">+15.6%</span></span>
+      <span style="display: flex; align-items: center; gap: 7px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: {{t.s1}};"></span>v2 · baseline · 2Y <span class="m" style="color: {{t.s1}}; margin-left: 4px;">+14.2%</span></span>
+    </div>
+    <svg width="100%" height="160" viewBox="0 0 800 160" preserveAspectRatio="none" style="margin-top: 12px;">
+      <path d="M0,140 L67,132 L133,136 L200,120 L267,124 L333,104 L400,110 L467,86 L533,92 L600,66 L667,60 L733,40 L800,26" fill="none" stroke="#7FF5CC" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M0,140 L67,138 L133,142 L200,132 L267,136 L333,124 L400,128 L467,112 L533,116 L600,100 L667,104 L733,88 L800,80" fill="none" stroke="{{t.s1}}" stroke-width="2.2" stroke-linejoin="round"/>
+    </svg>
+    <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; color: {{t.subOnDark}};"><span>Sep 2023</span><span>Mar 2024</span><span>Sep 2024</span><span>Mar 2025</span><span>Sep 2025</span><span>Today</span></div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; flex: 1;">
+
+    <div style="border-radius: 22px; padding: 22px 24px; background: {{t.cardLight}}; border: 1.5px solid #7FF5CC; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div><div class="h" style="font-size: 18px; font-weight: 600;">v3 · tighter stop</div><div style="font-size: 12px; color: {{t.subOnLight}}; margin-top: 2px;">Low-Vol Compounder · 3 years · from £10,000</div></div>
+        <span style="font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: rgba(127,245,204,0.22); color: {{t.greenText}};">Winner</span>
+      </div>
+      <div style="padding: 10px 12px; border-radius: 12px; background: rgba(127,245,204,0.1); border: 1px solid rgba(127,245,204,0.28); font-size: 12px;">
+        <span style="color: {{t.subOnLight}};">Changed vs v2:</span> Loss limit <span class="m" style="text-decoration: line-through; color: {{t.subOnLight}};">−2.5%</span> → <span class="m" style="font-weight: 600;">−2.0%</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;">
+        <div style="padding: 12px 14px; border-radius: 14px; background: {{t.chipBg}};"><div style="font-size: 11px; color: {{t.subOnLight}};">Total return</div><div class="h" style="font-size: 19px; font-weight: 600; margin-top: 4px; color: {{t.greenText}};">+15.6%</div></div>
+        <div style="padding: 12px 14px; border-radius: 14px; background: {{t.chipBg}};"><div style="font-size: 11px; color: {{t.subOnLight}};">Win rate</div><div class="h" style="font-size: 19px; font-weight: 600; margin-top: 4px;">66%</div></div>
+        <div style="padding: 12px 14px; border-radius: 14px; background: {{t.chipBg}};"><div style="font-size: 11px; color: {{t.subOnLight}};">Max drawdown</div><div class="h" style="font-size: 19px; font-weight: 600; margin-top: 4px;">−3.4%</div></div>
+        <div style="padding: 12px 14px; border-radius: 14px; background: {{t.chipBg}};"><div style="font-size: 11px; color: {{t.subOnLight}};">Trades</div><div class="h" style="font-size: 19px; font-weight: 600; margin-top: 4px;">44</div></div>
+      </div>
+      <div style="font-size: 12.5px; line-height: 1.55; color: {{t.subOnLight}};">The tighter stop trades fewer, smaller losses for a lower drawdown — the win rate climbs 3 points and the worst dip shrinks by nearly half, at the cost of exiting a few winners early. This is the run that became v3.</div>
+    </div>
+
+    <div style="border-radius: 22px; padding: 22px 24px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div><div class="h" style="font-size: 18px; font-weight: 600;">v2 · baseline</div><div style="font-size: 12px; color: {{t.subOnLight}}; margin-top: 2px;">Low-Vol Compounder · 2 years · from £10,000</div></div>
+      </div>
+      <div style="padding: 10px 12px; border-radius: 12px; background: {{t.chipBg}}; border: 1px solid {{t.chipBorder}}; font-size: 12px; color: {{t.subOnLight}};">Loss limit −2.5% · the version this comparison is measured against</div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;">
+        <div style="padding: 12px 14px; border-radius: 14px; background: {{t.chipBg}};"><div style="font-size: 11px; color: {{t.subOnLight}};">Total return</div><div class="h" style="font-size: 19px; font-weight: 600; margin-top: 4px; color: {{t.greenText}};">+14.2%</div></div>
+        <div style="padding: 12px 14px; border-radius: 14px; background: {{t.chipBg}};"><div style="font-size: 11px; color: {{t.subOnLight}};">Win rate</div><div class="h" style="font-size: 19px; font-weight: 600; margin-top: 4px;">63%</div></div>
+        <div style="padding: 12px 14px; border-radius: 14px; background: {{t.chipBg}};"><div style="font-size: 11px; color: {{t.subOnLight}};">Max drawdown</div><div class="h" style="font-size: 19px; font-weight: 600; margin-top: 4px;">−6.1%</div></div>
+        <div style="padding: 12px 14px; border-radius: 14px; background: {{t.chipBg}};"><div style="font-size: 11px; color: {{t.subOnLight}};">Trades</div><div class="h" style="font-size: 19px; font-weight: 600; margin-top: 4px;">48</div></div>
+      </div>
+      <div style="font-size: 12.5px; line-height: 1.55; color: {{t.subOnLight}};">The parameters actually live today — the reference point every later tweak gets compared against, until one wins and becomes the new baseline.</div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"theme":{"editor":"enum","default":"light","options":["light","dark"]}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'light';
+    const light = {
+      frame: '#F3F2EF', cardLight: '#FFFFFF', cardLightBorder: '#E6E3DC', textOnLight: '#141519', subOnLight: '#6B7079',
+      cardDark: '#111214', cardDarkBorder: '#111214', textOnDark: '#F4F5F7', subOnDark: '#9BA1AC', pos: '#7FF5CC', neg: '#FF8FCB', greenText: '#0E8C66', pinkText: '#C8368A', s1: '#C4B5FD', s2: '#8FE3FF', s3: '#FFE38A',
+      chipBg: '#F3F2EF', chipBorder: '#E6E3DC', divider: '#ECEAE4',
+      navPillBg: '#111214', navPillText: '#F4F5F7', navText: '#4B5058',
+    };
+    const dark = {
+      frame: '#0B0C0F', cardLight: '#141519', cardLightBorder: '#262A31', textOnLight: '#F4F5F7', subOnLight: '#9BA1AC',
+      cardDark: '#101114', cardDarkBorder: '#262A31', textOnDark: '#F4F5F7', subOnDark: '#9BA1AC', pos: '#7FF5CC', neg: '#FF8FCB', greenText: '#7FF5CC', pinkText: '#FF8FCB', s1: '#C4B5FD', s2: '#8FE3FF', s3: '#FFE38A',
+      chipBg: '#1B1E24', chipBorder: '#262A31', divider: '#262A31',
+      navPillBg: '#6C7BFA', navPillText: '#0B0C0F', navText: '#9BA1AC',
+    };
+    return { t: theme === 'dark' ? dark : light };
+  }
+}
+</script>
+</body>
+</html>

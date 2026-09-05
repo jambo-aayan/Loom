@@ -1,0 +1,932 @@
+<title>Loom Prototype</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+
+  :root {
+    --frame: #F3F2EF; --card: #FFFFFF; --card-border: #E6E3DC; --text: #141519; --sub: #6B7079;
+    --card-dark: #111214; --card-dark-border: #111214; --text-on-dark: #F4F5F7; --sub-on-dark: #9BA1AC;
+    --chip: #F3F2EF; --chip-border: #E6E3DC; --divider: #ECEAE4;
+    --nav-pill-bg: #111214; --nav-pill-text: #F4F5F7; --nav-text: #4B5058;
+    --range-active-bg: #F4F5F7; --range-active-text: #111214;
+    --indigo: #6C7BFA; --indigo-hover: #4F5FE0; --indigo-text: #4F5FE0; --amber-text: #A86F0C;
+    --mint: #7FF5CC; --pink: #FF8FCB; --green-text: #0E8C66; --pink-text: #C8368A;
+    --s1: #C4B5FD; --s2: #8FE3FF; --s3: #FFE38A; --danger: #F2555A;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --frame: #0B0C0F; --card: #141519; --card-border: #262A31; --text: #F4F5F7; --sub: #9BA1AC;
+      --card-dark: #101114; --card-dark-border: #262A31; --text-on-dark: #F4F5F7; --sub-on-dark: #9BA1AC;
+      --chip: #1B1E24; --chip-border: #262A31; --divider: #262A31;
+      --nav-pill-bg: #6C7BFA; --nav-pill-text: #0B0C0F; --nav-text: #9BA1AC;
+      --range-active-bg: #6C7BFA; --range-active-text: #0B0C0F;
+      --indigo-text: #8B97FC; --amber-text: #F5B942;
+      --green-text: #7FF5CC; --pink-text: #FF8FCB;
+    }
+  }
+  :root[data-theme="dark"] {
+    --frame: #0B0C0F; --card: #141519; --card-border: #262A31; --text: #F4F5F7; --sub: #9BA1AC;
+    --card-dark: #101114; --card-dark-border: #262A31; --text-on-dark: #F4F5F7; --sub-on-dark: #9BA1AC;
+    --chip: #1B1E24; --chip-border: #262A31; --divider: #262A31;
+    --nav-pill-bg: #6C7BFA; --nav-pill-text: #0B0C0F; --nav-text: #9BA1AC;
+    --range-active-bg: #6C7BFA; --range-active-text: #0B0C0F;
+    --indigo-text: #8B97FC; --amber-text: #F5B942;
+    --green-text: #7FF5CC; --pink-text: #FF8FCB;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--frame); }
+  body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+  a { color: var(--indigo); }
+  a:hover { color: var(--indigo-hover); }
+  h1, h2, h3 { text-wrap: balance; }
+  .h { font-family: 'Space Grotesk', system-ui, sans-serif; }
+  .m { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; }
+  .wordmark { font-family: 'Tiro Bangla', Georgia, serif; }
+  button { font-family: inherit; cursor: pointer; }
+  input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; }
+  input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: var(--chip-border); }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 999px; background: var(--indigo); border: 3px solid var(--card); margin-top: -5px; cursor: pointer; }
+  input[type="range"]::-moz-range-track { height: 6px; border-radius: 3px; background: var(--chip-border); }
+  input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 999px; background: var(--indigo); border: 3px solid var(--card); cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+
+  .ico-btn { width: 38px; height: 38px; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: var(--card); border: 1px solid var(--card-border); color: var(--nav-text); flex-shrink: 0; }
+  .ico-btn.active { background: var(--nav-pill-bg); color: var(--nav-pill-text); border-color: transparent; }
+  .ico-btn.danger { border-color: rgba(242,85,90,0.45); color: var(--danger); }
+  .pill { display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--card); border: 1px solid var(--card-border); }
+  .pill > button { padding: 6px 14px; border: none; background: none; border-radius: 999px; font-size: 12.5px; font-weight: 500; color: var(--nav-text); }
+  .pill > button.active { background: var(--nav-pill-bg); color: var(--nav-pill-text); font-weight: 600; }
+  .card { border-radius: 20px; background: var(--card); border: 1px solid var(--card-border); }
+  .card-dark { border-radius: 20px; background: var(--card-dark); border: 1px solid var(--card-dark-border); color: var(--text-on-dark); }
+  .chip { padding: 4px 10px; border-radius: 999px; background: var(--chip); color: var(--sub); font-size: 11px; font-weight: 600; }
+  .btn-primary { height: 44px; border-radius: 999px; background: var(--indigo); color: #0B0C0F; font-size: 13.5px; font-weight: 600; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn-primary[disabled] { opacity: 0.4; cursor: not-allowed; }
+  .btn-ghost-danger { height: 44px; border-radius: 999px; background: transparent; color: var(--danger); border: 1px solid rgba(242,85,90,0.45); font-size: 13.5px; font-weight: 600; }
+  .btn-ghost-danger[disabled] { opacity: 0.4; cursor: not-allowed; }
+
+  #app { min-height: 100vh; padding-bottom: 24px; }
+  .shell { max-width: 1320px; margin: 0 auto; padding: 20px 24px 40px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 56px; margin-bottom: 18px; }
+  .brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; color: inherit; font: inherit; cursor: pointer; }
+  .brand span { font-size: 26px; line-height: 1; }
+  .topnav { display: none; }
+  .env-cluster { display: flex; align-items: center; gap: 10px; }
+
+  .killbanner { display: none; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 14px; background: rgba(242,85,90,0.12); border: 1px solid rgba(242,85,90,0.35); color: var(--danger); font-size: 13px; font-weight: 600; margin-bottom: 16px; }
+  .killbanner.show { display: flex; }
+
+  .grid12 { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
+  .span-4 { grid-column: span 4; } .span-5 { grid-column: span 5; } .span-6 { grid-column: span 6; }
+  .span-7 { grid-column: span 7; } .span-8 { grid-column: span 8; } .span-12 { grid-column: span 12; }
+  .span-4, .span-5, .span-6, .span-7, .span-8, .span-12 { min-width: 0; }
+
+  .bottomtabs { display: none; }
+
+  @media (min-width: 860px) {
+    .topnav { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--card); border: 1px solid var(--card-border); }
+    .topnav button { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px; border: none; background: none; border-radius: 999px; font-size: 13.5px; font-weight: 500; color: var(--nav-text); }
+    .topnav button.active { background: var(--nav-pill-bg); color: var(--nav-pill-text); }
+    .header-menu-icons { display: flex; }
+  }
+  @media (max-width: 859px) {
+    .shell { max-width: 480px; padding: 14px 14px 96px; }
+    .grid12 > * { grid-column: span 12 !important; }
+    .header-menu-icons { display: flex; gap: 6px; }
+    .topbar { gap: 8px; height: 44px; margin-bottom: 14px; }
+    .brand .wordmark { display: none; }
+    .env-cluster { gap: 6px; }
+    .pill { padding: 2px; }
+    .pill > button { padding: 6px 9px; font-size: 11.5px; }
+    .ico-btn, .themetoggle { width: 32px; height: 32px; }
+    .ico-btn svg, .themetoggle svg { transform: scale(0.9); }
+    .bottomtabs { display: flex; position: fixed; left: 0; right: 0; bottom: 0; height: 76px; padding: 8px 10px 20px; background: var(--card); border-top: 1px solid var(--card-border); align-items: center; z-index: 20; }
+    .bottomtabs button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; font-weight: 500; background: none; border: none; color: var(--nav-text); position: relative; }
+    .bottomtabs button.active { color: var(--text); }
+    .bottomtabs .badge { position: absolute; top: -4px; right: 18%; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 999px; background: var(--indigo); color: #0B0C0F; font-size: 9px; display: flex; align-items: center; justify-content: center; }
+  }
+
+  table { border-collapse: collapse; width: 100%; }
+  th { text-align: left; font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; color: var(--sub); padding: 0 12px 8px; }
+  td { padding: 10px 12px; font-size: 12.5px; border-top: 1px solid var(--divider); }
+  .table-wrap { overflow-x: auto; }
+
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); opacity: 0; padding: 10px 18px; border-radius: 999px; background: var(--nav-pill-bg); color: var(--nav-pill-text); font-size: 13px; font-weight: 600; transition: opacity 0.2s ease, transform 0.2s ease; z-index: 50; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .themetoggle { width: 38px; height: 38px; border-radius: 999px; background: var(--card); border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; color: var(--nav-text); flex-shrink: 0; }
+</style>
+
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- fake data ---------- */
+
+  var STRAT = [
+    { id: 'compounder', name: 'Low-Vol Compounder', style: 'investment', live: true, approval: 'auto-above', threshold: 0.80, notify: 0.75, win: 63, avg: '+1.8%', avgUp: true, trades: 96, drawdown: '-4.2%', book: '+20.4%', bookUp: true,
+      blurb: "Looks for large-cap stocks and index ETFs whose price has been unusually calm lately, on the idea that low-volatility names tend to drift upward steadily. Buys into that calm, holds for a modest pre-set gain, exits quickly if wrong. This is the strategy built to feel like “quick, confirmed wins.”",
+      params: [
+        { name: 'Volatility window', value: '20 days', desc: 'How much price history feeds the low-volatility filter.' },
+        { name: 'Volatility threshold', value: 'bottom 30%', desc: 'Only considers instruments calmer than 70% of their peers.' },
+        { name: 'Profit target', value: '+3.0%', desc: 'Take-profit level from entry — arithmetic, not a forecast.' },
+        { name: 'Loss limit', value: '−2.5%', desc: 'Tightened in v3 (was −3.5%) after backtesting.' },
+      ],
+      versions: [
+        { v: 'v3 · current', date: 'since 2 Sep', note: 'Tightened loss limit from −3.5% to −2.5%, after backtesting showed it cut drawdowns without costing much win rate.', win: '63%', dd: '−4.2%' },
+        { v: 'v2', date: '18 Jul – 1 Sep', note: 'Widened volatility threshold from bottom 20% to bottom 30%.', win: '—', dd: '—' },
+      ] },
+    { id: 'harvester', name: 'Volatility Harvester', style: 'trading', live: false, approval: 'manual', threshold: 0.70, notify: 0.70, win: 48, avg: '−0.6%', avgUp: false, trades: 52, drawdown: '-9.8%', book: '−6.2%', bookUp: false,
+      blurb: "Buys a pullback vs. an asset's own recent range, trims on a bounce back toward the mean, and can add on further weakness — the one action that is always manual, regardless of confidence, since doubling down on a losing bet is the riskiest move in the roster.",
+      params: [
+        { name: 'Lookback window', value: '30 days', desc: 'Rolling range used to judge how stretched a pullback is.' },
+        { name: 'Entry z-score', value: '≤ −1.5', desc: 'How many standard deviations below the mean before buying.' },
+        { name: 'Trim level', value: 'mean reversion', desc: 'Sells back toward the rolling mean, not a fixed target.' },
+      ],
+      versions: [ { v: 'v1 · current', date: 'since launch', note: 'Initial version.', win: '—', dd: '—' } ] },
+    { id: 'trend', name: 'Trend Follower', style: 'trading', live: false, approval: 'auto-above', threshold: 0.75, notify: 0.75, win: 55, avg: '+1.1%', avgUp: true, trades: 41, drawdown: '-8.4%', book: '+3.1%', bookUp: true,
+      blurb: "Buys strength, not weakness — enters on a moving-average crossover or a fresh N-day high, rides the trend, and exits on the reverse crossover or a trailing stop. The complement to the mean-reversion strategies: different regime, different failure mode (whipsaws, not value traps).",
+      params: [
+        { name: 'Fast / slow MA', value: '50 / 200 day', desc: 'The crossover pair that defines an entry.' },
+        { name: 'Trailing stop', value: '8% from peak', desc: 'Exit trigger once a trend reverses.' },
+      ],
+      versions: [ { v: 'v1 · current', date: 'since launch', note: 'Initial version.', win: '—', dd: '—' } ] },
+    { id: 'breakout', name: 'Volatility Breakout', style: 'trading', live: false, approval: 'manual', threshold: 0.70, notify: 0.70, win: 46, avg: '+0.4%', avgUp: true, trades: 28, drawdown: '-11.2%', book: '+0.8%', bookUp: true,
+      blurb: "Watches for a volatility squeeze — an unusually quiet stretch — then buys the breakout direction once price actually moves, on the idea that quiet periods precede bigger ones. The shakiest entry signal in the roster; fakeouts are its classic failure mode.",
+      params: [
+        { name: 'Squeeze window', value: '60 days', desc: 'Period checked for a multi-month low in band width.' },
+        { name: 'Confirmation', value: '1 full session', desc: 'Breakout must hold a full session before entry.' },
+      ],
+      versions: [ { v: 'v1 · current', date: 'since launch', note: 'Initial version.', win: '—', dd: '—' } ] },
+    { id: 'dipbuyer', name: 'Value/Quality Dip-Buyer', style: 'investment', live: false, approval: 'manual', threshold: 0.70, notify: 0.70, win: 67, avg: '+2.4%', avgUp: true, trades: 19, drawdown: '-5.1%', book: '+11.2%', bookUp: true,
+      blurb: "Screens for large caps trading meaningfully below their own historical P/E, with a dividend floor and a basic quality filter, then holds closer to Compounder's horizon than a quick trade. Longest holding period in the roster — leans hardest on Insight research before committing.",
+      params: [
+        { name: 'P/E discount', value: '≥20% below 5yr avg', desc: 'How cheap, relative to its own history, before it qualifies.' },
+        { name: 'Dividend floor', value: '≥ 2.0%', desc: 'Minimum yield required to screen in.' },
+      ],
+      versions: [ { v: 'v1 · current', date: 'since launch', note: 'Initial version.', win: '—', dd: '—' } ] },
+  ];
+
+  var TRADES = {
+    compounder: [
+      { ticker: 'VUSA', date: 'Sep 2', action: 'BUY', entry: 71.75, exit: 76.05, retPct: 6.3, retGBP: 14.30, hold: 6, status: 'closed' },
+      { ticker: 'MSFT', date: 'Sep 1', action: 'BUY', entry: 391.20, exit: 410.80, retPct: 5.0, retGBP: 61.50, hold: 11, status: 'closed' },
+      { ticker: 'VWRL', date: 'Aug 29', action: 'BUY', entry: 99.30, exit: null, retPct: 2.6, retGBP: 2.60, hold: 7, status: 'open' },
+      { ticker: 'JNJ', date: 'Aug 27', action: 'BUY', entry: 152.10, exit: 155.30, retPct: 2.1, retGBP: 19.40, hold: 4, status: 'closed' },
+      { ticker: 'VUSA', date: 'Aug 21', action: 'BUY', entry: 74.60, exit: 72.85, retPct: -2.3, retGBP: -8.70, hold: 3, status: 'closed' },
+      { ticker: 'VWRL', date: 'Aug 14', action: 'BUY', entry: 97.40, exit: 100.60, retPct: 3.3, retGBP: 12.80, hold: 9, status: 'closed' },
+      { ticker: 'MSFT', date: 'Aug 6', action: 'BUY', entry: 402.50, exit: 393.20, retPct: -2.3, retGBP: -14.60, hold: 2, status: 'closed' },
+      { ticker: 'JNJ', date: 'Jul 30', action: 'BUY', entry: 148.90, exit: 154.20, retPct: 3.6, retGBP: 21.30, hold: 8, status: 'closed' },
+    ],
+    harvester: [
+      { ticker: 'AAPL', date: 'Sep 4', action: 'BUY', entry: 73.10, exit: null, retPct: -3.1, retGBP: -4.40, hold: 5, status: 'open' },
+      { ticker: 'MSFT', date: 'Aug 26', action: 'BUY', entry: 397.00, exit: 391.50, retPct: -1.4, retGBP: -9.20, hold: 3, status: 'closed' },
+      { ticker: 'VUSA', date: 'Aug 19', action: 'BUY', entry: 73.90, exit: 71.20, retPct: -3.6, retGBP: -12.10, hold: 6, status: 'closed' },
+      { ticker: 'VWRL', date: 'Aug 11', action: 'BUY', entry: 98.60, exit: 101.90, retPct: 3.3, retGBP: 11.40, hold: 4, status: 'closed' },
+      { ticker: 'JNJ', date: 'Aug 3', action: 'BUY', entry: 150.40, exit: 148.10, retPct: -1.5, retGBP: -6.80, hold: 2, status: 'closed' },
+      { ticker: 'AAPL', date: 'Jul 27', action: 'BUY', entry: 70.20, exit: 72.60, retPct: 3.4, retGBP: 9.60, hold: 7, status: 'closed' },
+    ],
+    trend: [
+      { ticker: 'MSFT', date: 'Sep 5', action: 'BUY', entry: 412.30, exit: null, retPct: 1.9, retGBP: 38.20, hold: 1, status: 'open' },
+      { ticker: 'AAPL', date: 'Aug 28', action: 'SELL', entry: 74.90, exit: 71.30, retPct: 4.8, retGBP: 22.40, hold: 5, status: 'closed' },
+      { ticker: 'VUSA', date: 'Aug 18', action: 'BUY', entry: 73.10, exit: 76.40, retPct: 4.5, retGBP: 16.20, hold: 9, status: 'closed' },
+      { ticker: 'VWRL', date: 'Aug 9', action: 'BUY', entry: 96.80, exit: 94.60, retPct: -2.3, retGBP: -9.10, hold: 3, status: 'closed' },
+      { ticker: 'MSFT', date: 'Jul 31', action: 'BUY', entry: 388.40, exit: 401.90, retPct: 3.5, retGBP: 27.30, hold: 12, status: 'closed' },
+    ],
+    breakout: [
+      { ticker: 'AAPL', date: 'Aug 30', action: 'BUY', entry: 72.40, exit: 74.10, retPct: 2.3, retGBP: 6.80, hold: 4, status: 'closed' },
+      { ticker: 'VWRL', date: 'Aug 22', action: 'BUY', entry: 100.10, exit: 96.30, retPct: -3.8, retGBP: -11.40, hold: 2, status: 'closed' },
+      { ticker: 'MSFT', date: 'Aug 13', action: 'BUY', entry: 395.60, exit: 402.90, retPct: 1.8, retGBP: 14.60, hold: 6, status: 'closed' },
+      { ticker: 'VUSA', date: 'Aug 4', action: 'BUY', entry: 75.20, exit: 72.40, retPct: -3.7, retGBP: -10.30, hold: 3, status: 'closed' },
+    ],
+    dipbuyer: [
+      { ticker: 'JNJ', date: 'Aug 25', action: 'BUY', entry: 149.60, exit: null, retPct: 4.1, retGBP: 18.90, hold: 11, status: 'open' },
+      { ticker: 'VWRL', date: 'Aug 1', action: 'BUY', entry: 95.20, exit: 101.80, retPct: 6.9, retGBP: 24.60, hold: 25, status: 'closed' },
+      { ticker: 'MSFT', date: 'Jul 14', action: 'BUY', entry: 380.10, exit: 402.30, retPct: 5.8, retGBP: 33.20, hold: 30, status: 'closed' },
+    ],
+  };
+  function tradeStats(trades) {
+    var closed = trades.filter(function (t) { return t.status === 'closed'; });
+    var wins = closed.filter(function (t) { return t.retGBP > 0; });
+    var losses = closed.filter(function (t) { return t.retGBP <= 0; });
+    var sumWins = wins.reduce(function (s, t) { return s + t.retGBP; }, 0);
+    var sumLosses = losses.reduce(function (s, t) { return s + t.retGBP; }, 0);
+    var best = closed.reduce(function (a, t) { return !a || t.retPct > a.retPct ? t : a; }, null);
+    var worst = closed.reduce(function (a, t) { return !a || t.retPct < a.retPct ? t : a; }, null);
+    var avgHold = closed.length ? (closed.reduce(function (s, t) { return s + t.hold; }, 0) / closed.length) : 0;
+    return {
+      profitFactor: sumLosses ? (sumWins / Math.abs(sumLosses)).toFixed(2) : (wins.length ? '∞' : '—'),
+      avgWin: wins.length ? '+£' + (sumWins / wins.length).toFixed(2) : '—',
+      avgLoss: losses.length ? '−£' + Math.abs(sumLosses / losses.length).toFixed(2) : 'none yet',
+      best: best,
+      worst: worst,
+      avgHold: avgHold.toFixed(1) + 'd',
+    };
+  }
+
+  var nextId = 900;
+  function mkSignal(o) { o.id = 'sig' + (nextId++); o.note = ''; return o; }
+
+  var PENDING = [
+    mkSignal({ ticker: 'MSFT', name: 'Microsoft', action: 'BUY', qty: 5, stratId: 'trend', env: 'demo', confidence: 0.78, price: 412.30, target: 424.50, stop: 402.00, size: 2061, alwaysManual: false, fired: '2h ago' }),
+    mkSignal({ ticker: 'VWRL', name: 'FTSE All-World ETF', action: 'BUY', qty: 2, stratId: 'compounder', env: 'live', confidence: 0.61, price: 101.90, target: 105.50, stop: 98.60, size: 204, alwaysManual: false, fired: '3h ago' }),
+    mkSignal({ ticker: 'AAPL', name: 'Apple', action: 'BUY', qty: 2, stratId: 'harvester', env: 'demo', confidence: 0.52, price: 71.00, target: null, stop: null, size: 142, alwaysManual: true, fired: '1d ago', holdNote: 'already held, −3.1%' }),
+  ];
+
+  var DECIDED = [
+    { ticker: 'VUSA', action: 'BUY', qty: 3, stratName: 'Low-Vol Compounder', status: 'Executed', detail: 'approved by you · filled at £76.05 · 5h ago', note: 'bounce off the 50-day, low risk', outcome: '+£14.30', outcomeLabel: '+6.3% closed', color: 'green' },
+    { ticker: 'AAPL', action: 'BUY', qty: 1, stratName: 'Trend Follower', status: 'Auto', detail: 'above its 0.75 threshold · 1d ago', note: '', outcome: '+£9.80', outcomeLabel: '+5.1% open', color: 'green' },
+  ];
+
+  var HISTORY_SEED = [
+    { date: 'Sep 5, 09:14', ticker: 'MSFT', strat: 'Trend Follower', env: 'demo', action: 'BUY 5', status: 'Executed', outcome: '+£38.20', outcomeLabel: '+1.9% · open', color: 'green', note: '' },
+    { date: 'Sep 4, 15:02', ticker: 'VWRL', strat: 'Low-Vol Compounder', env: 'live', action: 'BUY 2', status: 'Executed', outcome: '+£4.10', outcomeLabel: '+2.0% · open', color: 'green', note: '' },
+    { date: 'Sep 4, 08:41', ticker: 'JNJ', strat: 'Low-Vol Compounder', env: 'demo', action: 'SELL 6', status: 'Rejected', outcome: 'would have: −£11.20', outcomeLabel: '−1.2% · counterfactual', color: 'sub', note: '“felt like a headline dip, not the strategy”' },
+    { date: 'Sep 2, 16:47', ticker: 'VUSA', strat: 'Low-Vol Compounder', env: 'demo', action: 'BUY 3', status: 'Executed', outcome: '+£14.30', outcomeLabel: '+6.3% · closed', color: 'green', note: '“bounce off the 50-day, low risk”' },
+    { date: 'Sep 1, 09:03', ticker: 'MSFT', strat: 'Low-Vol Compounder', env: 'demo', action: 'SELL 3', status: 'Executed', outcome: '+£61.50', outcomeLabel: '+5.0% · target hit', color: 'green', note: '' },
+    { date: 'Aug 29, 14:12', ticker: 'VWRL', strat: 'Low-Vol Compounder', env: 'live', action: 'BUY 1', status: 'Executed', outcome: '+£2.60', outcomeLabel: '+2.6% · open', color: 'green', note: '' },
+    { date: 'Aug 28, 10:55', ticker: 'AAPL', strat: 'Trend Follower', env: 'demo', action: 'SELL 2', status: 'Rejected', outcome: 'would have: +£22.40', outcomeLabel: '+3.4% · counterfactual', color: 'pink', note: '“thought it was too late to sell” — wasn’t' },
+    { date: 'Aug 27, 13:30', ticker: 'JNJ', strat: 'Low-Vol Compounder', env: 'demo', action: 'BUY 6', status: 'Executed', outcome: '+£19.40', outcomeLabel: '+2.1% · closed', color: 'green', note: '' },
+    { date: 'Aug 25, 17:00', ticker: 'VWRL', strat: 'Volatility Harvester', env: 'demo', action: 'SELL 1', status: 'Expired', outcome: 'would have: −£3.90', outcomeLabel: '−1.1% · unactioned', color: 'sub', note: '' },
+  ];
+
+  var POSITIONS = {
+    demo: [
+      { t: 'VUSA', shares: 12, chg: '+2.5%', up: true, color: '#6C7BFA' },
+      { t: 'AAPL', shares: 4, chg: '+1.4%', up: true, color: '#141519' },
+      { t: 'VWRL', shares: 8, chg: '−1.2%', up: false, color: '#7FF5CC' },
+      { t: 'MSFT', shares: 3, chg: '+0.6%', up: true, color: '#F5B942' },
+    ],
+    live: [
+      { t: 'VWRL', shares: 5, chg: '+0.4%', up: true, color: '#7FF5CC' },
+    ],
+  };
+
+  var BOOKS = [
+    { name: 'Compounder', pct: '+20.4%', up: true },
+    { name: 'Harvester', pct: '−6.2%', up: false },
+    { name: 'Trend Follower', pct: '+3.1%', up: true },
+    { name: 'Breakout', pct: '+0.8%', up: true },
+    { name: 'Dip-Buyer', pct: '+11.2%', up: true },
+    { name: 'Manual', pct: '—', up: null },
+  ];
+
+  var BACKTEST_RESULTS = {
+    v3: { headline: '£11,560', pct: '+15.6%', win: '66%', dd: '−5.0%', trades: 52, sharpe: '1.62' },
+    v2: { headline: '£11,420', pct: '+14.2%', win: '63%', dd: '−6.1%', trades: 48, sharpe: '1.31' },
+    draft: { headline: '£11,890', pct: '+18.9%', win: '69%', dd: '−3.6%', trades: 61, sharpe: '1.84' },
+  };
+
+  var DIGEST = "3 signals fired, all in calmer-than-usual names — no red flags in the news flow. Sterling strength is doing more to move index ETFs than the underlying companies this week, worth remembering before reading too much into any one dip.";
+
+  /* ---------- state ---------- */
+
+  var state = {
+    view: 'overview',
+    env: 'demo',
+    kill: false,
+    selectedStrategy: 'compounder',
+    openNoteId: null,
+    historyEnvFilter: 'all',
+    insightsTab: 'signals',
+    backtestStrategy: 'compounder',
+    backtestVersion: 'v3',
+    backtestWindow: '3Y',
+    backtestRunning: false,
+    askText: '',
+    askAnswer: null,
+  };
+
+  function stratById(id) { for (var i = 0; i < STRAT.length; i++) if (STRAT[i].id === id) return STRAT[i]; return STRAT[0]; }
+
+  /* ---------- icons ---------- */
+
+  var ICON = {
+    logo: '<svg width="W" height="W" viewBox="0 0 64 64" fill="none"><path d="M4,56 C24,56 32,26 58,12" stroke="#6C7BFA" stroke-opacity="0.3" stroke-width="4" stroke-linecap="round"/><path d="M4,46 C22,46 32,30 58,12" stroke="#6C7BFA" stroke-opacity="0.5" stroke-width="4" stroke-linecap="round"/><path d="M4,34 C24,34 30,32 58,12" stroke="#6C7BFA" stroke-opacity="0.75" stroke-width="4" stroke-linecap="round"/><path d="M4,20 C26,20 34,26 58,12" stroke="#6C7BFA" stroke-width="4" stroke-linecap="round"/><circle cx="58" cy="12" r="4" fill="#6C7BFA"/></svg>',
+    overview: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg>',
+    approvals: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5 L11 15.5 L16 9.5"/></svg>',
+    strategies: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 8 L12 13 L3 8 Z"/><path d="M3 13 L12 18 L21 13"/></svg>',
+    backtest: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7 V12 L15.5 14"/></svg>',
+    insights: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3 L14 9.5 L21 12 L14 14.5 L12 21 L10 14.5 L3 12 L10 9.5 Z"/></svg>',
+    history: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6 H20 M4 12 H20 M4 18 H14"/></svg>',
+    settings: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>',
+    kill: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 2 V11"/><path d="M7 5.5 A9 9 0 1 0 17 5.5"/></svg>',
+    bell: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16 V10 a6 6 0 0 1 12 0 V16 L20 18 H4 Z"/><path d="M10 20.5 a2 2 0 0 0 4 0"/></svg>',
+    lock: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11 V7 a4 4 0 0 1 8 0 V11"/></svg>',
+    check: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5 L11 15.5 L16 9.5"/></svg>',
+    note: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 L4.5 16.5 L15.5 5.5 a1.5 1.5 0 0 1 2 0 l1 1 a1.5 1.5 0 0 1 0 2 L7.5 19.5 Z"/></svg>',
+    sun: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2 V5 M12 19 V22 M4.2 4.2 L6.3 6.3 M17.7 17.7 L19.8 19.8 M2 12 H5 M19 12 H22 M4.2 19.8 L6.3 17.7 M17.7 6.3 L19.8 4.2"/></svg>',
+    moon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5 A8.5 8.5 0 1 1 9.5 4 A6.8 6.8 0 0 0 20 14.5 Z"/></svg>',
+    plus: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5 V19 M5 12 H19"/></svg>',
+    back: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18 L9 12 L15 6"/></svg>',
+  };
+  function logo(size) { return ICON.logo.replace(/W/g, size); }
+
+  /* ---------- small helpers ---------- */
+
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+  function envBadge(env) {
+    return env === 'live'
+      ? '<span class="chip" style="background:rgba(242,85,90,0.14);color:var(--danger);">Live</span>'
+      : '<span class="chip">Demo</span>';
+  }
+  function colorFor(c) { return c === 'green' ? 'var(--green-text)' : c === 'pink' ? 'var(--pink-text)' : 'var(--sub)'; }
+
+  /* ---------- shell ---------- */
+
+  var NAV_ITEMS = [
+    ['overview', 'Overview'], ['approvals', 'Approvals'], ['strategies', 'Strategies'],
+    ['backtest', 'Backtest'], ['insights', 'Insights'],
+  ];
+
+  function topNav() {
+    return '<div class="topnav">' + NAV_ITEMS.map(function (n) {
+      var badge = n[0] === 'approvals' && PENDING.length ? ' <span class="m" style="font-size:11px;padding:1px 7px;border-radius:999px;background:#6C7BFA;color:#0B0C0F;">' + PENDING.length + '</span>' : '';
+      return '<button data-action="nav" data-view="' + n[0] + '" class="' + (state.view === n[0] ? 'active' : '') + '">' + ICON[n[0]] + '<span>' + n[1] + badge + '</span></button>';
+    }).join('') + '</div>';
+  }
+
+  function bottomTabs() {
+    return '<div class="bottomtabs">' + NAV_ITEMS.map(function (n) {
+      var badge = n[0] === 'approvals' && PENDING.length ? '<span class="badge">' + PENDING.length + '</span>' : '';
+      return '<button data-action="nav" data-view="' + n[0] + '" class="' + (state.view === n[0] ? 'active' : '') + '">' + ICON[n[0]] + '<span>' + n[1] + '</span>' + badge + '</button>';
+    }).join('') + '</div>';
+  }
+
+  function headerMenuIcons() {
+    return '<div class="header-menu-icons" style="gap:8px;">' +
+      '<button class="ico-btn ' + (state.view === 'history' ? 'active' : '') + '" data-action="nav" data-view="history" aria-label="History">' + ICON.history + '</button>' +
+      '<button class="ico-btn ' + (state.view === 'settings' ? 'active' : '') + '" data-action="nav" data-view="settings" aria-label="Settings">' + ICON.settings + '</button>' +
+      '</div>';
+  }
+
+  function topbar() {
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark' ||
+      (!document.documentElement.hasAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    return '<div class="topbar">' +
+      '<button class="brand" data-action="nav" data-view="overview" style="border:none;background:none;padding:0;">' + logo(28) + '<span class="wordmark">loom</span></button>' +
+      topNav() +
+      '<div class="env-cluster">' +
+        '<div class="pill"><button data-action="env" data-env="demo" class="' + (state.env === 'demo' ? 'active' : '') + '">Demo</button><button data-action="env" data-env="live" class="' + (state.env === 'live' ? 'active' : '') + '">Live</button></div>' +
+        headerMenuIcons() +
+        '<button class="themetoggle" data-action="theme" aria-label="Toggle theme">' + (isDark ? ICON.sun : ICON.moon) + '</button>' +
+        '<button class="ico-btn danger" data-action="kill" aria-label="Kill switch">' + ICON.kill + '</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function killBanner() {
+    if (!state.kill) return '';
+    return '<div class="killbanner show">' + ICON.kill + '<span>Kill switch is ON — all order submission is halted, in both Demo and Live. Existing positions are untouched.</span></div>';
+  }
+
+  /* ---------- OVERVIEW ---------- */
+
+  function renderOverview() {
+    var balance = state.env === 'live' ? '£4,120.00' : '£8,742.30';
+    var chg = state.env === 'live' ? '+£18.40 · +0.4%' : '+£186.40 · +2.2%';
+    return '<div class="grid12">' +
+      '<div class="span-8 card-dark" style="padding:22px 24px 18px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+          '<div><div style="font-size:13px;color:var(--sub-on-dark);">Portfolio · ' + (state.env === 'live' ? 'Live' : 'Demo') + '</div>' +
+          '<div class="h" style="font-size:38px;font-weight:600;letter-spacing:-0.02em;line-height:1;margin-top:6px;">' + balance + '</div>' +
+          '<div style="margin-top:8px;font-size:13px;color:#7FF5CC;"><span class="m">' + chg + '</span> <span style="color:var(--sub-on-dark);">this month</span></div></div>' +
+        '</div>' +
+        '<svg width="100%" height="150" viewBox="0 0 800 150" preserveAspectRatio="none" style="margin-top:14px;display:block;">' +
+          '<defs><linearGradient id="eqfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FF5CC" stop-opacity="0.28"/><stop offset="1" stop-color="#7FF5CC" stop-opacity="0"/></linearGradient></defs>' +
+          '<path d="M0,110 L67,105 L133,108 L200,96 L267,100 L333,84 L400,88 L467,68 L533,72 L600,52 L667,56 L733,36 L800,20 L800,150 L0,150 Z" fill="url(#eqfill)"/>' +
+          '<path d="M0,110 L67,105 L133,108 L200,96 L267,100 L333,84 L400,88 L467,68 L533,72 L600,52 L667,56 L733,36 L800,20" fill="none" stroke="var(--text-on-dark)" stroke-width="2" stroke-linejoin="round"/>' +
+        '</svg>' +
+      '</div>' +
+      '<div class="span-4 card" style="padding:22px 24px;display:flex;flex-direction:column;justify-content:space-between;gap:14px;">' +
+        '<div><div style="font-size:13px;color:var(--sub);">Awaiting your approval</div><div class="h" style="font-size:64px;font-weight:600;letter-spacing:-0.03em;line-height:1;margin-top:8px;color:var(--indigo);">' + PENDING.length + '</div>' +
+        '<div style="font-size:13px;color:var(--sub);margin-top:6px;">signal' + (PENDING.length === 1 ? '' : 's') + ' need a decision</div></div>' +
+        '<button class="btn-primary" data-action="nav" data-view="approvals">Review queue</button>' +
+      '</div>' +
+      '<div class="span-12" style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:16px;background:var(--card);border:1px solid var(--card-border);overflow-x:auto;">' +
+        '<span style="font-size:11.5px;color:var(--sub);flex-shrink:0;">By strategy</span>' +
+        BOOKS.map(function (b) {
+          var c = b.up === null ? 'var(--sub)' : (b.up ? 'var(--green-text)' : 'var(--pink-text)');
+          return '<div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:var(--chip);border:1px solid var(--chip-border);flex-shrink:0;"><span style="font-size:12px;font-weight:600;">' + b.name + '</span><span class="m" style="font-size:12px;color:' + c + ';">' + b.pct + '</span></div>';
+        }).join('') +
+      '</div>' +
+      '<div class="span-6 card" style="padding:20px 22px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;"><div class="h" style="font-size:16px;font-weight:600;">Positions</div><div style="font-size:12px;color:var(--sub);">' + POSITIONS[state.env].length + ' open · ' + (state.env === 'live' ? 'Live' : 'Demo') + '</div></div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;">' +
+          POSITIONS[state.env].map(function (p) {
+            return '<div style="display:flex;align-items:center;gap:9px;padding:8px 12px 8px 8px;border-radius:999px;border:1px solid var(--chip-border);background:var(--chip);">' +
+              '<div class="m" style="width:28px;height:28px;border-radius:999px;background:' + p.color + ';color:' + (p.color === '#141519' ? '#fff' : '#0B0C0F') + ';font-size:10px;display:flex;align-items:center;justify-content:center;">' + p.t.slice(0, 2) + '</div>' +
+              '<div><div style="font-size:12.5px;font-weight:600;line-height:1.1;">' + p.t + '</div><div style="font-size:11px;color:var(--sub);">' + p.shares + ' shares</div></div>' +
+              '<span class="m" style="font-size:11.5px;color:' + (p.up ? 'var(--green-text)' : 'var(--pink-text)') + ';margin-left:4px;">' + p.chg + '</span></div>';
+          }).join('') +
+          (!POSITIONS[state.env].length ? '<div style="font-size:12.5px;color:var(--sub);padding:6px 0;">No open positions in Live yet.</div>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="span-6 card" style="padding:20px 22px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;"><div class="h" style="font-size:16px;font-weight:600;">Recent signals</div><div style="font-size:12px;color:var(--sub);">Today · ' + (PENDING.length + DECIDED.length) + '</div></div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px;margin-top:12px;">' +
+          PENDING.concat(DECIDED.map(function (d) { return { ticker: d.ticker, action: d.action, qty: d.qty, stratName: d.stratName, decided: d.status }; })).slice(0, 5).map(function (s) {
+            var stat = s.decided ? s.decided : 'Pending';
+            var sc = stat === 'Executed' ? 'rgba(127,245,204,0.22)' : stat === 'Auto' ? 'rgba(108,123,250,0.16)' : 'var(--chip)';
+            var stc = stat === 'Executed' ? 'var(--green-text)' : stat === 'Auto' ? 'var(--indigo-text)' : 'var(--amber-text)';
+            return '<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;border:1px solid var(--chip-border);">' +
+              '<div style="flex:1;"><span style="font-size:12.5px;font-weight:600;">' + s.ticker + ' · ' + s.action + ' ' + s.qty + '</span><div style="font-size:11px;color:var(--sub);">' + (s.stratName || stratById(s.stratId).name) + '</div></div>' +
+              '<span class="chip" style="background:' + sc + ';color:' + stc + ';">' + stat + '</span></div>';
+          }).join('') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  /* ---------- APPROVALS ---------- */
+
+  function signalCard(s, big) {
+    var st = stratById(s.stratId);
+    var notified = s.confidence >= st.notify;
+    var noteOpen = state.openNoteId === s.id;
+    return '<div class="card" style="padding:18px 20px;' + (big ? 'border:1.5px solid var(--indigo);' : '') + '">' +
+      '<div style="display:flex;align-items:center;gap:12px;">' +
+        '<div class="m" style="width:40px;height:40px;border-radius:999px;background:#F5B942;color:#0B0C0F;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + s.ticker.slice(0, 2) + '</div>' +
+        '<div style="flex:1;">' +
+          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+            '<span class="h" style="font-size:17px;font-weight:600;">' + s.ticker + '</span>' +
+            '<span class="chip" style="background:' + (s.action === 'BUY' ? 'rgba(127,245,204,0.22)' : 'rgba(255,143,203,0.22)') + ';color:' + (s.action === 'BUY' ? 'var(--green-text)' : 'var(--pink-text)') + ';">' + s.action + ' ' + s.qty + '</span>' +
+            envBadge(s.env) +
+            (s.alwaysManual
+              ? '<span class="chip" style="display:inline-flex;align-items:center;gap:4px;background:rgba(245,185,66,0.18);color:var(--amber-text);">' + ICON.lock + ' Always manual</span>'
+              : '<span class="chip" style="display:inline-flex;align-items:center;gap:4px;' + (notified ? 'background:rgba(108,123,250,0.14);color:var(--indigo);' : '') + '">' + ICON.bell + (notified ? ' Notified' : ' Below threshold') + '</span>') +
+          '</div>' +
+          '<div style="font-size:12px;color:var(--sub);margin-top:3px;">' + st.name + (s.holdNote ? ' · ' + s.holdNote : '') + ' · fired ' + s.fired + '</div>' +
+        '</div>' +
+        '<div style="text-align:right;flex-shrink:0;"><div style="font-size:11px;color:var(--sub);">Confidence</div><div class="m" style="font-size:18px;margin-top:2px;">' + s.confidence.toFixed(2) + '</div></div>' +
+      '</div>' +
+      '<div style="height:5px;border-radius:3px;background:var(--chip);margin:14px 0;"><div style="width:' + (s.confidence * 100) + '%;height:100%;border-radius:3px;background:#7FF5CC;"></div></div>' +
+      (noteOpen
+        ? '<div style="margin-bottom:12px;"><input type="text" data-action="note-input" data-id="' + s.id + '" value="' + esc(s.note) + '" placeholder="Why? (optional)" style="width:100%;height:38px;border-radius:10px;border:1px solid var(--chip-border);background:var(--chip);padding:0 12px;font-size:13px;color:var(--text);font-family:inherit;" /></div>'
+        : '<button data-action="note-toggle" data-id="' + s.id + '" style="display:flex;align-items:center;gap:6px;width:100%;height:30px;padding:0 10px;border-radius:9px;border:1px dashed var(--chip-border);background:none;color:var(--sub);font-size:11.5px;margin-bottom:12px;">' + ICON.note + '<span>' + (s.note ? '“' + esc(s.note) + '”' : 'Add a quick note (optional)') + '</span></button>') +
+      '<div style="display:flex;gap:8px;">' +
+        '<button class="btn-primary" style="flex:1;" data-action="approve" data-id="' + s.id + '" ' + (state.kill ? 'disabled' : '') + '>Approve</button>' +
+        '<button class="btn-ghost-danger" style="flex:1;" data-action="reject" data-id="' + s.id + '">Reject</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderApprovals() {
+    if (!PENDING.length) {
+      return '<div class="card" style="padding:60px 24px;text-align:center;">' +
+        '<div class="h" style="font-size:20px;font-weight:600;">Queue is empty</div>' +
+        '<div style="font-size:13px;color:var(--sub);margin-top:8px;">Nothing waiting on you right now — approved and rejected signals move to History.</div>' +
+        '<button class="btn-primary" style="margin:20px auto 0;padding:0 20px;width:auto;" data-action="nav" data-view="history">View History</button>' +
+      '</div>';
+    }
+    return '<div class="grid12">' +
+      '<div class="span-7" style="display:flex;flex-direction:column;gap:12px;">' +
+        '<div style="display:flex;align-items:flex-end;justify-content:space-between;padding:0 4px;"><div class="h" style="font-size:22px;font-weight:600;">Waiting for you</div><div style="font-size:13px;color:var(--sub);">' + PENDING.length + ' signal' + (PENDING.length === 1 ? '' : 's') + '</div></div>' +
+        PENDING.map(function (s) { return signalCard(s, s === PENDING[0]); }).join('') +
+      '</div>' +
+      '<div class="span-5 card" style="padding:16px 20px;">' +
+        '<div class="h" style="font-size:14px;font-weight:600;margin-bottom:10px;">Decided today</div>' +
+        DECIDED.map(function (d) {
+          return '<div style="padding:10px 0;border-top:1px solid var(--divider);font-size:12.5px;">' +
+            '<div style="display:flex;align-items:center;gap:10px;"><span class="chip" style="background:' + (d.status === 'Executed' ? 'rgba(127,245,204,0.22)' : 'rgba(108,123,250,0.16)') + ';color:' + (d.status === 'Executed' ? 'var(--green-text)' : 'var(--indigo-text)') + ';width:70px;text-align:center;">' + d.status + '</span>' +
+            '<span style="font-weight:600;">' + d.ticker + ' · ' + d.action + ' ' + d.qty + '</span></div>' +
+            '<div style="color:var(--sub);margin-top:4px;">' + d.detail + (d.note ? ' · <span style="font-style:italic;">“' + esc(d.note) + '”</span>' : '') + '</div>' +
+          '</div>';
+        }).join('') +
+        (!DECIDED.length ? '<div style="font-size:12.5px;color:var(--sub);padding:10px 0;">Nothing decided yet today.</div>' : '') +
+      '</div>' +
+    '</div>';
+  }
+
+  /* ---------- STRATEGIES ---------- */
+
+  function renderStrategies() {
+    return '<div class="grid12">' +
+      '<div class="span-4" style="display:flex;flex-direction:column;gap:10px;">' +
+        '<div style="display:flex;align-items:flex-end;justify-content:space-between;padding:0 4px;"><div class="h" style="font-size:24px;font-weight:600;">Strategies</div><div style="font-size:12.5px;color:var(--sub);">5 total</div></div>' +
+        STRAT.map(function (s) {
+          var sel = s.id === state.selectedStrategy;
+          var styleColor = s.style === 'investment' ? '#3E97B3' : '#8B6FE8';
+          var styleBg = s.style === 'investment' ? 'rgba(143,227,255,0.2)' : 'rgba(196,181,253,0.22)';
+          return '<button data-action="select-strategy" data-id="' + s.id + '" style="text-align:left;border-radius:18px;padding:14px 16px;background:var(--card);border:' + (sel ? '1.5px solid var(--indigo)' : '1px solid var(--card-border)') + ';font-family:inherit;">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;"><div class="h" style="font-size:14.5px;font-weight:600;color:var(--text);">' + s.name + '</div><span class="chip" style="background:' + styleBg + ';color:' + styleColor + ';">' + s.style + '</span></div>' +
+            '<div style="display:flex;gap:6px;margin-top:8px;">' +
+              '<span class="chip" style="' + (s.live ? 'background:rgba(127,245,204,0.22);color:var(--green-text);' : '') + '">' + (s.live ? 'Live-enabled' : 'Demo only') + '</span>' +
+              '<span class="chip">' + (s.approval === 'auto-above' ? 'Auto above ' + s.threshold.toFixed(2) : 'Manual') + '</span>' +
+            '</div>' +
+            '<div style="display:flex;gap:14px;margin-top:8px;font-size:11px;color:var(--sub);"><span><span class="m" style="color:var(--text);">' + s.win + '%</span> win</span><span><span class="m" style="color:' + (s.avgUp ? 'var(--green-text)' : 'var(--pink-text)') + ';">' + s.avg + '</span> avg</span><span><span class="m" style="color:var(--text);">' + s.trades + '</span> trades</span></div>' +
+          '</button>';
+        }).join('') +
+        '<div style="height:44px;border-radius:999px;border:1px dashed var(--chip-border);color:var(--sub);font-size:13px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:8px;">' + ICON.plus + '<span>New strategy</span></div>' +
+      '</div>' +
+      '<div class="span-8">' + strategyDetailPanel(stratById(state.selectedStrategy)) + '</div>' +
+    '</div>';
+  }
+
+  function strategyDetailPanel(st) {
+    return '<div style="display:flex;flex-direction:column;gap:16px;">' +
+      '<div class="card-dark" style="padding:22px 24px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">' +
+          '<div><div style="display:flex;align-items:center;gap:10px;"><div class="h" style="font-size:24px;font-weight:600;">' + st.name + '</div>' +
+          '<span class="chip" style="background:rgba(143,227,255,0.2);color:#6FC7E0;">' + st.style + '</span></div>' +
+          '<div style="font-size:13px;color:var(--sub-on-dark);margin-top:6px;max-width:52ch;">' + st.blurb + '</div></div>' +
+          '<div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">' +
+            '<span style="font-size:12.5px;color:var(--sub-on-dark);">Live-enabled</span>' +
+            '<button data-action="toggle-live" data-id="' + st.id + '" style="width:40px;height:22px;border-radius:999px;border:none;background:' + (st.live ? '#7FF5CC' : 'rgba(255,255,255,0.15)') + ';position:relative;">' +
+              '<span style="width:18px;height:18px;border-radius:999px;background:' + (st.live ? '#0B0C0F' : '#F4F5F7') + ';position:absolute;top:2px;left:' + (st.live ? '20px' : '2px') + ';"></span></button>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;margin-top:16px;">' +
+          ['manual', 'auto-above', 'auto'].map(function (m) {
+            var label = m === 'manual' ? 'Manual' : m === 'auto-above' ? 'Auto above…' : 'Auto';
+            return '<button data-action="set-approval" data-id="' + st.id + '" data-mode="' + m + '" style="flex:1;padding:8px 0;border-radius:999px;border:none;font-size:12.5px;font-weight:' + (st.approval === m ? '600' : '400') + ';background:' + (st.approval === m ? 'var(--range-active-bg)' : 'rgba(255,255,255,0.06)') + ';color:' + (st.approval === m ? 'var(--range-active-text)' : 'var(--sub-on-dark)') + ';">' + label + '</button>';
+          }).join('') +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px;">' +
+          rangeRow(st, 'threshold', 'Auto-approve above', '#7FF5CC') +
+          rangeRow(st, 'notify', 'Notify (push) above', '#8B97FC') +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px;">' +
+          statTile('Win rate', st.win + '%') + statTile('Avg return', st.avg, st.avgUp ? '#7FF5CC' : '#FF8FCB') + statTile('Drawdown', st.drawdown) + statTile('Trades', st.trades) +
+        '</div>' +
+      '</div>' +
+      '<div class="card" style="padding:20px 22px;">' +
+        '<div class="h" style="font-size:16px;font-weight:600;">Parameters</div>' +
+        '<div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;">' +
+          st.params.map(function (p) {
+            return '<div style="display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:14px;background:var(--chip);"><div class="m" style="font-size:15px;font-weight:600;width:120px;flex-shrink:0;">' + p.value + '</div><div><div style="font-size:13px;font-weight:600;">' + p.name + '</div><div style="font-size:12px;color:var(--sub);margin-top:2px;">' + p.desc + '</div></div></div>';
+          }).join('') +
+        '</div>' +
+      '</div>' +
+      '<div class="card" style="padding:20px 22px;">' +
+        '<div class="h" style="font-size:16px;font-weight:600;">Version history</div>' +
+        '<div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;">' +
+          st.versions.map(function (v, i) {
+            return '<div style="border-radius:16px;padding:14px 16px;background:var(--chip);' + (i === 0 ? 'border:1.5px solid var(--indigo);' : 'border:1px solid var(--chip-border);') + '">' +
+              '<div style="display:flex;justify-content:space-between;"><span class="h" style="font-size:14px;font-weight:600;">' + v.v + '</span><span style="font-size:11px;color:var(--sub);">' + v.date + '</span></div>' +
+              '<div style="font-size:12.5px;color:var(--sub);margin-top:6px;">' + v.note + '</div>' +
+            '</div>';
+          }).join('') +
+        '</div>' +
+      '</div>' +
+      strategyPerformancePanel(st) +
+    '</div>';
+  }
+
+  function strategyPerformancePanel(st) {
+    var tradesDisplay = TRADES[st.id] || [];
+    var trades = tradesDisplay.slice().reverse();
+    var stats = tradeStats(trades);
+    var w = 720, h = 120, pad = 6;
+    var cum = 0, pts = [0];
+    trades.forEach(function (t) { cum += t.retPct; pts.push(cum); });
+    var lo = Math.min.apply(null, pts), hi = Math.max.apply(null, pts);
+    var range = (hi - lo) || 1;
+    var stepX = (w - pad * 2) / (pts.length - 1 || 1);
+    var path = pts.map(function (v, i) {
+      var x = pad + i * stepX;
+      var y = pad + (h - pad * 2) * (1 - (v - lo) / range);
+      return (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1);
+    }).join(' ');
+    var lastX = pad + (pts.length - 1) * stepX;
+    var lastY = pad + (h - pad * 2) * (1 - (pts[pts.length - 1] - lo) / range);
+    var barW = Math.min(48, (w - pad * 2) / trades.length - 8);
+    var maxAbs = Math.max.apply(null, trades.map(function (t) { return Math.abs(t.retPct); }).concat([1]));
+
+    return '<div class="card" style="padding:20px 22px;">' +
+      '<div class="h" style="font-size:16px;font-weight:600;">Performance</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:10px;margin-top:14px;">' +
+        statTileLight('Profit factor', stats.profitFactor) + statTileLight('Avg win', stats.avgWin, 'var(--green-text)') + statTileLight('Avg loss', stats.avgLoss, 'var(--pink-text)') + statTileLight('Best trade', stats.best ? stats.best.retPct.toFixed(1) + '%' : '—', 'var(--green-text)') + statTileLight('Avg hold', stats.avgHold) +
+      '</div>' +
+      '<div style="font-size:11.5px;color:var(--sub);margin-top:18px;margin-bottom:6px;">Cumulative return, trade by trade</div>' +
+      '<svg width="100%" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" style="display:block;">' +
+        '<line x1="' + pad + '" y1="' + (pad + (h - pad * 2) * (1 - (0 - lo) / range)).toFixed(1) + '" x2="' + (w - pad) + '" y2="' + (pad + (h - pad * 2) * (1 - (0 - lo) / range)).toFixed(1) + '" stroke="var(--divider)" stroke-width="1" stroke-dasharray="3,3"/>' +
+        '<path d="' + path + '" fill="none" stroke="' + (pts[pts.length - 1] >= 0 ? 'var(--green-text)' : 'var(--pink-text)') + '" stroke-width="2.4" stroke-linejoin="round"/>' +
+        '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="4" fill="' + (pts[pts.length - 1] >= 0 ? 'var(--green-text)' : 'var(--pink-text)') + '"/>' +
+      '</svg>' +
+      '<div style="font-size:11.5px;color:var(--sub);margin-top:14px;margin-bottom:6px;">Return per trade</div>' +
+      '<svg width="100%" height="90" viewBox="0 0 ' + w + ' 90" preserveAspectRatio="none" style="display:block;">' +
+        '<line x1="0" y1="45" x2="' + w + '" y2="45" stroke="var(--divider)" stroke-width="1"/>' +
+        trades.map(function (t, i) {
+          var bh = (Math.abs(t.retPct) / maxAbs) * 38;
+          var x = pad + i * ((w - pad * 2) / trades.length) + 4;
+          var up = t.retPct >= 0;
+          var y = up ? 45 - bh : 45;
+          return '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="2" fill="' + (up ? 'var(--green-text)' : 'var(--pink-text)') + '" opacity="' + (t.status === 'open' ? '0.5' : '1') + '"/>';
+        }).join('') +
+      '</svg>' +
+      '<div class="table-wrap" style="margin-top:16px;">' +
+        '<table><thead><tr><th>Date</th><th>Instrument</th><th>Entry</th><th>Exit</th><th>Return</th><th>Hold</th><th>Status</th></tr></thead><tbody>' +
+        tradesDisplay.map(function (t) {
+          return '<tr><td class="m" style="color:var(--sub);white-space:nowrap;">' + t.date + '</td>' +
+            '<td><span style="font-weight:600;">' + t.ticker + '</span> <span style="color:var(--sub);font-size:11px;">' + t.action + '</span></td>' +
+            '<td class="m">£' + t.entry.toFixed(2) + '</td>' +
+            '<td class="m">' + (t.exit ? '£' + t.exit.toFixed(2) : '—') + '</td>' +
+            '<td class="m" style="color:' + (t.retPct >= 0 ? 'var(--green-text)' : 'var(--pink-text)') + ';">' + (t.retPct >= 0 ? '+' : '') + t.retPct.toFixed(1) + '% <span style="color:var(--sub);">(' + (t.retGBP >= 0 ? '+' : '−') + '£' + Math.abs(t.retGBP).toFixed(2) + ')</span></td>' +
+            '<td class="m" style="color:var(--sub);">' + t.hold + 'd</td>' +
+            '<td><span class="chip" style="' + (t.status === 'open' ? 'background:rgba(108,123,250,0.14);color:var(--indigo-text);' : '') + '">' + (t.status === 'open' ? 'Open' : 'Closed') + '</span></td></tr>';
+        }).join('') +
+        '</tbody></table>' +
+      '</div>' +
+    '</div>';
+  }
+  function statTileLight(label, value, color) {
+    return '<div style="padding:12px 12px;border-radius:14px;background:var(--chip);"><div style="font-size:10.5px;color:var(--sub);">' + label + '</div><div class="h" style="font-size:17px;font-weight:600;margin-top:4px;' + (color ? 'color:' + color + ';' : '') + '">' + value + '</div></div>';
+  }
+
+  function rangeRow(st, kind, label, color) {
+    var val = kind === 'threshold' ? st.threshold : st.notify;
+    return '<div style="padding:14px 16px;border-radius:14px;background:rgba(255,255,255,0.06);">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:var(--sub-on-dark);">' + label + '</span><span class="m" style="font-size:14px;font-weight:600;">' + val.toFixed(2) + '</span></div>' +
+      '<input type="range" min="0.5" max="1" step="0.01" value="' + val + '" data-action="range" data-id="' + st.id + '" data-kind="' + kind + '" style="width:100%;margin-top:10px;" />' +
+    '</div>';
+  }
+  function statTile(label, value, color) {
+    return '<div style="padding:12px 14px;border-radius:14px;background:rgba(255,255,255,0.06);"><div style="font-size:11px;color:var(--sub-on-dark);">' + label + '</div><div class="h" style="font-size:20px;font-weight:600;margin-top:4px;' + (color ? 'color:' + color + ';' : '') + '">' + value + '</div></div>';
+  }
+
+  /* ---------- BACKTEST ---------- */
+
+  function renderBacktest() {
+    var res = BACKTEST_RESULTS[state.backtestVersion];
+    return '<div class="grid12">' +
+      '<div class="span-4 card" style="padding:20px 22px;display:flex;flex-direction:column;gap:14px;">' +
+        '<div class="h" style="font-size:20px;font-weight:600;">Backtest</div>' +
+        formField('Strategy', STRAT.map(function (s) { return { id: s.id, label: s.name }; }), state.backtestStrategy, 'backtest-strategy', true) +
+        formField('Config version', [{ id: 'v3', label: 'v3 · current' }, { id: 'v2', label: 'v2' }, { id: 'draft', label: '+ draft' }], state.backtestVersion, 'backtest-version', false) +
+        formField('Window', [{ id: '1Y', label: '1Y' }, { id: '3Y', label: '3Y' }, { id: '5Y', label: '5Y' }, { id: 'Max', label: 'Max' }], state.backtestWindow, 'backtest-window', false) +
+        '<button class="btn-primary" data-action="run-backtest">' + (state.backtestRunning ? 'Running…' : 'Run backtest') + '</button>' +
+      '</div>' +
+      '<div class="span-8" style="display:flex;flex-direction:column;gap:12px;">' +
+        '<div class="card-dark" style="padding:22px 24px 16px;">' +
+          '<div style="font-size:12.5px;color:var(--sub-on-dark);">' + state.backtestVersion + ' · ' + stratById(state.backtestStrategy).name + ' · ' + state.backtestWindow + ' · from £10,000</div>' +
+          '<div class="h" style="font-size:34px;font-weight:600;letter-spacing:-0.02em;line-height:1;margin-top:8px;">' + res.headline + ' <span style="font-size:17px;color:#7FF5CC;">' + res.pct + '</span></div>' +
+          '<svg width="100%" height="130" viewBox="0 0 800 130" preserveAspectRatio="none" style="margin-top:14px;">' +
+            '<path d="M0,110 L67,100 L133,104 L200,88 L267,92 L333,72 L400,76 L467,56 L533,60 L600,40 L667,44 L733,24 L800,16" fill="none" stroke="#7FF5CC" stroke-width="2.4" stroke-linejoin="round"/>' +
+          '</svg>' +
+        '</div>' +
+        '<div class="grid12" style="gap:10px;">' +
+          '<div class="span-3 card" style="padding:14px 16px;"><div style="font-size:11px;color:var(--sub);">Total return</div><div class="h" style="font-size:19px;font-weight:600;margin-top:4px;color:var(--green-text);">' + res.pct + '</div></div>' +
+          '<div class="span-3 card" style="padding:14px 16px;"><div style="font-size:11px;color:var(--sub);">Win rate</div><div class="h" style="font-size:19px;font-weight:600;margin-top:4px;">' + res.win + '</div></div>' +
+          '<div class="span-3 card" style="padding:14px 16px;"><div style="font-size:11px;color:var(--sub);">Max drawdown</div><div class="h" style="font-size:19px;font-weight:600;margin-top:4px;">' + res.dd + '</div></div>' +
+          '<div class="span-3 card" style="padding:14px 16px;"><div style="font-size:11px;color:var(--sub);">Sharpe</div><div class="h" style="font-size:19px;font-weight:600;margin-top:4px;">' + res.sharpe + '</div></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function formField(label, options, current, action, wrap) {
+    return '<div><div style="font-size:11.5px;color:var(--sub);margin-bottom:6px;">' + label + '</div>' +
+      '<div style="display:flex;gap:6px;' + (wrap ? 'flex-wrap:wrap;' : '') + '">' +
+      options.map(function (o) {
+        var on = o.id === current;
+        return '<button data-action="' + action + '" data-id="' + o.id + '" style="flex:' + (wrap ? '0 0 auto' : '1') + ';text-align:center;padding:8px 12px;border-radius:999px;font-size:12.5px;font-weight:' + (on ? '600' : '400') + ';background:' + (on ? 'var(--nav-pill-bg)' : 'var(--chip)') + ';color:' + (on ? 'var(--nav-pill-text)' : 'var(--sub)') + ';border:1px solid ' + (on ? 'transparent' : 'var(--chip-border)') + ';">' + o.label + '</button>';
+      }).join('') + '</div></div>';
+  }
+
+  /* ---------- INSIGHTS ---------- */
+
+  function renderInsights() {
+    return '<div class="grid12">' +
+      '<div class="span-7" style="display:flex;flex-direction:column;gap:14px;">' +
+        '<div><div class="h" style="font-size:24px;font-weight:600;">Ask about anything you hold — or might</div><div style="font-size:13px;color:var(--sub);margin-top:4px;">Research with sources. Insights inform you; they never place a trade.</div></div>' +
+        '<div style="display:flex;align-items:center;gap:10px;padding:8px 8px 8px 18px;border-radius:999px;background:var(--card);border:1px solid var(--card-border);">' +
+          ICON.insights +
+          '<input type="text" id="ask-input" value="' + esc(state.askText) + '" placeholder="Why is VWRL down this week?" style="flex:1;border:none;background:none;font-size:14px;color:var(--text);font-family:inherit;" data-action="ask-input" />' +
+          '<button data-action="ask" class="btn-primary" style="width:auto;padding:0 20px;">Ask</button>' +
+        '</div>' +
+        (state.askAnswer ? '<div class="card-dark" style="padding:24px;display:flex;flex-direction:column;gap:14px;">' +
+          '<div style="display:flex;align-items:center;gap:8px;"><span class="chip" style="background:var(--indigo);color:#0B0C0F;">Insight</span><span style="font-size:11.5px;color:var(--sub-on-dark);">Advisory only · generated with web search</span></div>' +
+          '<div class="h" style="font-size:19px;font-weight:600;">' + state.askAnswer.title + '</div>' +
+          '<div style="font-size:14px;line-height:1.65;">' + state.askAnswer.body + '</div>' +
+        '</div>' : '') +
+      '</div>' +
+      '<div class="span-5" style="display:flex;flex-direction:column;gap:10px;">' +
+        '<div style="display:flex;align-items:flex-end;justify-content:space-between;"><div class="h" style="font-size:18px;font-weight:600;">Why each signal fired</div>' +
+        '<div class="pill"><button data-action="insights-tab" data-id="signals" class="' + (state.insightsTab === 'signals' ? 'active' : '') + '">Signals</button><button data-action="insights-tab" data-id="digest" class="' + (state.insightsTab === 'digest' ? 'active' : '') + '">Digest</button></div></div>' +
+        (state.insightsTab === 'digest'
+          ? '<div class="card" style="padding:18px 20px;background:rgba(108,123,250,0.1);border-color:rgba(108,123,250,0.28);"><div class="h" style="font-size:14px;font-weight:600;margin-bottom:8px;">Today’s briefing</div><div style="font-size:13px;line-height:1.6;color:var(--sub);">' + DIGEST + '</div></div>'
+          : PENDING.map(function (s) {
+              return '<div class="card" style="padding:16px 18px;"><div style="display:flex;justify-content:space-between;align-items:center;"><div style="display:flex;align-items:center;gap:8px;"><span class="h" style="font-size:14.5px;font-weight:600;">' + s.ticker + ' · ' + s.action.toLowerCase() + '</span><span class="m" style="font-size:11.5px;color:var(--sub);">' + s.confidence.toFixed(2) + '</span></div><span style="font-size:11px;color:var(--sub);">' + s.fired + '</span></div>' +
+              '<div style="font-size:13px;line-height:1.55;color:var(--sub);margin-top:8px;">' + insightBlurb(s) + '</div></div>';
+            }).join('')) +
+      '</div>' +
+    '</div>';
+  }
+  function insightBlurb(s) {
+    if (s.stratId === 'trend') return 'Three-day pullback to the 50-day average while relative strength against the sector stayed positive — historically a favourable entry for this strategy.';
+    if (s.stratId === 'compounder') return 'Confidence is moderate: broad-market volatility ticked up this week, widening this strategy’s stop and shrinking the position it proposes.';
+    return 'Already held and down −3.1% — adding here would compound the position; this action always requires your explicit manual approval.';
+  }
+
+  /* ---------- HISTORY ---------- */
+
+  function renderHistory() {
+    var rows = HISTORY_SEED.filter(function (r) { return state.historyEnvFilter === 'all' || r.env === state.historyEnvFilter; });
+    return '<div style="display:flex;flex-direction:column;gap:16px;">' +
+      '<div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:10px;"><div><div class="h" style="font-size:24px;font-weight:600;">History</div><div style="font-size:13px;color:var(--sub);margin-top:4px;">Every signal and order, kept for the record.</div></div></div>' +
+      '<div style="display:flex;gap:8px;">' +
+        '<button data-action="history-filter" data-id="all" class="chip" style="border:none;' + (state.historyEnvFilter === 'all' ? 'background:var(--nav-pill-bg);color:var(--nav-pill-text);' : 'background:var(--card);border:1px solid var(--card-border);') + '">All</button>' +
+        '<button data-action="history-filter" data-id="demo" class="chip" style="border:none;' + (state.historyEnvFilter === 'demo' ? 'background:var(--nav-pill-bg);color:var(--nav-pill-text);' : 'background:var(--card);border:1px solid var(--card-border);') + '">Demo only</button>' +
+        '<button data-action="history-filter" data-id="live" class="chip" style="border:none;' + (state.historyEnvFilter === 'live' ? 'background:var(--nav-pill-bg);color:var(--nav-pill-text);' : 'background:var(--card);border:1px solid var(--card-border);') + '">Live only</button>' +
+      '</div>' +
+      '<div class="grid12">' +
+        '<div class="span-4 card" style="padding:14px 16px;"><div style="font-size:11px;color:var(--sub);">Net P&amp;L, closed</div><div class="h" style="font-size:20px;font-weight:600;margin-top:4px;color:var(--green-text);">+£412</div></div>' +
+        '<div class="span-4 card" style="padding:14px 16px;"><div style="font-size:11px;color:var(--sub);">Rejected/expired</div><div class="h" style="font-size:20px;font-weight:600;margin-top:4px;">5</div></div>' +
+        '<div class="span-4 card" style="padding:14px 16px;background:rgba(108,123,250,0.1);border-color:rgba(108,123,250,0.3);"><div style="font-size:11px;color:var(--indigo-text);">Your calls, in hindsight</div><div class="h" style="font-size:20px;font-weight:600;margin-top:4px;color:var(--indigo-text);">4 of 5 correct</div></div>' +
+      '</div>' +
+      '<div class="card table-wrap" style="padding:8px;">' +
+        '<table><thead><tr><th>Date</th><th>Instrument</th><th>Strategy</th><th>Status</th><th>Outcome</th><th>Note</th></tr></thead><tbody>' +
+        rows.map(function (r) {
+          return '<tr><td class="m" style="color:var(--sub);white-space:nowrap;">' + r.date + '</td>' +
+            '<td><div style="font-weight:600;">' + r.ticker + '</div><div style="display:flex;gap:5px;margin-top:3px;"><span class="chip" style="font-size:10px;">' + r.action + '</span>' + envBadge(r.env) + '</div></td>' +
+            '<td style="color:var(--sub);">' + r.strat + '</td>' +
+            '<td><span class="chip" style="background:' + (r.status === 'Executed' ? 'rgba(127,245,204,0.22)' : 'var(--chip)') + ';color:' + (r.status === 'Executed' ? 'var(--green-text)' : 'var(--sub)') + ';">' + r.status + '</span></td>' +
+            '<td><div class="m" style="font-size:13px;color:' + colorFor(r.color) + ';">' + r.outcome + '</div><div style="font-size:10.5px;color:var(--sub);">' + r.outcomeLabel + '</div></td>' +
+            '<td style="color:var(--sub);font-style:italic;max-width:220px;">' + esc(r.note) + '</td></tr>';
+        }).join('') +
+        '</tbody></table>' +
+      '</div>' +
+    '</div>';
+  }
+
+  /* ---------- SETTINGS ---------- */
+
+  function renderSettings() {
+    return '<div class="grid12">' +
+      '<div class="span-5 card" style="padding:22px 24px;display:flex;flex-direction:column;gap:4px;">' +
+        '<div class="h" style="font-size:16px;font-weight:600;margin-bottom:4px;">Risk limits</div>' +
+        riskRow('Max position size', '15% of portfolio') +
+        riskRow('Max total exposure', '80% of portfolio · at 61%') +
+        riskRow('Daily loss limit', '£250.00') +
+        '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;"><div><div style="font-size:13.5px;font-weight:500;">Halt on daily limit breach</div><div style="font-size:11.5px;color:var(--sub);margin-top:2px;">Recommended — off means only a notification is sent.</div></div>' +
+        '<button data-action="toggle-simple" data-id="haltOnBreach" style="width:40px;height:22px;border-radius:999px;border:none;background:' + (window.__toggles.haltOnBreach ? 'var(--indigo)' : 'var(--chip-border)') + ';position:relative;"><span style="width:18px;height:18px;border-radius:999px;background:#F4F5F7;position:absolute;top:2px;left:' + (window.__toggles.haltOnBreach ? '20px' : '2px') + ';"></span></button></div>' +
+      '</div>' +
+      '<div class="span-4" style="display:flex;flex-direction:column;gap:16px;">' +
+        '<div class="card" style="padding:22px 24px;">' +
+          '<div class="h" style="font-size:16px;font-weight:600;margin-bottom:6px;">Notifications</div>' +
+          '<div style="display:flex;gap:6px;margin-bottom:8px;">' +
+            '<span class="chip" style="display:inline-flex;align-items:center;gap:4px;background:rgba(108,123,250,0.14);color:var(--indigo);">' + ICON.bell + ' Push</span>' +
+            '<span class="chip" style="background:rgba(108,123,250,0.14);color:var(--indigo);">Email</span>' +
+          '</div>' +
+          notifRow('Signal pending approval', 'sigPending') + notifRow('Kill switch triggered', 'killAlert') + notifRow('Order failed', 'orderFailed') + notifRow('Daily loss limit hit', 'lossAlert') +
+          '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--divider);font-size:12px;color:var(--sub);">Push → this device · Email → <span style="color:var(--text);font-weight:500;">aayan@example.com</span></div>' +
+        '</div>' +
+        '<div class="card" style="padding:22px 24px;flex:1;">' +
+          '<div class="h" style="font-size:16px;font-weight:600;margin-bottom:4px;">Account</div>' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--divider);"><div style="display:flex;align-items:center;gap:8px;"><span style="width:8px;height:8px;border-radius:999px;background:var(--green-text);"></span><span style="font-size:13px;">Trading 212 — ISA</span></div><span style="font-size:11.5px;color:var(--sub);">Live · connected</span></div>' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;"><span style="font-size:13px;">Currency</span><span class="m" style="font-size:13px;color:var(--sub);">GBP</span></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="span-3 card-dark" style="padding:22px;display:flex;flex-direction:column;gap:14px;">' +
+        '<div style="display:flex;align-items:center;gap:10px;"><div style="width:44px;height:44px;border-radius:999px;background:rgba(242,85,90,0.18);display:flex;align-items:center;justify-content:center;">' + ICON.kill + '</div>' +
+        '<div><div class="h" style="font-size:16px;font-weight:600;">Kill switch</div><div style="font-size:11.5px;color:var(--sub-on-dark);">' + (state.kill ? 'On · orders halted' : 'Off · checked before every order') + '</div></div></div>' +
+        '<button class="btn-ghost-danger" data-action="kill" style="' + (state.kill ? 'background:var(--danger);color:#fff;' : '') + '">' + (state.kill ? 'Resume trading' : 'Halt everything now') + '</button>' +
+        '<div style="font-size:11.5px;line-height:1.5;color:var(--sub-on-dark);">Stops all order submission immediately, in both Demo and Live. Existing positions aren’t sold — only new orders are blocked.</div>' +
+      '</div>' +
+    '</div>';
+  }
+  function riskRow(label, value) {
+    return '<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--divider);"><span style="font-size:13.5px;font-weight:500;">' + label + '</span><span class="m" style="font-size:13px;">' + value + '</span></div>';
+  }
+  function notifRow(label, key) {
+    var on = window.__toggles[key];
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--divider);"><span style="font-size:13px;">' + label + '</span>' +
+      '<button data-action="toggle-simple" data-id="' + key + '" style="width:36px;height:20px;border-radius:999px;border:none;background:' + (on ? 'var(--indigo)' : 'var(--chip-border)') + ';position:relative;"><span style="width:16px;height:16px;border-radius:999px;background:#F4F5F7;position:absolute;top:2px;left:' + (on ? '18px' : '2px') + ';"></span></button></div>';
+  }
+  window.__toggles = { haltOnBreach: true, sigPending: true, killAlert: true, orderFailed: true, lossAlert: true };
+
+  /* ---------- root render ---------- */
+
+  var VIEWS = { overview: renderOverview, approvals: renderApprovals, strategies: renderStrategies, backtest: renderBacktest, insights: renderInsights, history: renderHistory, settings: renderSettings };
+
+  function render() {
+    var app = document.getElementById('app');
+    app.innerHTML = '<div class="shell">' + topbar() + killBanner() + VIEWS[state.view]() + '</div>' + bottomTabs();
+    var ask = document.getElementById('ask-input');
+    if (ask) { ask.focus(); ask.setSelectionRange(ask.value.length, ask.value.length); }
+  }
+
+  function toast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(function () { t.classList.remove('show'); }, 1800);
+  }
+
+  /* ---------- actions ---------- */
+
+  function findPending(id) { for (var i = 0; i < PENDING.length; i++) if (PENDING[i].id === id) return i; return -1; }
+
+  function approve(id) {
+    if (state.kill) { toast('Kill switch is on — no orders can be submitted.'); return; }
+    var i = findPending(id); if (i < 0) return;
+    var s = PENDING[i];
+    var st = stratById(s.stratId);
+    var auto = st.approval === 'auto' || (st.approval === 'auto-above' && s.confidence >= st.threshold);
+    PENDING.splice(i, 1);
+    DECIDED.unshift({ ticker: s.ticker, action: s.action, qty: s.qty, stratName: st.name, status: auto ? 'Auto' : 'Executed', detail: (auto ? 'above its ' + st.threshold.toFixed(2) + ' threshold' : 'approved by you') + ' · filled at £' + s.price.toFixed(2) + ' · just now', note: s.note, outcome: '—', outcomeLabel: 'just opened', color: 'sub' });
+    HISTORY_SEED.unshift({ date: 'Just now', ticker: s.ticker, strat: st.name, env: s.env, action: s.action + ' ' + s.qty, status: auto ? 'Auto' : 'Executed', outcome: '—', outcomeLabel: 'just opened', color: 'sub', note: s.note });
+    toast(s.ticker + ' approved — order placed');
+    if (state.openNoteId === id) state.openNoteId = null;
+    render();
+  }
+  function reject(id) {
+    var i = findPending(id); if (i < 0) return;
+    var s = PENDING[i];
+    var st = stratById(s.stratId);
+    PENDING.splice(i, 1);
+    var counterfactuals = ['would have: +£8.40', 'would have: −£5.60', 'would have: +£19.90'];
+    var cf = counterfactuals[Math.floor(Math.random() * counterfactuals.length)];
+    HISTORY_SEED.unshift({ date: 'Just now', ticker: s.ticker, strat: st.name, env: s.env, action: s.action + ' ' + s.qty, status: 'Rejected', outcome: cf, outcomeLabel: 'counterfactual, tracking forward', color: cf.indexOf('−') > -1 ? 'green' : 'pink', note: s.note });
+    toast(s.ticker + ' rejected — tracked as a counterfactual in History');
+    if (state.openNoteId === id) state.openNoteId = null;
+    render();
+  }
+
+  function handleClick(e) {
+    var el = e.target.closest('[data-action]');
+    if (!el) return;
+    var action = el.getAttribute('data-action');
+    var id = el.getAttribute('data-id');
+    switch (action) {
+      case 'nav': state.view = el.getAttribute('data-view'); window.scrollTo(0, 0); render(); break;
+      case 'env': state.env = el.getAttribute('data-env'); render(); break;
+      case 'kill': state.kill = !state.kill; toast(state.kill ? 'Kill switch engaged — all orders halted' : 'Kill switch reset'); render(); break;
+      case 'theme': {
+        var cur = document.documentElement.getAttribute('data-theme');
+        var next = cur === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        try { localStorage.setItem('loom-theme', next); } catch (err) {}
+        render();
+        break;
+      }
+      case 'approve': approve(id); break;
+      case 'reject': reject(id); break;
+      case 'note-toggle': state.openNoteId = state.openNoteId === id ? null : id; render(); break;
+      case 'select-strategy': state.selectedStrategy = id; render(); break;
+      case 'toggle-live': { var s1 = stratById(id); s1.live = !s1.live; render(); break; }
+      case 'set-approval': { var s2 = stratById(id); s2.approval = el.getAttribute('data-mode'); render(); break; }
+      case 'backtest-strategy': state.backtestStrategy = id; render(); break;
+      case 'backtest-version': state.backtestVersion = id; render(); break;
+      case 'backtest-window': state.backtestWindow = id; render(); break;
+      case 'run-backtest': {
+        state.backtestRunning = true; render();
+        setTimeout(function () { state.backtestRunning = false; toast('Backtest complete'); render(); }, 500);
+        break;
+      }
+      case 'insights-tab': state.insightsTab = id; render(); break;
+      case 'ask': {
+        var q = state.askText.trim();
+        state.askAnswer = {
+          title: q ? 'Here’s what the research turned up on that.' : 'VWRL is down about 1.2% on the week — mostly the dollar, not the companies.',
+          body: q
+            ? 'Sample response for “' + esc(q) + '” — in the real app this comes from Claude with web search, grounded in sources you can open.'
+            : 'Roughly two-thirds of VWRL is US-listed, so a stronger pound this week mechanically lowered its GBP price even though the underlying index was flat to slightly up. For the Low-Vol Compounder’s thesis that’s neutral-to-mild positive.',
+        };
+        render();
+        break;
+      }
+      case 'history-filter': state.historyEnvFilter = id; render(); break;
+      case 'toggle-simple': window.__toggles[id] = !window.__toggles[id]; render(); break;
+    }
+  }
+
+  function handleInput(e) {
+    if (e.target.matches('[data-action="range"]')) {
+      var st = stratById(e.target.getAttribute('data-id'));
+      var kind = e.target.getAttribute('data-kind');
+      var v = parseFloat(e.target.value);
+      if (kind === 'threshold') st.threshold = v; else st.notify = v;
+      var out = e.target.parentElement.querySelector('.m');
+      if (out) out.textContent = v.toFixed(2);
+      return;
+    }
+    if (e.target.matches('[data-action="note-input"]')) {
+      var i = findPending(e.target.getAttribute('data-id'));
+      if (i >= 0) PENDING[i].note = e.target.value;
+      return;
+    }
+    if (e.target.id === 'ask-input') { state.askText = e.target.value; return; }
+  }
+
+  document.addEventListener('click', handleClick);
+  document.addEventListener('input', handleInput);
+
+  try {
+    var saved = localStorage.getItem('loom-theme');
+    if (saved === 'light' || saved === 'dark') document.documentElement.setAttribute('data-theme', saved);
+  } catch (err) {}
+
+  render();
+})();
+</script>

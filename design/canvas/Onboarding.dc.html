@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'IBM Plex Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #6C7BFA; } a:hover { color: #4F5FE0; }
+    .h { font-family: 'Space Grotesk', system-ui, sans-serif; }
+    .m { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; }
+  </style>
+</helmet>
+<div style="width: 1440px; height: 960px; background: {{t.frame}}; color: {{t.textOnLight}}; display: flex; flex-direction: column;">
+
+  <div style="height: 72px; padding: 0 40px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <svg width="26" height="26" viewBox="0 0 64 64" fill="none"><path d="M4,56 C24,56 32,26 58,12" stroke="#6C7BFA" stroke-opacity="0.3" stroke-width="4" stroke-linecap="round"/><path d="M4,46 C22,46 32,30 58,12" stroke="#6C7BFA" stroke-opacity="0.5" stroke-width="4" stroke-linecap="round"/><path d="M4,34 C24,34 30,32 58,12" stroke="#6C7BFA" stroke-opacity="0.75" stroke-width="4" stroke-linecap="round"/><path d="M4,20 C26,20 34,26 58,12" stroke="#6C7BFA" stroke-width="4" stroke-linecap="round"/><circle cx="58" cy="12" r="4" fill="#6C7BFA"/></svg>
+      <span style="font-family: 'Tiro Bangla', Georgia, serif; font-size: 22px; line-height: 1;">loom</span>
+    </div>
+    <div style="font-size: 13px; color: {{t.subOnLight}};">Already connected? <span style="color: #6C7BFA; font-weight: 500;">Sign in</span></div>
+  </div>
+
+  <div style="flex: 1; display: flex; align-items: center; justify-content: center;">
+    <div style="width: 640px;">
+
+      <div style="display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 36px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 30px; height: 30px; border-radius: 999px; background: #6C7BFA; color: #0B0C0F; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center;">1</div>
+          <span class="h" style="font-size: 13.5px; font-weight: 600;">Connect</span>
+        </div>
+        <div style="width: 64px; height: 2px; background: {{t.cardLightBorder}}; margin: 0 12px;"></div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 30px; height: 30px; border-radius: 999px; background: {{t.chipBg}}; border: 1px solid {{t.cardLightBorder}}; color: {{t.subOnLight}}; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center;">2</div>
+          <span style="font-size: 13.5px; color: {{t.subOnLight}};">Confirm your ISA</span>
+        </div>
+        <div style="width: 64px; height: 2px; background: {{t.cardLightBorder}}; margin: 0 12px;"></div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 30px; height: 30px; border-radius: 999px; background: {{t.chipBg}}; border: 1px solid {{t.cardLightBorder}}; color: {{t.subOnLight}}; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center;">3</div>
+          <span style="font-size: 13.5px; color: {{t.subOnLight}};">Pick a strategy</span>
+        </div>
+      </div>
+
+      <div style="border-radius: 26px; padding: 40px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; box-shadow: 0 30px 80px rgba(0,0,0,0.06);">
+        <div class="h" style="font-size: 26px; font-weight: 600; letter-spacing: -0.01em;">Connect your Trading 212 account</div>
+        <div style="font-size: 14px; color: {{t.subOnLight}}; margin-top: 8px; line-height: 1.5;">Start with your <strong style="color: {{t.textOnLight}};">Demo</strong> key — you can connect Live any time later, once you've watched a strategy run.</div>
+
+        <div style="display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: {{t.chipBg}}; width: max-content; margin-top: 24px;">
+          <div style="padding: 8px 18px; border-radius: 999px; font-size: 13px; font-weight: 600; background: {{t.navPillBg}}; color: {{t.navPillText}};">Demo key</div>
+          <div style="padding: 8px 18px; border-radius: 999px; font-size: 13px; color: {{t.subOnLight}};">Live key</div>
+        </div>
+
+        <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 14px;">
+          <div>
+            <div style="font-size: 12px; color: {{t.subOnLight}}; margin-bottom: 6px;">API key</div>
+            <div class="m" style="padding: 12px 14px; border-radius: 12px; background: {{t.chipBg}}; border: 1px solid {{t.chipBorder}}; font-size: 13px; color: {{t.subOnLight}};">Paste the key from Trading 212</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: {{t.subOnLight}}; margin-bottom: 6px;">API secret</div>
+            <div class="m" style="padding: 12px 14px; border-radius: 12px; background: {{t.chipBg}}; border: 1px solid {{t.chipBorder}}; font-size: 13px; color: {{t.subOnLight}};">••••••••••••••••</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 16px; padding: 12px 14px; border-radius: 12px; background: rgba(108,123,250,0.08); display: flex; gap: 10px; align-items: flex-start;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6C7BFA" stroke-width="2" style="margin-top: 2px; flex-shrink: 0;"><circle cx="12" cy="12" r="9"/><path d="M12 8 V13 M12 16 V16.2"/></svg>
+          <div style="font-size: 12.5px; line-height: 1.5; color: {{t.subOnLight}};">In Trading 212: Settings → API (Beta) → Generate API key, scoped to Account data, History and Portfolio. Keys are encrypted and never leave your account.</div>
+        </div>
+
+        <div style="height: 50px; border-radius: 999px; background: #6C7BFA; color: #0B0C0F; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 22px;">
+          Connect Demo account
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0B0C0F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 L17 7"/><path d="M9 7 H17 V15"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"theme":{"editor":"enum","default":"light","options":["light","dark"]}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'light';
+    const light = {
+      frame: '#F3F2EF', cardLight: '#FFFFFF', cardLightBorder: '#E6E3DC', textOnLight: '#141519', subOnLight: '#6B7079',
+      chipBg: '#F3F2EF', chipBorder: '#E6E3DC',
+      navPillBg: '#111214', navPillText: '#F4F5F7',
+    };
+    const dark = {
+      frame: '#0B0C0F', cardLight: '#141519', cardLightBorder: '#262A31', textOnLight: '#F4F5F7', subOnLight: '#9BA1AC',
+      chipBg: '#1B1E24', chipBorder: '#262A31',
+      navPillBg: '#6C7BFA', navPillText: '#0B0C0F',
+    };
+    return { t: theme === 'dark' ? dark : light };
+  }
+}
+</script>
+</body>
+</html>

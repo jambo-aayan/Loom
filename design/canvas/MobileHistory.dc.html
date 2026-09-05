@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'IBM Plex Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #6C7BFA; } a:hover { color: #4F5FE0; }
+    .h { font-family: 'Space Grotesk', system-ui, sans-serif; }
+    .m { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: {{t.frame}}; color: {{t.textOnLight}};">
+
+  <div style="padding: 46px 16px 24px; display: flex; flex-direction: column; gap: 8px;">
+
+    <div style="height: 44px; display: flex; align-items: center; justify-content: space-between;">
+      <div>
+        <div class="h" style="font-size: 22px; font-weight: 600; letter-spacing: -0.01em;">History</div>
+        <div style="font-size: 11px; color: {{t.subOnLight}};">Every decision, kept for the record</div>
+      </div>
+      <div style="width: 34px; height: 34px; border-radius: 999px; border: 1px solid rgba(242,85,90,0.45); background: {{t.cardLight}}; display: flex; align-items: center; justify-content: center;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F2555A" stroke-width="2.4" stroke-linecap="round"><path d="M12 2 V11"/><path d="M7 5.5 A9 9 0 1 0 17 5.5"/></svg>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
+      <div style="padding: 9px 12px; border-radius: 14px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};"><div style="font-size: 10px; color: {{t.subOnLight}};">Net P&amp;L, closed</div><div class="h" style="font-size: 17px; font-weight: 600; margin-top: 3px; color: {{t.greenText}};">+£412</div></div>
+      <div style="padding: 9px 12px; border-radius: 14px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};"><div style="font-size: 10px; color: {{t.subOnLight}};">Rejected/expired</div><div class="h" style="font-size: 17px; font-weight: 600; margin-top: 3px;">5</div></div>
+      <div style="grid-column: span 2; padding: 9px 12px; border-radius: 14px; background: rgba(108,123,250,0.1); border: 1px solid rgba(108,123,250,0.3); display: flex; align-items: center; justify-content: space-between;"><div style="font-size: 11px; color: {{t.indigoText}};">Your calls, in hindsight</div><div class="h" style="font-size: 16px; font-weight: 600; color: {{t.indigoText}};">4 of 5 correct</div></div>
+    </div>
+
+    <div style="display: flex; gap: 6px; overflow-x: auto;">
+      <div style="flex-shrink: 0; padding: 6px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 600; background: {{t.navPillBg}}; color: {{t.navPillText}};">All Books</div>
+      <div style="flex-shrink: 0; padding: 6px 12px; border-radius: 999px; font-size: 11.5px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; color: {{t.subOnLight}};">Demo &amp; Live</div>
+      <div style="flex-shrink: 0; padding: 6px 12px; border-radius: 999px; font-size: 11.5px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; color: {{t.subOnLight}};">Last 30 days</div>
+    </div>
+
+    <sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+      <div style="border-radius: 14px; padding: 9px 12px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-weight: 600; font-size: 13px;">{{r.ticker}}</span>
+            <span style="font-size: 9.5px; font-weight: 600; padding: 1px 6px; border-radius: 999px; background: {{r.actBg}}; color: {{r.actText}};">{{r.action}}</span>
+          </div>
+          <span style="font-size: 9.5px; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: {{r.statBg}}; color: {{r.statText}};">{{r.status}}</span>
+        </div>
+        <div style="font-size: 10.5px; color: {{t.subOnLight}}; margin-top: 3px;">{{r.strategy}} · {{r.date}}</div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 6px;">
+          <div class="m" style="font-size: 12.5px; color: {{r.outcomeColor}};">{{r.outcomeValue}}<span style="font-size: 10px; color: {{t.subOnLight}}; margin-left: 4px;">{{r.outcomeLabel}}</span></div>
+        </div>
+        <sc-if value="{{r.hasNote}}" hint-placeholder-val="{{false}}"><div style="font-size: 10.5px; color: {{t.subOnLight}}; font-style: italic; margin-top: 4px;">{{r.note}}</div></sc-if>
+      </div>
+    </sc-for>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"theme":{"editor":"enum","default":"light","options":["light","dark"]}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'light';
+    const light = {
+      frame: '#F3F2EF', cardLight: '#FFFFFF', cardLightBorder: '#E6E3DC', textOnLight: '#141519', subOnLight: '#6B7079',
+      greenText: '#0E8C66', pinkText: '#C8368A',
+      chipBg: '#F3F2EF', chipBorder: '#E6E3DC',
+      navPillBg: '#111214', navPillText: '#F4F5F7', indigoText: '#4F5FE0',
+    };
+    const dark = {
+      frame: '#0B0C0F', cardLight: '#141519', cardLightBorder: '#262A31', textOnLight: '#F4F5F7', subOnLight: '#9BA1AC',
+      greenText: '#7FF5CC', pinkText: '#FF8FCB',
+      chipBg: '#1B1E24', chipBorder: '#262A31',
+      navPillBg: '#6C7BFA', navPillText: '#0B0C0F', indigoText: '#8B97FC',
+    };
+    const t = theme === 'dark' ? dark : light;
+    const mintSoft = 'rgba(127,245,204,0.22)';
+    const pinkSoft = 'rgba(255,143,203,0.22)';
+    const raw = [
+      { date: 'Sep 5', ticker: 'MSFT', strategy: 'Compounder', action: 'BUY 5', status: 'Executed', outcomeValue: '+£38.20', outcomeLabel: '+1.9% open', outcomeColor: t.greenText, hasNote: false, note: '' },
+      { date: 'Sep 4', ticker: 'JNJ', strategy: 'Compounder', action: 'SELL 6', status: 'Rejected', outcomeValue: 'would: −£11.20', outcomeLabel: 'counterfactual', outcomeColor: t.subOnLight, hasNote: true, note: '"felt like a headline dip, not the strategy"' },
+      { date: 'Sep 2', ticker: 'VUSA', strategy: 'Compounder', action: 'BUY 3', status: 'Executed', outcomeValue: '+£14.30', outcomeLabel: '+6.3% closed', outcomeColor: t.greenText, hasNote: true, note: '"bounce off the 50-day, low risk"' },
+      { date: 'Aug 28', ticker: 'AAPL', strategy: 'Trend Follower', action: 'SELL 2', status: 'Rejected', outcomeValue: 'would: +£22.40', outcomeLabel: 'counterfactual', outcomeColor: t.pinkText, hasNote: true, note: '"thought it was too late to sell" — wasn\'t' },
+      { date: 'Aug 27', ticker: 'JNJ', strategy: 'Compounder', action: 'BUY 6', status: 'Executed', outcomeValue: '+£19.40', outcomeLabel: '+2.1% closed', outcomeColor: t.greenText, hasNote: false, note: '' },
+      { date: 'Aug 25', ticker: 'VWRL', strategy: 'Harvester', action: 'SELL 1', status: 'Expired', outcomeValue: 'would: −£3.90', outcomeLabel: 'counterfactual', outcomeColor: t.subOnLight, hasNote: false, note: '' },
+    ];
+    const rows = raw.map((r) => ({
+      ...r,
+      actBg: r.action.startsWith('BUY') ? mintSoft : pinkSoft,
+      actText: r.action.startsWith('BUY') ? t.greenText : t.pinkText,
+      statBg: r.status === 'Executed' ? mintSoft : t.chipBg,
+      statText: r.status === 'Executed' ? t.greenText : t.subOnLight,
+    }));
+    return { t, rows };
+  }
+}
+</script>
+</body>
+</html>

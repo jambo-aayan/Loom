@@ -1,0 +1,189 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'IBM Plex Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #6C7BFA; } a:hover { color: #4F5FE0; }
+    .h { font-family: 'Space Grotesk', system-ui, sans-serif; }
+    .m { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; }
+    .ico { width: 36px; height: 36px; border-radius: 999px; display: flex; align-items: center; justify-content: center; }
+    .lbl { font-size: 11.5px; margin-bottom: 6px; }
+    table { border-collapse: collapse; width: 100%; }
+    th { text-align: left; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; padding: 0 12px 8px; }
+    td { padding: 9px 12px; font-size: 12.5px; }
+  </style>
+</helmet>
+<div style="width: 1440px; height: 960px; padding: 20px 28px 28px; display: flex; flex-direction: column; gap: 18px; background: {{t.frame}}; color: {{t.textOnLight}};">
+
+  <div style="height: 56px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <svg width="30" height="30" viewBox="0 0 64 64" fill="none"><path d="M4,56 C24,56 32,26 58,12" stroke="#6C7BFA" stroke-opacity="0.3" stroke-width="4" stroke-linecap="round"/><path d="M4,46 C22,46 32,30 58,12" stroke="#6C7BFA" stroke-opacity="0.5" stroke-width="4" stroke-linecap="round"/><path d="M4,34 C24,34 30,32 58,12" stroke="#6C7BFA" stroke-opacity="0.75" stroke-width="4" stroke-linecap="round"/><path d="M4,20 C26,20 34,26 58,12" stroke="#6C7BFA" stroke-width="4" stroke-linecap="round"/><circle cx="58" cy="12" r="4" fill="#6C7BFA"/></svg>
+      <span style="font-family: 'Tiro Bangla', Georgia, serif; font-size: 27px; line-height: 1; color: {{t.textOnLight}};">loom</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 999px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+      <div class="ico" style="color: {{t.navText}};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg></div>
+      <div class="ico" style="color: {{t.navText}};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5 L11 15.5 L16 9.5"/></svg></div>
+      <div class="ico" style="color: {{t.navText}};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 8 L12 13 L3 8 Z"/><path d="M3 13 L12 18 L21 13"/></svg></div>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 0 16px 0 12px; height: 36px; border-radius: 999px; background: {{t.navPillBg}}; color: {{t.navPillText}}; font-size: 13.5px; font-weight: 500;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7 V12 L15.5 14"/></svg>
+        <span>Backtest</span>
+      </div>
+      <div class="ico" style="color: {{t.navText}};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3 L14 9.5 L21 12 L14 14.5 L12 21 L10 14.5 L3 12 L10 9.5 Z"/></svg></div>
+      <div class="ico" style="color: {{t.navText}};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6 H20 M4 12 H20 M4 18 H14"/></svg></div>
+      <div class="ico" style="color: {{t.navText}};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2 V5 M12 19 V22 M4.2 4.2 L6.3 6.3 M17.7 17.7 L19.8 19.8 M2 12 H5 M19 12 H22 M4.2 19.8 L6.3 17.7 M17.7 6.3 L19.8 4.2"/></svg></div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+        <div style="padding: 6px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 600; background: {{t.navPillBg}}; color: {{t.navPillText}};">Demo</div>
+        <div style="padding: 6px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 500; color: {{t.navText}};">Live</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 7px; height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(242,85,90,0.45); color: #F2555A; font-size: 12.5px; font-weight: 600; background: {{t.cardLight}};">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F2555A" stroke-width="2.4" stroke-linecap="round"><path d="M12 2 V11"/><path d="M7 5.5 A9 9 0 1 0 17 5.5"/></svg>
+        <span>Kill switch</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; flex: 1;">
+
+    <div style="grid-column: span 4; display: flex; flex-direction: column; gap: 12px;">
+      <div style="border-radius: 22px; padding: 18px 20px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; color: {{t.textOnLight}}; display: flex; flex-direction: column; gap: 13px;">
+        <div class="h" style="font-size: 21px; font-weight: 600; letter-spacing: -0.01em;">Backtest</div>
+
+        <div>
+          <div class="lbl" style="color: {{t.subOnLight}}; margin-bottom: 5px;">Strategy</div>
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <div style="padding: 8px 12px; border-radius: 11px; font-size: 12.5px; font-weight: 500; background: {{t.navPillBg}}; color: {{t.navPillText}};">Low-Vol Compounder</div>
+            <div style="padding: 8px 12px; border-radius: 11px; font-size: 12.5px; background: {{t.chipBg}}; color: {{t.subOnLight}}; border: 1px solid {{t.chipBorder}};">Volatility Harvester</div>
+            <div style="padding: 8px 12px; border-radius: 11px; font-size: 12.5px; background: {{t.chipBg}}; color: {{t.subOnLight}}; border: 1px solid {{t.chipBorder}};">Trend Follower</div>
+            <div style="padding: 8px 12px; border-radius: 11px; font-size: 12.5px; background: {{t.chipBg}}; color: {{t.subOnLight}}; border: 1px solid {{t.chipBorder}};">Volatility Breakout</div>
+            <div style="padding: 8px 12px; border-radius: 11px; font-size: 12.5px; background: {{t.chipBg}}; color: {{t.subOnLight}}; border: 1px solid {{t.chipBorder}};">Value/Quality Dip-Buyer</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="lbl" style="color: {{t.subOnLight}}; margin-bottom: 5px;">Config version</div>
+          <div style="display: flex; gap: 6px;">
+            <div style="flex: 1; text-align: center; padding: 7px 0; border-radius: 999px; font-size: 12px; font-weight: 600; background: {{t.navPillBg}}; color: {{t.navPillText}};">v3 · current</div>
+            <div style="flex: 1; text-align: center; padding: 7px 0; border-radius: 999px; font-size: 12px; background: {{t.chipBg}}; color: {{t.subOnLight}}; border: 1px solid {{t.chipBorder}};">v2</div>
+            <div style="flex: 1; text-align: center; padding: 7px 0; border-radius: 999px; font-size: 12px; background: {{t.chipBg}}; color: {{t.subOnLight}}; border: 1px dashed {{t.chipBorder}};">+ draft</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="lbl" style="color: {{t.subOnLight}}; margin-bottom: 5px;">Universe override <span style="opacity: 0.7;">(optional)</span></div>
+          <div style="padding: 8px 12px; border-radius: 11px; font-size: 12.5px; background: {{t.chipBg}}; border: 1px solid {{t.chipBorder}}; color: {{t.subOnLight}};">e.g. VUSA, AAPL</div>
+        </div>
+
+        <div>
+          <div class="lbl" style="color: {{t.subOnLight}}; margin-bottom: 5px;">Window</div>
+          <div style="display: flex; gap: 6px;">
+            <div style="flex: 1; text-align: center; padding: 7px 0; border-radius: 999px; font-size: 12px; background: {{t.chipBg}}; color: {{t.subOnLight}}; border: 1px solid {{t.chipBorder}};">1Y</div>
+            <div style="flex: 1; text-align: center; padding: 7px 0; border-radius: 999px; font-size: 12px; font-weight: 600; background: {{t.navPillBg}}; color: {{t.navPillText}};">3Y</div>
+            <div style="flex: 1; text-align: center; padding: 7px 0; border-radius: 999px; font-size: 12px; background: {{t.chipBg}}; color: {{t.subOnLight}}; border: 1px solid {{t.chipBorder}};">5Y</div>
+            <div style="flex: 1; text-align: center; padding: 7px 0; border-radius: 999px; font-size: 12px; background: {{t.chipBg}}; color: {{t.subOnLight}}; border: 1px solid {{t.chipBorder}};">Max</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="lbl" style="color: {{t.subOnLight}};">Starting capital</div>
+          <div class="m" style="padding: 10px 12px; border-radius: 12px; font-size: 13px; background: {{t.chipBg}}; border: 1px solid {{t.chipBorder}}; color: {{t.textOnLight}};">£10,000</div>
+        </div>
+
+        <div style="height: 46px; border-radius: 999px; background: #6C7BFA; color: #0B0C0F; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center;">Run backtest</div>
+      </div>
+
+      <div style="border-radius: 22px; padding: 18px 20px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; color: {{t.textOnLight}}; flex: 1;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <div class="h" style="font-size: 15px; font-weight: 600;">Saved runs</div>
+          <div style="font-size: 12px; color: {{t.subOnLight}};">3</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 12px; background: rgba(108,123,250,0.12); border: 1px solid rgba(108,123,250,0.35);"><span style="font-size: 12.5px; font-weight: 500;">v3 · tighter stop · 3Y</span><span class="m" style="font-size: 12px; color: {{t.greenText}};">+15.6%</span></div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 12px; border: 1px solid {{t.chipBorder}};"><span style="font-size: 12.5px; color: {{t.subOnLight}};">v2 · baseline · 2Y</span><span class="m" style="font-size: 12px; color: {{t.greenText}};">+14.2%</span></div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 12px; border: 1px solid {{t.chipBorder}};"><span style="font-size: 12.5px; color: {{t.subOnLight}};">v1 · wider target · 2Y</span><span class="m" style="font-size: 12px; color: {{t.greenText}};">+11.8%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="grid-column: span 8; display: flex; flex-direction: column; gap: 12px;">
+      <div style="border-radius: 22px; padding: 22px 24px 16px; background: {{t.cardDark}}; border: 1px solid {{t.cardDarkBorder}}; color: {{t.textOnDark}};">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <div style="font-size: 12.5px; color: {{t.subOnDark}};">v3 · tighter stop · Low-Vol Compounder · 3 years · from £10,000</div>
+            <div class="h" style="font-size: 36px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; margin-top: 8px;">£11,560 <span style="font-size: 18px; color: #7FF5CC;">+15.6%</span></div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 14px; font-size: 11.5px; color: {{t.subOnDark}};">
+            <span><span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #7FF5CC; margin-right: 5px;"></span>Strategy</span>
+            <span><span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #4B4F58; margin-right: 5px;"></span>Buy &amp; hold VUSA</span>
+          </div>
+        </div>
+        <svg width="100%" height="210" viewBox="0 0 800 210" preserveAspectRatio="none" style="margin-top: 14px;">
+          <path d="M0,180 L50,172 L100,176 L150,160 L200,164 L250,146 L300,150 L350,130 L400,136 L450,116 L500,120 L550,100 L600,106 L650,84 L700,90 L750,66 L800,58" fill="none" stroke="#4B4F58" stroke-width="1.8" stroke-dasharray="4 4" stroke-linejoin="round"/>
+          <path d="M0,180 L50,170 L100,166 L150,154 L200,150 L250,136 L300,130 L350,116 L400,110 L450,96 L500,92 L550,78 L600,72 L650,56 L700,50 L750,36 L800,26" fill="none" stroke="#7FF5CC" stroke-width="2.4" stroke-linejoin="round"/>
+        </svg>
+        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: {{t.subOnDark}};"><span>Sep 2023</span><span>Mar 2024</span><span>Sep 2024</span><span>Mar 2025</span><span>Sep 2025</span><span>Mar 2026</span><span>Today</span></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px;">
+        <div style="padding: 14px 16px; border-radius: 16px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};"><div style="font-size: 11px; color: {{t.subOnLight}};">Total return</div><div class="h" style="font-size: 20px; font-weight: 600; margin-top: 4px; color: {{t.greenText}};">+15.6%</div></div>
+        <div style="padding: 14px 16px; border-radius: 16px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};"><div style="font-size: 11px; color: {{t.subOnLight}};">vs benchmark</div><div class="h" style="font-size: 20px; font-weight: 600; margin-top: 4px; color: {{t.greenText}};">+4.1 pts</div></div>
+        <div style="padding: 14px 16px; border-radius: 16px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};"><div style="font-size: 11px; color: {{t.subOnLight}};">Win rate</div><div class="h" style="font-size: 20px; font-weight: 600; margin-top: 4px;">66%</div></div>
+        <div style="padding: 14px 16px; border-radius: 16px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};"><div style="font-size: 11px; color: {{t.subOnLight}};">Max drawdown</div><div class="h" style="font-size: 20px; font-weight: 600; margin-top: 4px;">−5.0%</div></div>
+        <div style="padding: 14px 16px; border-radius: 16px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};"><div style="font-size: 11px; color: {{t.subOnLight}};">Trades</div><div class="h" style="font-size: 20px; font-weight: 600; margin-top: 4px;">52</div></div>
+      </div>
+
+      <div style="border-radius: 22px; padding: 16px 10px 10px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; color: {{t.textOnLight}}; flex: 1;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 12px 10px;">
+          <div class="h" style="font-size: 15px; font-weight: 600;">Trades</div>
+          <div style="font-size: 12px; color: {{t.subOnLight}};">Showing 4 of 52 · signals were auto-approved for the replay</div>
+        </div>
+        <table>
+          <thead><tr style="color: {{t.subOnLight}};"><th>Instrument</th><th>Entry</th><th>Exit</th><th>Reason</th><th style="text-align: right;">P&amp;L</th></tr></thead>
+          <tbody>
+            <tr style="border-top: 1px solid {{t.divider}};"><td style="font-weight: 600;">VUSA</td><td class="m" style="color: {{t.subOnLight}};">12 Mar · £71.20</td><td class="m" style="color: {{t.subOnLight}};">24 Mar · £73.80</td><td style="color: {{t.subOnLight}};">Target hit</td><td class="m" style="text-align: right; color: {{t.greenText}};">+£31.20</td></tr>
+            <tr style="border-top: 1px solid {{t.divider}};"><td style="font-weight: 600;">AAPL</td><td class="m" style="color: {{t.subOnLight}};">2 Apr · £178.40</td><td class="m" style="color: {{t.subOnLight}};">9 Apr · £176.10</td><td style="color: {{t.subOnLight}};">Stop hit</td><td class="m" style="text-align: right; color: {{t.pinkText}};">−£9.20</td></tr>
+            <tr style="border-top: 1px solid {{t.divider}};"><td style="font-weight: 600;">VWRL</td><td class="m" style="color: {{t.subOnLight}};">18 May · £96.50</td><td class="m" style="color: {{t.subOnLight}};">1 Jun · £99.90</td><td style="color: {{t.subOnLight}};">Target hit</td><td class="m" style="text-align: right; color: {{t.greenText}};">+£27.20</td></tr>
+            <tr style="border-top: 1px solid {{t.divider}};"><td style="font-weight: 600;">MSFT</td><td class="m" style="color: {{t.subOnLight}};">7 Jun · £398.10</td><td class="m" style="color: {{t.subOnLight}};">28 Jun · £401.40</td><td style="color: {{t.subOnLight}};">Time exit · 21d</td><td class="m" style="text-align: right; color: {{t.greenText}};">+£6.60</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"theme":{"editor":"enum","default":"light","options":["light","dark"]}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'light';
+    const light = {
+      frame: '#F3F2EF', cardLight: '#FFFFFF', cardLightBorder: '#E6E3DC', textOnLight: '#141519', subOnLight: '#6B7079',
+      cardDark: '#111214', cardDarkBorder: '#111214', textOnDark: '#F4F5F7', subOnDark: '#9BA1AC', pos: '#7FF5CC', neg: '#FF8FCB', greenText: '#0E8C66', pinkText: '#C8368A', s1: '#C4B5FD', s2: '#8FE3FF', s3: '#FFE38A',
+      chipBg: '#F3F2EF', chipBorder: '#E6E3DC', divider: '#ECEAE4',
+      navPillBg: '#111214', navPillText: '#F4F5F7', navText: '#4B5058',
+      rangeActiveBg: '#F4F5F7', rangeActiveText: '#111214',
+      amberText: '#A86F0C', indigoText: '#4F5FE0',
+    };
+    const dark = {
+      frame: '#0B0C0F', cardLight: '#141519', cardLightBorder: '#262A31', textOnLight: '#F4F5F7', subOnLight: '#9BA1AC',
+      cardDark: '#101114', cardDarkBorder: '#262A31', textOnDark: '#F4F5F7', subOnDark: '#9BA1AC', pos: '#7FF5CC', neg: '#FF8FCB', greenText: '#7FF5CC', pinkText: '#FF8FCB', s1: '#C4B5FD', s2: '#8FE3FF', s3: '#FFE38A',
+      chipBg: '#1B1E24', chipBorder: '#262A31', divider: '#262A31',
+      navPillBg: '#6C7BFA', navPillText: '#0B0C0F', navText: '#9BA1AC',
+      rangeActiveBg: '#6C7BFA', rangeActiveText: '#0B0C0F',
+      amberText: '#F5B942', indigoText: '#8B97FC',
+    };
+    return { t: theme === 'dark' ? dark : light };
+  }
+}
+</script>
+</body>
+</html>

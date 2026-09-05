@@ -1,0 +1,315 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'IBM Plex Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #6C7BFA; } a:hover { color: #4F5FE0; }
+    .h { font-family: 'Space Grotesk', system-ui, sans-serif; }
+    .m { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; }
+    .ico { width: 36px; height: 36px; border-radius: 999px; display: flex; align-items: center; justify-content: center; }
+  </style>
+</helmet>
+<div style="width: 1440px; height: 1030px; padding: 20px 28px 28px; display: flex; flex-direction: column; gap: 18px; background: {{t.frame}}; color: {{t.textOnLight}};">
+
+  <div style="height: 56px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <svg width="30" height="30" viewBox="0 0 64 64" fill="none">
+        <path d="M4,56 C24,56 32,26 58,12" stroke="#6C7BFA" stroke-opacity="0.3" stroke-width="4" stroke-linecap="round"/>
+        <path d="M4,46 C22,46 32,30 58,12" stroke="#6C7BFA" stroke-opacity="0.5" stroke-width="4" stroke-linecap="round"/>
+        <path d="M4,34 C24,34 30,32 58,12" stroke="#6C7BFA" stroke-opacity="0.75" stroke-width="4" stroke-linecap="round"/>
+        <path d="M4,20 C26,20 34,26 58,12" stroke="#6C7BFA" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="58" cy="12" r="4" fill="#6C7BFA"/>
+      </svg>
+      <span style="font-family: 'Tiro Bangla', Georgia, serif; font-size: 27px; line-height: 1; color: {{t.textOnLight}};">loom</span>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 999px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+      <div style="display: flex; align-items: center; gap: 8px; padding: 0 16px 0 12px; height: 36px; border-radius: 999px; background: {{t.navPillBg}}; color: {{t.navPillText}}; font-size: 13.5px; font-weight: 500;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg>
+        <span>Overview</span>
+      </div>
+      <div class="ico" style="color: {{t.navText}};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5 L11 15.5 L16 9.5"/></svg></div>
+      <div class="ico" style="color: {{t.navText}};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 8 L12 13 L3 8 Z"/><path d="M3 13 L12 18 L21 13"/></svg></div>
+      <div class="ico" style="color: {{t.navText}};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7 V12 L15.5 14"/></svg></div>
+      <div class="ico" style="color: {{t.navText}};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3 L14 9.5 L21 12 L14 14.5 L12 21 L10 14.5 L3 12 L10 9.5 Z"/></svg></div>
+      <div class="ico" style="color: {{t.navText}};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6 H20 M4 12 H20 M4 18 H14"/></svg></div>
+      <div class="ico" style="color: {{t.navText}};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2 V5 M12 19 V22 M4.2 4.2 L6.3 6.3 M17.7 17.7 L19.8 19.8 M2 12 H5 M19 12 H22 M4.2 19.8 L6.3 17.7 M17.7 6.3 L19.8 4.2"/></svg></div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+        <div style="padding: 6px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 600; background: {{t.navPillBg}}; color: {{t.navPillText}};">Demo</div>
+        <div style="padding: 6px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 500; color: {{t.navText}};">Live</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 7px; height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(242,85,90,0.45); color: #F2555A; font-size: 12.5px; font-weight: 600; background: {{t.cardLight}};">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F2555A" stroke-width="2.4" stroke-linecap="round"><path d="M12 2 V11"/><path d="M7 5.5 A9 9 0 1 0 17 5.5"/></svg>
+        <span>Kill switch</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 16px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; overflow-x: auto;">
+    <span style="font-size: 11.5px; color: {{t.subOnLight}}; flex-shrink: 0; padding-right: 2px;">By strategy</span>
+    <sc-for list="{{books}}" as="b" hint-placeholder-count="6">
+      <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: {{t.chipBg}}; border: 1px solid {{t.chipBorder}}; flex-shrink: 0;">
+        <span style="font-size: 12px; font-weight: 600;">{{b.name}}</span>
+        <span class="m" style="font-size: 12px; color: {{b.color}};">{{b.pct}}</span>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; flex: 1;">
+
+    <div style="grid-column: span 8; border-radius: 22px; padding: 22px 24px 18px; background: {{t.cardDark}}; border: 1px solid {{t.cardDarkBorder}}; color: {{t.textOnDark}}; display: flex; flex-direction: column;">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+        <div>
+          <div style="font-size: 13px; color: {{t.subOnDark}}; margin-bottom: 6px;">Portfolio · Demo</div>
+          <div class="h" style="font-size: 38px; font-weight: 600; letter-spacing: -0.02em; line-height: 1;">£8,742.30</div>
+          <div style="margin-top: 8px; font-size: 13px; color: #7FF5CC;"><span class="m">+£186.40</span> <span style="color: {{t.subOnDark}};">· +2.2% this month</span></div>
+        </div>
+        <div style="display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,0.06);">
+          <div style="padding: 6px 12px; border-radius: 999px; font-size: 12px; color: {{t.subOnDark}};">1D</div>
+          <div style="padding: 6px 12px; border-radius: 999px; font-size: 12px; color: {{t.subOnDark}};">7D</div>
+          <div style="padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; background: {{t.rangeActiveBg}}; color: {{t.rangeActiveText}};">1M</div>
+          <div style="padding: 6px 12px; border-radius: 999px; font-size: 12px; color: {{t.subOnDark}};">1Y</div>
+          <div style="padding: 6px 12px; border-radius: 999px; font-size: 12px; color: {{t.subOnDark}};">All</div>
+        </div>
+      </div>
+
+      <svg width="100%" height="230" viewBox="0 0 800 230" preserveAspectRatio="none" style="margin-top: 14px; flex: 1;">
+        <defs>
+          <linearGradient id="eqfill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#7FF5CC" stop-opacity="0.28"/>
+            <stop offset="1" stop-color="#7FF5CC" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="M0,150 L35,146 L70,152 L104,140 L139,144 L174,138 L209,142 L243,131 L278,136 L313,128 L348,133 L383,122 L417,126 L452,118 L487,124 L522,112 L557,116 L591,108 L626,113 L661,104 L696,99 L730,106 L765,96 L800,90 L800,230 L0,230 Z" fill="url(#eqfill)"/>
+        <path d="M0,150 L35,146 L70,152 L104,140 L139,144 L174,138 L209,142 L243,131 L278,136 L313,128 L348,133 L383,122 L417,126 L452,118 L487,124 L522,112 L557,116 L591,108 L626,113 L661,104 L696,99 L730,106 L765,96 L800,90" fill="none" stroke="{{t.textOnDark}}" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M209,142 V200 M522,112 V200 M696,99 V200" stroke="#6C7BFA" stroke-opacity="0.45" stroke-width="1" stroke-dasharray="3 3"/>
+        <circle cx="209" cy="142" r="7" fill="#7FF5CC"/><circle cx="209" cy="142" r="2.5" fill="#0B0C0F"/>
+        <circle cx="522" cy="112" r="7" fill="#7FF5CC"/><circle cx="522" cy="112" r="2.5" fill="#0B0C0F"/>
+        <circle cx="696" cy="99" r="7" fill="#FF8FCB"/><circle cx="696" cy="99" r="2.5" fill="#0B0C0F"/>
+        <rect x="150" y="204" width="118" height="20" rx="10" fill="#7FF5CC"/>
+        <text x="209" y="218" text-anchor="middle" font-family="IBM Plex Sans, system-ui" font-size="11" font-weight="600" fill="#0B0C0F">MSFT · buy · 0.78</text>
+        <rect x="462" y="204" width="120" height="20" rx="10" fill="#7FF5CC"/>
+        <text x="522" y="218" text-anchor="middle" font-family="IBM Plex Sans, system-ui" font-size="11" font-weight="600" fill="#0B0C0F">VWRL · buy · 0.61</text>
+        <rect x="638" y="204" width="116" height="20" rx="10" fill="#FF8FCB"/>
+        <text x="696" y="218" text-anchor="middle" font-family="IBM Plex Sans, system-ui" font-size="11" font-weight="600" fill="#0B0C0F">JNJ · sell · 0.44</text>
+      </svg>
+      <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 11px; color: {{t.subOnDark}};">
+        <span>Aug 5</span><span>Aug 12</span><span>Aug 19</span><span>Aug 26</span><span>Sep 2</span><span>Today</span>
+      </div>
+    </div>
+
+    <div style="grid-column: span 4; position: relative; overflow: hidden; border-radius: 22px; padding: 22px 24px; background: {{t.cardDark}}; border: 1px solid {{t.cardDarkBorder}}; color: {{t.textOnDark}}; display: flex; flex-direction: column; justify-content: space-between;">
+      <svg width="300" height="300" viewBox="0 0 64 64" fill="none" style="position: absolute; right: -60px; bottom: -70px; opacity: 0.16;">
+        <path d="M4,56 C24,56 32,26 58,12" stroke="#6C7BFA" stroke-opacity="0.3" stroke-width="3.6" stroke-linecap="round"/>
+        <path d="M4,46 C22,46 32,30 58,12" stroke="#6C7BFA" stroke-opacity="0.5" stroke-width="3.6" stroke-linecap="round"/>
+        <path d="M4,34 C24,34 30,32 58,12" stroke="#6C7BFA" stroke-opacity="0.75" stroke-width="3.6" stroke-linecap="round"/>
+        <path d="M4,20 C26,20 34,26 58,12" stroke="#6C7BFA" stroke-width="3.6" stroke-linecap="round"/>
+        <circle cx="58" cy="12" r="3.6" fill="#6C7BFA"/>
+      </svg>
+      <div style="position: relative;">
+        <div style="font-size: 13px; color: {{t.subOnDark}};">Awaiting your approval</div>
+        <div class="h" style="font-size: 76px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; margin-top: 10px;">3</div>
+        <div style="font-size: 13px; color: {{t.subOnDark}}; margin-top: 6px;">signals need a decision · 2 demo, 1 live</div>
+      </div>
+      <div style="position: relative; display: flex; flex-direction: column; gap: 12px;">
+        <div style="padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,0.06);">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+            <span><span class="h" style="font-weight: 600;">MSFT</span> <span style="color: {{t.subOnDark}};">· buy 5 · Low-Vol Compounder</span></span>
+            <span class="m" style="font-size: 12.5px;">0.78</span>
+          </div>
+          <div style="height: 4px; border-radius: 2px; background: rgba(255,255,255,0.1); margin-top: 8px;"><div style="width: 78%; height: 100%; border-radius: 2px; background: #7FF5CC;"></div></div>
+        </div>
+        <div style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 42px; border-radius: 999px; background: #6C7BFA; color: #0B0C0F; font-size: 13.5px; font-weight: 600;">
+          <span>Review queue</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B0C0F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 L17 7"/><path d="M9 7 H17 V15"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div style="grid-column: span 4; border-radius: 22px; padding: 20px 22px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; color: {{t.textOnLight}}; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div class="h" style="font-size: 16px; font-weight: 600;">Positions</div>
+        <div style="font-size: 12px; color: {{t.subOnLight}};">4 open · <span class="m">£4,360</span> invested</div>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 9px; padding: 8px 12px 8px 8px; border-radius: 999px; border: 1px solid {{t.chipBorder}}; background: {{t.chipBg}};">
+          <div class="m" style="width: 28px; height: 28px; border-radius: 999px; background: #6C7BFA; color: #0B0C0F; font-size: 10px; display: flex; align-items: center; justify-content: center;">VU</div>
+          <div><div style="font-size: 12.5px; font-weight: 600; line-height: 1.1;">VUSA</div><div style="font-size: 11px; color: {{t.subOnLight}};">12 shares</div></div>
+          <div class="m" style="font-size: 11.5px; color: {{t.greenText}}; margin-left: 4px;">+2.5%</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 9px; padding: 8px 12px 8px 8px; border-radius: 999px; border: 1px solid {{t.chipBorder}}; background: {{t.chipBg}};">
+          <div class="m" style="width: 28px; height: 28px; border-radius: 999px; background: {{t.textOnLight}}; color: {{t.cardLight}}; font-size: 10px; display: flex; align-items: center; justify-content: center;">AA</div>
+          <div><div style="font-size: 12.5px; font-weight: 600; line-height: 1.1;">AAPL</div><div style="font-size: 11px; color: {{t.subOnLight}};">4 shares</div></div>
+          <div class="m" style="font-size: 11.5px; color: {{t.greenText}}; margin-left: 4px;">+1.4%</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 9px; padding: 8px 12px 8px 8px; border-radius: 999px; border: 1px solid {{t.chipBorder}}; background: {{t.chipBg}};">
+          <div class="m" style="width: 28px; height: 28px; border-radius: 999px; background: #7FF5CC; color: #0B0C0F; font-size: 10px; display: flex; align-items: center; justify-content: center;">VW</div>
+          <div><div style="font-size: 12.5px; font-weight: 600; line-height: 1.1;">VWRL</div><div style="font-size: 11px; color: {{t.subOnLight}};">8 shares</div></div>
+          <div class="m" style="font-size: 11.5px; color: {{t.pinkText}}; margin-left: 4px;">−1.2%</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 9px; padding: 8px 12px 8px 8px; border-radius: 999px; border: 1px solid {{t.chipBorder}}; background: {{t.chipBg}};">
+          <div class="m" style="width: 28px; height: 28px; border-radius: 999px; background: #F5B942; color: #0B0C0F; font-size: 10px; display: flex; align-items: center; justify-content: center;">MS</div>
+          <div><div style="font-size: 12.5px; font-weight: 600; line-height: 1.1;">MSFT</div><div style="font-size: 11px; color: {{t.subOnLight}};">3 shares</div></div>
+          <div class="m" style="font-size: 11.5px; color: {{t.greenText}}; margin-left: 4px;">+0.6%</div>
+        </div>
+      </div>
+      <div style="margin-top: auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 14px;">
+        <div style="display: flex; align-items: flex-end; gap: 3px; height: 44px;">
+          <sc-for list="{{bars}}" as="b" hint-placeholder-count="32">
+            <div style="width: 4px; height: {{b.h}}; border-radius: 2px; background: {{b.c}};"></div>
+          </sc-for>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: {{t.subOnLight}}; flex-shrink: 0;">
+          <div style="display: flex; align-items: center; gap: 6px;"><span style="width: 8px; height: 8px; border-radius: 2px; background: {{t.s1}};"></span>Index ETFs <span class="m" style="color: {{t.textOnLight}};">58%</span></div>
+          <div style="display: flex; align-items: center; gap: 6px;"><span style="width: 8px; height: 8px; border-radius: 2px; background: {{t.s2}};"></span>Stocks <span class="m" style="color: {{t.textOnLight}};">34%</span></div>
+          <div style="display: flex; align-items: center; gap: 6px;"><span style="width: 8px; height: 8px; border-radius: 2px; background: {{t.s3}};"></span>Cash <span class="m" style="color: {{t.textOnLight}};">8%</span></div>
+        </div>
+      </div>
+      <div style="padding-top: 12px; border-top: 1px solid {{t.divider}}; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+          <div style="font-size: 12px; color: {{t.subOnLight}};">Cash available</div>
+          <div class="h" style="font-size: 22px; font-weight: 600; letter-spacing: -0.01em; margin-top: 2px;">£4,382.10</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 12px; color: {{t.subOnLight}};">Today's P&amp;L</div>
+          <div class="m" style="font-size: 15px; color: {{t.greenText}}; margin-top: 4px;">+£23.00</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="grid-column: span 4; border-radius: 22px; padding: 20px 22px; background: {{t.cardDark}}; border: 1px solid {{t.cardDarkBorder}}; color: {{t.textOnDark}}; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div class="h" style="font-size: 16px; font-weight: 600;">Strategies</div>
+        <div style="font-size: 12px; color: {{t.subOnDark}};">2 running</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px; flex: 1;">
+        <div style="padding: 14px; border-radius: 14px; background: rgba(255,255,255,0.05);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 13.5px; font-weight: 600;">Low-Vol Compounder</div>
+            <div style="display: flex; gap: 6px;">
+              <span style="font-size: 10.5px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: rgba(127,245,204,0.22); color: #7FF5CC;">Live-enabled</span>
+              <span style="font-size: 10.5px; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,0.08); color: {{t.subOnDark}};">Manual</span>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; margin-top: 12px;">
+            <div style="flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.1);"><div style="width: 63%; height: 100%; border-radius: 3px; background: #7FF5CC;"></div></div>
+            <span class="m" style="font-size: 12px;">63% win</span>
+          </div>
+          <div style="display: flex; gap: 16px; margin-top: 10px; font-size: 11.5px; color: {{t.subOnDark}};">
+            <span>Avg <span class="m" style="color: #7FF5CC;">+1.8%</span></span>
+            <span>Drawdown <span class="m" style="color: {{t.textOnDark}};">−4.2%</span></span>
+            <span><span class="m" style="color: {{t.textOnDark}};">96</span> trades</span>
+          </div>
+        </div>
+        <div style="padding: 14px; border-radius: 14px; background: rgba(255,255,255,0.05);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 13.5px; font-weight: 600;">Momentum Pilot</div>
+            <div style="display: flex; gap: 6px;">
+              <span style="font-size: 10.5px; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,0.08); color: {{t.subOnDark}};">Demo only</span>
+              <span style="font-size: 10.5px; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,0.08); color: {{t.subOnDark}};">Auto &gt; 0.80</span>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; margin-top: 12px;">
+            <div style="flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.1);"><div style="width: 54%; height: 100%; border-radius: 3px; background: #7FF5CC;"></div></div>
+            <span class="m" style="font-size: 12px;">54% win</span>
+          </div>
+          <div style="display: flex; gap: 16px; margin-top: 10px; font-size: 11.5px; color: {{t.subOnDark}};">
+            <span>Avg <span class="m" style="color: #7FF5CC;">+0.9%</span></span>
+            <span>Drawdown <span class="m" style="color: {{t.textOnDark}};">−7.6%</span></span>
+            <span><span class="m" style="color: {{t.textOnDark}};">31</span> trades</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="grid-column: span 4; border-radius: 22px; padding: 20px 22px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; color: {{t.textOnLight}}; display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div class="h" style="font-size: 16px; font-weight: 600;">Recent signals</div>
+        <div style="font-size: 12px; color: {{t.subOnLight}};">Today · 5</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
+        <div style="display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 12px; border: 1px solid {{t.chipBorder}};">
+          <div class="m" style="width: 30px; height: 30px; border-radius: 999px; background: #F5B942; color: #0B0C0F; font-size: 10px; display: flex; align-items: center; justify-content: center;">MS</div>
+          <div style="flex: 1;"><div style="font-size: 12.5px; font-weight: 600;">MSFT · buy 5</div><div style="font-size: 11px; color: {{t.subOnLight}};">Low-Vol Compounder · 2h ago</div></div>
+          <span class="m" style="font-size: 11.5px; color: {{t.subOnLight}};">0.78</span>
+          <span style="font-size: 10.5px; font-weight: 600; padding: 4px 9px; border-radius: 999px; background: rgba(245,185,66,0.18); color: #A86F0C;">Pending</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 12px; border: 1px solid {{t.chipBorder}};">
+          <div class="m" style="width: 30px; height: 30px; border-radius: 999px; background: #7FF5CC; color: #0B0C0F; font-size: 10px; display: flex; align-items: center; justify-content: center;">VW</div>
+          <div style="flex: 1;"><div style="font-size: 12.5px; font-weight: 600;">VWRL · buy 2 <span style="font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 999px; background: rgba(242,85,90,0.14); color: #F2555A; margin-left: 4px;">Live</span></div><div style="font-size: 11px; color: {{t.subOnLight}};">Low-Vol Compounder · 3h ago</div></div>
+          <span class="m" style="font-size: 11.5px; color: {{t.subOnLight}};">0.61</span>
+          <span style="font-size: 10.5px; font-weight: 600; padding: 4px 9px; border-radius: 999px; background: rgba(245,185,66,0.18); color: #A86F0C;">Pending</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 12px; border: 1px solid {{t.chipBorder}};">
+          <div class="m" style="width: 30px; height: 30px; border-radius: 999px; background: #6C7BFA; color: #0B0C0F; font-size: 10px; display: flex; align-items: center; justify-content: center;">VU</div>
+          <div style="flex: 1;"><div style="font-size: 12.5px; font-weight: 600;">VUSA · buy 3</div><div style="font-size: 11px; color: {{t.subOnLight}};">Low-Vol Compounder · 5h ago</div></div>
+          <span class="m" style="font-size: 11.5px; color: {{t.subOnLight}};">0.82</span>
+          <span style="font-size: 10.5px; font-weight: 600; padding: 4px 9px; border-radius: 999px; background: rgba(127,245,204,0.22); color: #1B8A5A;">Executed</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 12px; border: 1px solid {{t.chipBorder}};">
+          <div class="m" style="width: 30px; height: 30px; border-radius: 999px; background: {{t.textOnLight}}; color: {{t.cardLight}}; font-size: 10px; display: flex; align-items: center; justify-content: center;">JN</div>
+          <div style="flex: 1;"><div style="font-size: 12.5px; font-weight: 600;">JNJ · sell 6</div><div style="font-size: 11px; color: {{t.subOnLight}};">Low-Vol Compounder · 1d ago</div></div>
+          <span class="m" style="font-size: 11.5px; color: {{t.subOnLight}};">0.44</span>
+          <span style="font-size: 10.5px; font-weight: 600; padding: 4px 9px; border-radius: 999px; background: {{t.chipBg}}; color: {{t.subOnLight}};">Rejected</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 12px; border: 1px solid {{t.chipBorder}};">
+          <div class="m" style="width: 30px; height: 30px; border-radius: 999px; background: {{t.textOnLight}}; color: {{t.cardLight}}; font-size: 10px; display: flex; align-items: center; justify-content: center;">AA</div>
+          <div style="flex: 1;"><div style="font-size: 12.5px; font-weight: 600;">AAPL · buy 1</div><div style="font-size: 11px; color: {{t.subOnLight}};">Momentum Pilot · 1d ago</div></div>
+          <span class="m" style="font-size: 11.5px; color: {{t.subOnLight}};">0.86</span>
+          <span style="font-size: 10.5px; font-weight: 600; padding: 4px 9px; border-radius: 999px; background: rgba(108,123,250,0.16); color: #4F5FE0;">Auto</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"theme":{"editor":"enum","default":"light","options":["light","dark"]}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'light';
+    const light = {
+      frame: '#F3F2EF', cardLight: '#FFFFFF', cardLightBorder: '#E6E3DC', textOnLight: '#141519', subOnLight: '#6B7079',
+      cardDark: '#111214', cardDarkBorder: '#111214', textOnDark: '#F4F5F7', subOnDark: '#9BA1AC', pos: '#7FF5CC', neg: '#FF8FCB', greenText: '#0E8C66', pinkText: '#C8368A', s1: '#C4B5FD', s2: '#8FE3FF', s3: '#FFE38A',
+      chipBg: '#F3F2EF', chipBorder: '#E6E3DC', divider: '#ECEAE4',
+      navPillBg: '#111214', navPillText: '#F4F5F7', navText: '#4B5058',
+      rangeActiveBg: '#F4F5F7', rangeActiveText: '#111214',
+    };
+    const dark = {
+      frame: '#0B0C0F', cardLight: '#141519', cardLightBorder: '#262A31', textOnLight: '#F4F5F7', subOnLight: '#9BA1AC',
+      cardDark: '#101114', cardDarkBorder: '#262A31', textOnDark: '#F4F5F7', subOnDark: '#9BA1AC', pos: '#7FF5CC', neg: '#FF8FCB', greenText: '#7FF5CC', pinkText: '#FF8FCB', s1: '#C4B5FD', s2: '#8FE3FF', s3: '#FFE38A',
+      chipBg: '#1B1E24', chipBorder: '#262A31', divider: '#262A31',
+      navPillBg: '#6C7BFA', navPillText: '#0B0C0F', navText: '#9BA1AC',
+      rangeActiveBg: '#6C7BFA', rangeActiveText: '#0B0C0F',
+    };
+    const t = theme === 'dark' ? dark : light;
+    const bars = [];
+    for (let i = 0; i < 32; i++) {
+      const h = Math.round(48 + 48 * Math.abs(Math.sin(i * 1.7 + 0.4)));
+      bars.push({ h: h + '%', c: i < 18 ? t.s1 : i < 29 ? t.s2 : t.s3 });
+    }
+    const books = [
+      { name: 'Compounder', pct: '+20.4%', color: t.greenText },
+      { name: 'Harvester', pct: '−6.2%', color: t.pinkText },
+      { name: 'Trend Follower', pct: '+3.1%', color: t.greenText },
+      { name: 'Breakout', pct: '+0.8%', color: t.greenText },
+      { name: 'Dip-Buyer', pct: '+11.2%', color: t.greenText },
+      { name: 'Manual', pct: '—', color: t.subOnLight },
+    ];
+    return { t, bars, books };
+  }
+}
+</script>
+</body>
+</html>

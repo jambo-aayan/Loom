@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'IBM Plex Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #6C7BFA; } a:hover { color: #4F5FE0; }
+    .h { font-family: 'Space Grotesk', system-ui, sans-serif; }
+    .m { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; }
+    .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 500; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: {{t.frame}}; color: {{t.textOnLight}};">
+
+  <div style="padding: 50px 16px 100px; display: flex; flex-direction: column; gap: 10px;">
+
+    <div style="height: 44px; display: flex; align-items: center; justify-content: space-between;">
+      <div class="h" style="font-size: 22px; font-weight: 600; letter-spacing: -0.01em;">Insights</div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <div style="width: 34px; height: 34px; border-radius: 999px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; display: flex; align-items: center; justify-content: center; color: {{t.navText}};">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6 H20 M4 12 H20 M4 18 H14"/></svg>
+        </div>
+        <div style="width: 34px; height: 34px; border-radius: 999px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; display: flex; align-items: center; justify-content: center; color: {{t.navText}};">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2 V5 M12 19 V22 M4.2 4.2 L6.3 6.3 M17.7 17.7 L19.8 19.8 M2 12 H5 M19 12 H22 M4.2 19.8 L6.3 17.7 M17.7 6.3 L19.8 4.2"/></svg>
+        </div>
+        <div style="width: 34px; height: 34px; border-radius: 999px; border: 1px solid rgba(242,85,90,0.45); background: {{t.cardLight}}; display: flex; align-items: center; justify-content: center;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F2555A" stroke-width="2.4" stroke-linecap="round"><path d="M12 2 V11"/><path d="M7 5.5 A9 9 0 1 0 17 5.5"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; width: fit-content;">
+      <div style="padding: 6px 13px; border-radius: 999px; font-size: 12px; font-weight: 600; background: {{t.navPillBg}}; color: {{t.navPillText}};">Signals</div>
+      <div style="padding: 6px 13px; border-radius: 999px; font-size: 12px; color: {{t.navText}};">Digest</div>
+    </div>
+
+    <div style="border-radius: 16px; padding: 13px 15px; background: rgba(108,123,250,0.1); border: 1px solid rgba(108,123,250,0.28);">
+      <div style="display: flex; align-items: center; gap: 7px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6C7BFA" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19 H20 M4 19 V9 L9 13 L13 6 L20 11"/></svg>
+        <span class="h" style="font-size: 12.5px; font-weight: 600;">Today's briefing</span>
+      </div>
+      <div style="font-size: 11.5px; line-height: 1.5; color: {{t.subOnLight}}; margin-top: 5px;">3 signals fired, all in calmer-than-usual names — no red flags in the news flow. Sterling strength is moving index ETFs more than the underlying companies this week.</div>
+    </div>
+
+    <div style="border-radius: 16px; padding: 14px 16px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 6px;"><span class="h" style="font-size: 13.5px; font-weight: 600;">MSFT · buy</span><span class="m" style="font-size: 11px; color: {{t.subOnLight}};">0.78</span><span style="font-size: 9px; font-weight: 600; padding: 1px 6px; border-radius: 999px; background: {{t.chipBg}}; color: {{t.subOnLight}};">Screening</span></div>
+        <span style="font-size: 10px; color: {{t.subOnLight}};">2h</span>
+      </div>
+      <svg width="100%" height="38" viewBox="0 0 300 46" preserveAspectRatio="none" style="margin-top: 6px; display: block;">
+        <path d="M0,14 L30,18 L60,24 L90,30 L120,34 L150,28 L180,22 L210,18 L240,14 L270,10 L300,8" fill="none" stroke="{{t.subOnLight}}" stroke-width="1.6" stroke-linejoin="round"/>
+        <circle cx="150" cy="28" r="4" fill="#6C7BFA"/>
+        <path d="M150,28 V4" stroke="#6C7BFA" stroke-width="1" stroke-dasharray="2 2"/>
+      </svg>
+      <div style="font-size: 12px; line-height: 1.5; color: {{t.subOnLight}}; margin-top: 5px;">Three-day pullback to the 50-day average with relative strength staying positive — a favourable entry, historically.</div>
+    </div>
+
+    <div style="border-radius: 16px; padding: 14px 16px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 6px;"><span class="h" style="font-size: 13.5px; font-weight: 600;">VWRL · buy</span><span class="m" style="font-size: 11px; color: {{t.subOnLight}};">0.61</span><span style="font-size: 9px; font-weight: 600; padding: 1px 6px; border-radius: 999px; background: {{t.chipBg}}; color: {{t.subOnLight}};">Screening</span><span style="font-size: 9px; font-weight: 600; padding: 1px 6px; border-radius: 999px; background: rgba(242,85,90,0.14); color: #F2555A;">Live</span></div>
+        <span style="font-size: 10px; color: {{t.subOnLight}};">3h</span>
+      </div>
+      <div style="font-size: 12px; line-height: 1.5; color: {{t.subOnLight}}; margin-top: 6px;">Confidence is moderate: broad-market volatility ticked up this week, widening this strategy's stop and shrinking the position it proposes.</div>
+    </div>
+
+    <div style="border-radius: 16px; padding: 14px 16px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 6px;"><span class="h" style="font-size: 13.5px; font-weight: 600;">JNJ · sell</span><span class="m" style="font-size: 11px; color: {{t.subOnLight}};">0.44</span><span style="font-size: 9px; font-weight: 600; padding: 1px 6px; border-radius: 999px; background: {{t.chipBg}}; color: {{t.subOnLight}};">Screening</span></div>
+        <span style="font-size: 10px; color: {{t.subOnLight}};">1d</span>
+      </div>
+      <div style="font-size: 12px; line-height: 1.5; color: {{t.subOnLight}}; margin-top: 6px;">Mild earnings-reaction dip; already 80% of its profit target before pulling back, so the strategy proposes taking what's there.</div>
+    </div>
+
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 84px; padding: 10px 12px 26px; background: {{t.cardLight}}; border-top: 1px solid {{t.cardLightBorder}}; display: flex; align-items: center;">
+    <div class="tab" style="color: {{t.navText}};"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg><span>Overview</span></div>
+    <div class="tab" style="position: relative; color: {{t.navText}};"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5 L11 15.5 L16 9.5"/></svg><span>Approvals</span><div class="m" style="position: absolute; top: -4px; right: 14px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: #6C7BFA; color: #0B0C0F; font-size: 9.5px; display: flex; align-items: center; justify-content: center;">3</div></div>
+    <div class="tab" style="color: {{t.navText}};"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 8 L12 13 L3 8 Z"/><path d="M3 13 L12 18 L21 13"/></svg><span>Strategies</span></div>
+    <div class="tab" style="color: {{t.navText}};"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7 V12 L15.5 14"/></svg><span>Backtest</span></div>
+    <div class="tab" style="color: {{t.textOnLight}};"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M12 3 L14 9.5 L21 12 L14 14.5 L12 21 L10 14.5 L3 12 L10 9.5 Z"/></svg><span>Insights</span></div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"theme":{"editor":"enum","default":"light","options":["light","dark"]}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'light';
+    const light = {
+      frame: '#F3F2EF', cardLight: '#FFFFFF', cardLightBorder: '#E6E3DC', textOnLight: '#141519', subOnLight: '#6B7079',
+      chipBg: '#F3F2EF', chipBorder: '#E6E3DC',
+      navPillBg: '#111214', navPillText: '#F4F5F7', navText: '#6B7079',
+    };
+    const dark = {
+      frame: '#0B0C0F', cardLight: '#141519', cardLightBorder: '#262A31', textOnLight: '#F4F5F7', subOnLight: '#9BA1AC',
+      chipBg: '#1B1E24', chipBorder: '#262A31',
+      navPillBg: '#6C7BFA', navPillText: '#0B0C0F', navText: '#9BA1AC',
+    };
+    return { t: theme === 'dark' ? dark : light };
+  }
+}
+</script>
+</body>
+</html>

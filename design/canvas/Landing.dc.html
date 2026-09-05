@@ -1,0 +1,172 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'IBM Plex Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #6C7BFA; } a:hover { color: #4F5FE0; }
+    .h { font-family: 'Space Grotesk', system-ui, sans-serif; }
+    .m { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; }
+    .k-thread { stroke-dasharray: 1; stroke-dashoffset: 1; animation: kdraw 4.8s ease-in-out infinite; }
+    .k-t1 { animation-delay: 0s; } .k-t2 { animation-delay: 0.15s; } .k-t3 { animation-delay: 0.3s; } .k-t4 { animation-delay: 0.45s; }
+    .k-dot { transform-box: fill-box; transform-origin: center; animation: kdot 4.8s ease-out infinite; }
+    @keyframes kdraw { 0% { stroke-dashoffset: 1; opacity: 1; } 36% { stroke-dashoffset: 0; opacity: 1; } 82% { stroke-dashoffset: 0; opacity: 1; } 92% { stroke-dashoffset: 0; opacity: 0; } 100% { stroke-dashoffset: 1; opacity: 0; } }
+    @keyframes kdot { 0%, 34% { transform: scale(0); opacity: 0; } 44% { transform: scale(1.3); opacity: 1; } 52%, 82% { transform: scale(1); opacity: 1; } 92%, 100% { transform: scale(1); opacity: 0; } }
+  </style>
+</helmet>
+<div style="width: 1440px; min-height: 1480px; padding: 0 0 48px; background: {{t.frame}}; color: {{t.textOnLight}};">
+
+  <div style="height: 72px; padding: 0 48px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <svg width="30" height="30" viewBox="0 0 64 64" fill="none"><path d="M4,56 C24,56 32,26 58,12" stroke="#6C7BFA" stroke-opacity="0.3" stroke-width="4" stroke-linecap="round"/><path d="M4,46 C22,46 32,30 58,12" stroke="#6C7BFA" stroke-opacity="0.5" stroke-width="4" stroke-linecap="round"/><path d="M4,34 C24,34 30,32 58,12" stroke="#6C7BFA" stroke-opacity="0.75" stroke-width="4" stroke-linecap="round"/><path d="M4,20 C26,20 34,26 58,12" stroke="#6C7BFA" stroke-width="4" stroke-linecap="round"/><circle cx="58" cy="12" r="4" fill="#6C7BFA"/></svg>
+      <span style="font-family: 'Tiro Bangla', Georgia, serif; font-size: 27px; line-height: 1;">loom</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 26px; font-size: 13.5px; font-weight: 500; color: {{t.subOnLight}};">
+      <span>How it works</span><span>Strategies</span><span>Safety</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="height: 40px; padding: 0 18px; border-radius: 999px; font-size: 13.5px; font-weight: 500; color: {{t.textOnLight}}; display: flex; align-items: center; border: 1px solid {{t.cardLightBorder}}; background: {{t.cardLight}};">Sign in</div>
+      <div style="height: 40px; padding: 0 18px; border-radius: 999px; font-size: 13.5px; font-weight: 600; background: {{t.navPillBg}}; color: {{t.navPillText}}; display: flex; align-items: center;">Open Loom</div>
+    </div>
+  </div>
+
+  <div style="padding: 56px 48px 40px; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 24px; align-items: center;">
+    <div style="grid-column: span 6;">
+      <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; border-radius: 999px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; font-size: 12px; font-weight: 500; color: {{t.subOnLight}};">
+        <span style="width: 8px; height: 8px; border-radius: 999px; background: #7FF5CC;"></span>
+        <span>Built for Trading 212 · Stocks &amp; Shares ISA</span>
+      </div>
+      <div class="h" style="font-size: 64px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.02; margin-top: 22px;">Many small trades.<br>One steady line.</div>
+      <div style="font-size: 18px; line-height: 1.55; color: {{t.subOnLight}}; margin-top: 20px; max-width: 520px; text-wrap: pretty;">Loom runs patient strategies on large, steady names, proposes each trade with a confidence score and an exit plan — and waits for you to approve it. Automation is something you switch on per strategy, once it has earned it.</div>
+      <div style="display: flex; align-items: center; gap: 10px; margin-top: 30px;">
+        <div style="height: 50px; padding: 0 24px; border-radius: 999px; background: #6C7BFA; color: #0B0C0F; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px;">Start in Demo <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0B0C0F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 L17 7"/><path d="M9 7 H17 V15"/></svg></div>
+        <div style="height: 50px; padding: 0 22px; border-radius: 999px; font-size: 15px; font-weight: 500; color: {{t.textOnLight}}; display: flex; align-items: center; border: 1px solid {{t.cardLightBorder}}; background: {{t.cardLight}};">See how it works</div>
+      </div>
+      <div style="font-size: 12.5px; color: {{t.subOnLight}}; margin-top: 16px;">Demo uses Trading 212's paper account. Nothing touches real money until you enable it.</div>
+    </div>
+
+    <div style="grid-column: span 6; position: relative;">
+      <div style="border-radius: 24px; padding: 24px; background: {{t.cardDark}}; border: 1px solid {{t.cardDarkBorder}}; color: {{t.textOnDark}}; box-shadow: 0 30px 80px rgba(0,0,0,0.25);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <div style="font-size: 12.5px; color: {{t.subOnDark}};">Portfolio · Demo</div>
+            <div class="h" style="font-size: 34px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; margin-top: 8px;">£8,742.30</div>
+            <div style="font-size: 12.5px; margin-top: 8px; color: #7FF5CC;"><span class="m">+£186.40</span> <span style="color: {{t.subOnDark}};">· +2.2% this month</span></div>
+          </div>
+          <svg width="88" height="88" viewBox="0 0 64 64" fill="none">
+            <path class="k-thread k-t1" pathLength="1" d="M4,56 C24,56 32,26 58,12" stroke="#6C7BFA" stroke-opacity="0.3" stroke-width="3.6" stroke-linecap="round"/>
+            <path class="k-thread k-t2" pathLength="1" d="M4,46 C22,46 32,30 58,12" stroke="#6C7BFA" stroke-opacity="0.5" stroke-width="3.6" stroke-linecap="round"/>
+            <path class="k-thread k-t3" pathLength="1" d="M4,34 C24,34 30,32 58,12" stroke="#6C7BFA" stroke-opacity="0.75" stroke-width="3.6" stroke-linecap="round"/>
+            <path class="k-thread k-t4" pathLength="1" d="M4,20 C26,20 34,26 58,12" stroke="#6C7BFA" stroke-width="3.6" stroke-linecap="round"/>
+            <circle class="k-dot" cx="58" cy="12" r="3.6" fill="#6C7BFA"/>
+          </svg>
+        </div>
+        <svg width="100%" height="170" viewBox="0 0 600 170" preserveAspectRatio="none" style="margin-top: 14px; display: block;">
+          <defs><linearGradient id="lfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FF5CC" stop-opacity="0.3"/><stop offset="1" stop-color="#7FF5CC" stop-opacity="0"/></linearGradient></defs>
+          <path d="M0,120 L26,116 L52,121 L78,110 L104,114 L130,108 L157,112 L183,101 L209,106 L235,98 L261,103 L287,92 L313,96 L339,88 L365,94 L391,82 L417,86 L443,78 L470,83 L496,74 L522,69 L548,76 L574,66 L600,60 L600,170 L0,170 Z" fill="url(#lfill)"/>
+          <path d="M0,120 L26,116 L52,121 L78,110 L104,114 L130,108 L157,112 L183,101 L209,106 L235,98 L261,103 L287,92 L313,96 L339,88 L365,94 L391,82 L417,86 L443,78 L470,83 L496,74 L522,69 L548,76 L574,66 L600,60" fill="none" stroke="#F4F5F7" stroke-width="2" stroke-linejoin="round"/>
+          <circle cx="157" cy="112" r="6" fill="#7FF5CC"/><circle cx="391" cy="82" r="6" fill="#7FF5CC"/><circle cx="522" cy="69" r="6" fill="#FF8FCB"/>
+        </svg>
+        <div style="margin-top: 14px; padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between;">
+          <div style="font-size: 13px;"><span class="h" style="font-weight: 600;">MSFT</span> <span style="color: {{t.subOnDark}};">· buy 5 · confidence</span> <span class="m">0.78</span></div>
+          <div style="display: flex; gap: 6px;">
+            <div style="height: 32px; padding: 0 14px; border-radius: 999px; background: #F4F5F7; color: #111214; font-size: 12.5px; font-weight: 600; display: flex; align-items: center;">Approve</div>
+            <div style="height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(242,85,90,0.5); color: #F2555A; font-size: 12.5px; font-weight: 600; display: flex; align-items: center;">Reject</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 24px 48px 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px;">
+    <div style="border-radius: 22px; padding: 24px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; min-height: 210px; display: flex; flex-direction: column;">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6C7BFA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5 L11 15.5 L16 9.5"/></svg>
+      <div class="h" style="font-size: 19px; font-weight: 600; margin-top: 18px; letter-spacing: -0.01em;">You approve every trade</div>
+      <div style="font-size: 13.5px; line-height: 1.55; color: {{t.subOnLight}}; margin-top: 8px; text-wrap: pretty;">Every strategy starts on manual approval. Each signal shows its confidence, its target and stop, and the risk checks it passed — then waits for you.</div>
+    </div>
+    <div style="border-radius: 22px; padding: 24px; background: {{t.cardDark}}; border: 1px solid {{t.cardDarkBorder}}; color: {{t.textOnDark}}; min-height: 210px; display: flex; flex-direction: column;">
+      <div style="display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,0.08); width: max-content;">
+        <div style="padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; background: #F4F5F7; color: #111214;">Demo</div>
+        <div style="padding: 4px 10px; border-radius: 999px; font-size: 11px; color: {{t.subOnDark}};">Live</div>
+      </div>
+      <div class="h" style="font-size: 19px; font-weight: 600; margin-top: 18px; letter-spacing: -0.01em;">Demo and Live, side by side</div>
+      <div style="font-size: 13.5px; line-height: 1.55; color: {{t.subOnDark}}; margin-top: 8px; text-wrap: pretty;">Try any strategy on the paper account whenever you like. Enabling it for real money is a separate, deliberate switch — and never takes Demo away.</div>
+    </div>
+    <div style="border-radius: 22px; padding: 24px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; min-height: 210px; display: flex; flex-direction: column;">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6C7BFA" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7 V12 L15.5 14"/></svg>
+      <div class="h" style="font-size: 19px; font-weight: 600; margin-top: 18px; letter-spacing: -0.01em;">Backtest before you risk a pound</div>
+      <div style="font-size: 13.5px; line-height: 1.55; color: {{t.subOnLight}}; margin-top: 8px; text-wrap: pretty;">Replay a strategy over years of history in seconds, against a buy-and-hold benchmark, using the exact code that trades. Save runs and compare them.</div>
+    </div>
+    <div style="border-radius: 22px; padding: 24px; background: {{t.cardLight}}; border: 1px solid rgba(242,85,90,0.35); min-height: 210px; display: flex; flex-direction: column;">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F2555A" stroke-width="2.2" stroke-linecap="round"><path d="M12 2 V11"/><path d="M7 5.5 A9 9 0 1 0 17 5.5"/></svg>
+      <div class="h" style="font-size: 19px; font-weight: 600; margin-top: 18px; letter-spacing: -0.01em;">A kill switch, one tap away</div>
+      <div style="font-size: 13.5px; line-height: 1.55; color: {{t.subOnLight}}; margin-top: 8px; text-wrap: pretty;">Checked before every single order. Hit it and nothing else goes out — from any screen, on your phone or your desk.</div>
+    </div>
+  </div>
+
+  <div style="padding: 56px 48px 0;">
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 20px;">
+      <div class="h" style="font-size: 30px; font-weight: 600; letter-spacing: -0.02em;">How a trade happens</div>
+      <div style="font-size: 13px; color: {{t.subOnLight}};">The same path every time — no strategy can skip a step</div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px;">
+      <div style="border-radius: 22px; padding: 22px 24px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+        <div class="m" style="font-size: 12px; color: #6C7BFA;">01 · Signal</div>
+        <div class="h" style="font-size: 18px; font-weight: 600; margin-top: 10px;">A strategy proposes a trade</div>
+        <div style="font-size: 13.5px; line-height: 1.55; color: {{t.subOnLight}}; margin-top: 6px;">With a confidence score and a full exit plan — a profit target and a stop — or it isn't a signal.</div>
+      </div>
+      <div style="border-radius: 22px; padding: 22px 24px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+        <div class="m" style="font-size: 12px; color: #6C7BFA;">02 · Risk &amp; approval</div>
+        <div class="h" style="font-size: 18px; font-weight: 600; margin-top: 10px;">Sizing, limits, then you</div>
+        <div style="font-size: 13.5px; line-height: 1.55; color: {{t.subOnLight}}; margin-top: 6px;">Position size, total exposure and the daily loss limit are checked first. Then the signal waits for your tap — unless you've earned that strategy its autonomy.</div>
+      </div>
+      <div style="border-radius: 22px; padding: 22px 24px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+        <div class="m" style="font-size: 12px; color: #6C7BFA;">03 · Execute</div>
+        <div class="h" style="font-size: 18px; font-weight: 600; margin-top: 10px;">One order, never twice</div>
+        <div style="font-size: 13.5px; line-height: 1.55; color: {{t.subOnLight}}; margin-top: 6px;">Placed on Trading 212 with an idempotency key, so a retry can never double a trade. Every decision is kept, with its reasoning.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin: 56px 48px 0; border-radius: 26px; padding: 40px 44px; background: {{t.cardDark}}; border: 1px solid {{t.cardDarkBorder}}; color: {{t.textOnDark}}; display: flex; align-items: center; justify-content: space-between; position: relative; overflow: hidden;">
+    <svg width="360" height="360" viewBox="0 0 64 64" fill="none" style="position: absolute; right: -80px; top: -110px; opacity: 0.14;"><path d="M4,56 C24,56 32,26 58,12" stroke="#6C7BFA" stroke-opacity="0.3" stroke-width="3.6" stroke-linecap="round"/><path d="M4,46 C22,46 32,30 58,12" stroke="#6C7BFA" stroke-opacity="0.5" stroke-width="3.6" stroke-linecap="round"/><path d="M4,34 C24,34 30,32 58,12" stroke="#6C7BFA" stroke-opacity="0.75" stroke-width="3.6" stroke-linecap="round"/><path d="M4,20 C26,20 34,26 58,12" stroke="#6C7BFA" stroke-width="3.6" stroke-linecap="round"/></svg>
+    <div style="position: relative;">
+      <div class="h" style="font-size: 30px; font-weight: 600; letter-spacing: -0.02em;">Start on paper. Go live when you're ready.</div>
+      <div style="font-size: 14.5px; color: {{t.subOnDark}}; margin-top: 8px;">Connect your Trading 212 demo key and watch the first signals come in.</div>
+    </div>
+    <div style="position: relative; height: 50px; padding: 0 24px; border-radius: 999px; background: #6C7BFA; color: #0B0C0F; font-size: 15px; font-weight: 600; display: flex; align-items: center; flex-shrink: 0;">Open Loom</div>
+  </div>
+
+  <div style="padding: 40px 48px 0; display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; color: {{t.subOnLight}};">
+    <div style="display: flex; align-items: center; gap: 8px;"><span style="font-family: 'Tiro Bangla', Georgia, serif; font-size: 18px; color: {{t.textOnLight}};">loom</span><span>· Not investment advice. Capital at risk.</span></div>
+    <div style="display: flex; gap: 20px;"><span>Privacy</span><span>Terms</span><span>Contact</span></div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"theme":{"editor":"enum","default":"light","options":["light","dark"]}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'light';
+    const light = {
+      frame: '#F3F2EF', cardLight: '#FFFFFF', cardLightBorder: '#E6E3DC', textOnLight: '#141519', subOnLight: '#6B7079',
+      cardDark: '#111214', cardDarkBorder: '#111214', textOnDark: '#F4F5F7', subOnDark: '#9BA1AC', pos: '#7FF5CC', neg: '#FF8FCB', greenText: '#0E8C66', pinkText: '#C8368A', s1: '#C4B5FD', s2: '#8FE3FF', s3: '#FFE38A',
+      navPillBg: '#111214', navPillText: '#F4F5F7',
+    };
+    const dark = {
+      frame: '#0B0C0F', cardLight: '#141519', cardLightBorder: '#262A31', textOnLight: '#F4F5F7', subOnLight: '#9BA1AC',
+      cardDark: '#101114', cardDarkBorder: '#262A31', textOnDark: '#F4F5F7', subOnDark: '#9BA1AC', pos: '#7FF5CC', neg: '#FF8FCB', greenText: '#7FF5CC', pinkText: '#FF8FCB', s1: '#C4B5FD', s2: '#8FE3FF', s3: '#FFE38A',
+      navPillBg: '#6C7BFA', navPillText: '#0B0C0F',
+    };
+    return { t: theme === 'dark' ? dark : light };
+  }
+}
+</script>
+</body>
+</html>

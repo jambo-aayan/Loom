@@ -1,0 +1,179 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'IBM Plex Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #6C7BFA; } a:hover { color: #4F5FE0; }
+    .h { font-family: 'Space Grotesk', system-ui, sans-serif; }
+    .m { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; }
+    table { border-collapse: collapse; width: 100%; }
+    th { text-align: left; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; padding: 0 14px 10px; }
+    td { padding: 14px; font-size: 13px; }
+  </style>
+</helmet>
+<div style="width: 1440px; height: 960px; padding: 20px 28px 28px; display: flex; flex-direction: column; gap: 18px; background: {{t.frame}}; color: {{t.textOnLight}};">
+
+  <div style="height: 56px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <svg width="30" height="30" viewBox="0 0 64 64" fill="none"><path d="M4,56 C24,56 32,26 58,12" stroke="#6C7BFA" stroke-opacity="0.3" stroke-width="4" stroke-linecap="round"/><path d="M4,46 C22,46 32,30 58,12" stroke="#6C7BFA" stroke-opacity="0.5" stroke-width="4" stroke-linecap="round"/><path d="M4,34 C24,34 30,32 58,12" stroke="#6C7BFA" stroke-opacity="0.75" stroke-width="4" stroke-linecap="round"/><path d="M4,20 C26,20 34,26 58,12" stroke="#6C7BFA" stroke-width="4" stroke-linecap="round"/><circle cx="58" cy="12" r="4" fill="#6C7BFA"/></svg>
+        <span style="font-family: 'Tiro Bangla', Georgia, serif; font-size: 27px; line-height: 1;">loom</span>
+      </div>
+      <div style="width: 1px; height: 24px; background: {{t.cardLightBorder}};"></div>
+      <div style="display: flex; align-items: center; gap: 6px; font-size: 13.5px; color: {{t.subOnLight}};">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18 L9 12 L15 6"/></svg>
+        <span>Strategies</span><span style="color: {{t.textOnLight}}; font-weight: 500;">/ Compare performance</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+        <div style="padding: 6px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 600; background: {{t.navPillBg}}; color: {{t.navPillText}};">Demo</div>
+        <div style="padding: 6px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 500; color: {{t.navText}};">Live</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 7px; height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(242,85,90,0.45); color: #F2555A; font-size: 12.5px; font-weight: 600; background: {{t.cardLight}};">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F2555A" stroke-width="2.4" stroke-linecap="round"><path d="M12 2 V11"/><path d="M7 5.5 A9 9 0 1 0 17 5.5"/></svg>
+        <span>Kill switch</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: flex-end; justify-content: space-between;">
+    <div>
+      <div class="h" style="font-size: 24px; font-weight: 600; letter-spacing: -0.01em;">Compare performance</div>
+      <div style="font-size: 13px; color: {{t.subOnLight}}; margin-top: 4px;">Every strategy, same window, same benchmark — so "which one is actually working" has an answer.</div>
+    </div>
+    <div style="display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+      <div style="padding: 7px 14px; border-radius: 999px; font-size: 12.5px; color: {{t.subOnLight}};">1M</div>
+      <div style="padding: 7px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 600; background: {{t.navPillBg}}; color: {{t.navPillText}};">6M</div>
+      <div style="padding: 7px 14px; border-radius: 999px; font-size: 12.5px; color: {{t.subOnLight}};">1Y</div>
+      <div style="padding: 7px 14px; border-radius: 999px; font-size: 12.5px; color: {{t.subOnLight}};">All</div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 8px;">
+    <div style="display: flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 999px; background: {{t.navPillBg}}; color: {{t.navPillText}}; font-size: 12px; font-weight: 600;">By Book</div>
+    <div style="display: flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 999px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; font-size: 12px; color: {{t.subOnLight}};">By instrument</div>
+    <div style="display: flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 999px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; font-size: 12px; color: {{t.subOnLight}};">By sector</div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px;">
+    <div style="grid-column: span 8; border-radius: 22px; padding: 20px 22px 14px; background: {{t.cardDark}}; border: 1px solid {{t.cardDarkBorder}}; color: {{t.textOnDark}};">
+      <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 14px; font-size: 11.5px;">
+        <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 9px; height: 9px; border-radius: 2px; background: #7FF5CC;"></span>Compounder <span class="m" style="color: {{t.pos}}; margin-left: 3px;">+20.4%</span></span>
+        <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 9px; height: 9px; border-radius: 2px; background: {{t.s1}};"></span>Dip-Buyer <span class="m" style="color: {{t.s1}}; margin-left: 3px;">+11.2%</span></span>
+        <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 9px; height: 9px; border-radius: 2px; background: #4B4F58;"></span>Bench (VUSA) <span class="m" style="color: {{t.subOnDark}}; margin-left: 3px;">+11.5%</span></span>
+        <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 9px; height: 9px; border-radius: 2px; background: {{t.s2}};"></span>Trend Follower <span class="m" style="color: {{t.s2}}; margin-left: 3px;">+3.1%</span></span>
+        <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 9px; height: 9px; border-radius: 2px; background: {{t.s3}};"></span>Breakout <span class="m" style="color: {{t.s3}}; margin-left: 3px;">+0.8%</span></span>
+        <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 9px; height: 9px; border-radius: 2px; background: #FF8FCB;"></span>Harvester <span class="m" style="color: {{t.neg}}; margin-left: 3px;">−6.2%</span></span>
+      </div>
+      <svg width="100%" height="190" viewBox="0 0 800 220" preserveAspectRatio="none" style="margin-top: 12px;">
+        <path d="M0,166 L800,166" stroke="rgba(255,255,255,0.14)" stroke-width="1" stroke-dasharray="3 3"/>
+        <path d="M0,166 L100,163 L200,158 L300,152 L400,148 L500,142 L600,138 L700,132 L800,128" fill="none" stroke="#4B4F58" stroke-width="1.6" stroke-dasharray="4 4" stroke-linejoin="round"/>
+        <path d="M0,166 L100,168 L200,172 L300,178 L400,174 L500,180 L600,184 L700,182 L800,188" fill="none" stroke="{{t.s2}}" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M0,166 L100,170 L200,175 L300,180 L400,190 L500,185 L600,195 L700,198 L800,204" fill="none" stroke="{{t.s3}}" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M0,166 L100,172 L200,180 L300,190 L400,182 L500,195 L600,200 L700,205 L800,210" fill="none" stroke="#FF8FCB" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M0,166 L100,162 L200,155 L300,150 L400,145 L500,140 L600,136 L700,132 L800,130" fill="none" stroke="{{t.s1}}" stroke-width="2.2" stroke-linejoin="round"/>
+        <path d="M0,166 L100,158 L200,148 L300,138 L400,122 L500,110 L600,95 L700,80 L800,64" fill="none" stroke="#7FF5CC" stroke-width="2.4" stroke-linejoin="round"/>
+      </svg>
+      <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; color: {{t.subOnDark}};"><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span></div>
+    </div>
+
+    <div style="grid-column: span 4; border-radius: 22px; padding: 18px 20px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+      <div class="h" style="font-size: 14.5px; font-weight: 600;">Correlation between Books</div>
+      <div style="font-size: 11px; color: {{t.subOnLight}}; margin-top: 3px;">Lower = more diversifying, not just "more strategies."</div>
+      <div style="display: grid; grid-template-columns: 70px repeat(5, minmax(0, 1fr)); gap: 3px; margin-top: 14px; align-items: center;">
+        <div></div>
+        <sc-for list="{{corrLabels}}" as="l" hint-placeholder-count="5"><div style="font-size: 9px; color: {{t.subOnLight}}; text-align: center; writing-mode: vertical-rl; transform: rotate(180deg); height: 44px;">{{l}}</div></sc-for>
+        <sc-for list="{{corrRows}}" as="row" hint-placeholder-count="5">
+          <div style="font-size: 9.5px; color: {{t.subOnLight}}; padding-right: 4px;">{{row.label}}</div>
+          <sc-for list="{{row.cells}}" as="c" hint-placeholder-count="5">
+            <div class="m" style="aspect-ratio: 1; border-radius: 4px; background: {{c.bg}}; color: {{c.textColor}}; font-size: 9.5px; display: flex; align-items: center; justify-content: center;">{{c.value}}</div>
+          </sc-for>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div style="border-radius: 22px; padding: 16px 10px 10px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; flex: 1; overflow: hidden;">
+    <table>
+      <thead><tr style="color: {{t.subOnLight}};"><th>Strategy</th><th>Status</th><th style="text-align: right;">Total return</th><th style="text-align: right;">Sharpe</th><th style="text-align: right;">Profit factor</th><th style="text-align: right;">Win rate</th><th style="text-align: right;">Avg return</th><th style="text-align: right;">Max drawdown</th><th style="text-align: right;">Trades</th><th style="text-align: right;">Net P&amp;L</th></tr></thead>
+      <tbody>
+        <sc-for list="{{strategyRows}}" as="s" hint-placeholder-count="6">
+          <tr style="border-top: 1px solid {{t.divider}}; background: {{s.rowBg}};">
+            <td style="display: flex; align-items: center; gap: 8px; font-weight: {{s.nameWeight}}; color: {{s.nameColor}};"><span style="width: 10px; height: 10px; border-radius: 2px; background: {{s.dot}};"></span>{{s.name}}<sc-if value="{{s.badge}}" hint-placeholder-val="{{false}}"><span style="font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: rgba(127,245,204,0.22); color: {{t.greenText}}; margin-left: 4px;">{{s.badge}}</span></sc-if></td>
+            <td><span style="font-size: 10.5px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: {{s.statusBg}}; color: {{s.statusColor}};">{{s.status}}</span></td>
+            <td class="m" style="text-align: right; color: {{s.returnColor}}; font-weight: 600;">{{s.totalReturn}}</td>
+            <td class="m" style="text-align: right;">{{s.sharpe}}</td>
+            <td class="m" style="text-align: right;">{{s.profitFactor}}</td>
+            <td class="m" style="text-align: right;">{{s.winRate}}</td>
+            <td class="m" style="text-align: right; color: {{s.avgColor}};">{{s.avgReturn}}</td>
+            <td class="m" style="text-align: right;">{{s.drawdown}}</td>
+            <td class="m" style="text-align: right;">{{s.trades}}</td>
+            <td class="m" style="text-align: right; color: {{s.netColor}};">{{s.netPnl}}</td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"theme":{"editor":"enum","default":"light","options":["light","dark"]}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'light';
+    const light = {
+      frame: '#F3F2EF', cardLight: '#FFFFFF', cardLightBorder: '#E6E3DC', textOnLight: '#141519', subOnLight: '#6B7079',
+      cardDark: '#111214', cardDarkBorder: '#111214', textOnDark: '#F4F5F7', subOnDark: '#9BA1AC', pos: '#7FF5CC', neg: '#FF8FCB', greenText: '#0E8C66', pinkText: '#C8368A', s1: '#C4B5FD', s2: '#8FE3FF', s3: '#FFE38A',
+      chipBg: '#F3F2EF', chipBorder: '#E6E3DC', divider: '#ECEAE4',
+      navPillBg: '#111214', navPillText: '#F4F5F7', navText: '#4B5058',
+    };
+    const dark = {
+      frame: '#0B0C0F', cardLight: '#141519', cardLightBorder: '#262A31', textOnLight: '#F4F5F7', subOnLight: '#9BA1AC',
+      cardDark: '#101114', cardDarkBorder: '#262A31', textOnDark: '#F4F5F7', subOnDark: '#9BA1AC', pos: '#7FF5CC', neg: '#FF8FCB', greenText: '#7FF5CC', pinkText: '#FF8FCB', s1: '#C4B5FD', s2: '#8FE3FF', s3: '#FFE38A',
+      chipBg: '#1B1E24', chipBorder: '#262A31', divider: '#262A31',
+      navPillBg: '#6C7BFA', navPillText: '#0B0C0F', navText: '#9BA1AC',
+    };
+    const t = theme === 'dark' ? dark : light;
+
+    const strategyRows = [
+      { name: 'Low-Vol Compounder', badge: 'Best', dot: '#7FF5CC', nameWeight: '600', nameColor: t.textOnLight, rowBg: 'rgba(127,245,204,0.08)', status: 'Live-enabled', statusBg: 'rgba(127,245,204,0.22)', statusColor: t.greenText, totalReturn: '+20.4%', returnColor: t.greenText, sharpe: '1.62', profitFactor: '2.1', winRate: '63%', avgReturn: '+1.8%', avgColor: t.greenText, drawdown: '−4.2%', trades: '96', netPnl: '+£412', netColor: t.greenText },
+      { name: 'Buy & hold VUSA', badge: false, dot: '#4B4F58', nameWeight: '400', nameColor: t.subOnLight, rowBg: 'transparent', status: 'reference', statusBg: t.chipBg, statusColor: t.subOnLight, totalReturn: '+11.5%', returnColor: t.greenText, sharpe: '0.88', profitFactor: '—', winRate: '—', avgReturn: '—', avgColor: t.subOnLight, drawdown: '−9.1%', trades: '—', netPnl: '—', netColor: t.subOnLight },
+      { name: 'Value/Quality Dip-Buyer', badge: false, dot: t.s1, nameWeight: '600', nameColor: t.textOnLight, rowBg: 'transparent', status: 'Demo only', statusBg: t.chipBg, statusColor: t.subOnLight, totalReturn: '+11.2%', returnColor: t.greenText, sharpe: '1.38', profitFactor: '1.9', winRate: '67%', avgReturn: '+2.4%', avgColor: t.greenText, drawdown: '−5.1%', trades: '19', netPnl: '+£211', netColor: t.greenText },
+      { name: 'Trend Follower', badge: false, dot: t.s2, nameWeight: '600', nameColor: t.textOnLight, rowBg: 'transparent', status: 'Demo only', statusBg: t.chipBg, statusColor: t.subOnLight, totalReturn: '+3.1%', returnColor: t.greenText, sharpe: '0.74', profitFactor: '1.3', winRate: '55%', avgReturn: '+1.1%', avgColor: t.greenText, drawdown: '−8.4%', trades: '41', netPnl: '+£94', netColor: t.greenText },
+      { name: 'Volatility Breakout', badge: false, dot: t.s3, nameWeight: '600', nameColor: t.textOnLight, rowBg: 'transparent', status: 'Demo only', statusBg: t.chipBg, statusColor: t.subOnLight, totalReturn: '+0.8%', returnColor: t.greenText, sharpe: '0.21', profitFactor: '1.05', winRate: '46%', avgReturn: '+0.4%', avgColor: t.greenText, drawdown: '−11.2%', trades: '28', netPnl: '+£19', netColor: t.greenText },
+      { name: 'Volatility Harvester', badge: 'Worst', dot: '#FF8FCB', nameWeight: '600', nameColor: t.textOnLight, rowBg: 'rgba(255,143,203,0.08)', status: 'Demo only', statusBg: t.chipBg, statusColor: t.subOnLight, totalReturn: '−6.2%', returnColor: t.pinkText, sharpe: '−0.31', profitFactor: '0.7', winRate: '48%', avgReturn: '−0.6%', avgColor: t.pinkText, drawdown: '−9.8%', trades: '52', netPnl: '−£118', netColor: t.pinkText },
+    ];
+
+    const corrLabels = ['Comp', 'Harv', 'Trend', 'Break', 'Dip'];
+    const corrValues = [
+      [1.00, 0.12, 0.34, 0.08, 0.61],
+      [0.12, 1.00, -0.15, 0.22, 0.05],
+      [0.34, -0.15, 1.00, 0.48, 0.29],
+      [0.08, 0.22, 0.48, 1.00, 0.11],
+      [0.61, 0.05, 0.29, 0.11, 1.00],
+    ];
+    const corrColor = (v) => {
+      if (v === 1) return { bg: t.chipBg, textColor: t.subOnLight };
+      const mag = Math.abs(v);
+      const bg = v >= 0 ? `rgba(127,245,204,${0.12 + mag * 0.55})` : `rgba(255,143,203,${0.12 + mag * 0.55})`;
+      return { bg, textColor: mag > 0.35 ? t.textOnLight : t.subOnLight };
+    };
+    const corrRows = corrValues.map((row, i) => ({
+      label: corrLabels[i],
+      cells: row.map((v) => ({ value: v.toFixed(2).replace('0.', '.'), ...corrColor(v) })),
+    }));
+
+    return { t, strategyRows, corrLabels, corrRows };
+  }
+}
+</script>
+</body>
+</html>

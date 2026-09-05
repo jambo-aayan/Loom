@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'IBM Plex Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #6C7BFA; } a:hover { color: #4F5FE0; }
+    .h { font-family: 'Space Grotesk', system-ui, sans-serif; }
+    .m { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; }
+    .row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: {{t.frame}}; color: {{t.textOnLight}};">
+
+  <div style="padding: 50px 16px 40px; display: flex; flex-direction: column; gap: 10px;">
+
+    <div style="height: 44px; display: flex; align-items: center; justify-content: space-between;">
+      <div class="h" style="font-size: 22px; font-weight: 600; letter-spacing: -0.01em;">Settings</div>
+    </div>
+
+    <div style="border-radius: 18px; padding: 16px; background: {{t.cardDark}}; border: 1px solid {{t.cardDarkBorder}}; color: {{t.textOnDark}};">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 38px; height: 38px; border-radius: 999px; background: rgba(242,85,90,0.18); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F2555A" stroke-width="2.4" stroke-linecap="round"><path d="M12 2 V11"/><path d="M7 5.5 A9 9 0 1 0 17 5.5"/></svg>
+        </div>
+        <div style="flex: 1;"><div class="h" style="font-size: 14.5px; font-weight: 600;">Kill switch</div><div style="font-size: 10.5px; color: {{t.subOnDark}};">Off · checked before every order</div></div>
+      </div>
+      <div style="height: 42px; border-radius: 999px; border: 1px solid rgba(242,85,90,0.5); color: #F2555A; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; margin-top: 12px;">Halt everything now</div>
+    </div>
+
+    <div style="border-radius: 18px; padding: 16px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+      <div class="h" style="font-size: 14.5px; font-weight: 600; margin-bottom: 2px;">Risk limits</div>
+      <div class="row" style="border-bottom: 1px solid {{t.divider}};"><span style="font-size: 12.5px;">Max position size</span><span class="m" style="font-size: 12px;">15%</span></div>
+      <div class="row" style="border-bottom: 1px solid {{t.divider}};"><span style="font-size: 12.5px;">Max total exposure</span><span class="m" style="font-size: 12px;">80% <span style="color: {{t.subOnLight}};">· at 61%</span></span></div>
+      <div class="row"><span style="font-size: 12.5px;">Daily loss limit</span><span class="m" style="font-size: 12px;">£250.00</span></div>
+    </div>
+
+    <div style="border-radius: 18px; padding: 16px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+      <div class="h" style="font-size: 14.5px; font-weight: 600; margin-bottom: 4px;">Notifications</div>
+      <div style="display: flex; gap: 6px; margin-bottom: 4px;">
+        <div style="display: flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; background: rgba(108,123,250,0.14); color: #6C7BFA;">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16 V10 a6 6 0 0 1 12 0 V16 L20 18 H4 Z"/><path d="M10 20.5 a2 2 0 0 0 4 0"/></svg>
+          <span style="font-size: 10.5px; font-weight: 600;">Push</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; background: rgba(108,123,250,0.14); color: #6C7BFA;">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6 H20 V18 H4 Z"/><path d="M4 7 L12 13 L20 7"/></svg>
+          <span style="font-size: 10.5px; font-weight: 600;">Email</span>
+        </div>
+      </div>
+      <div style="font-size: 11.5px; color: {{t.subOnLight}}; line-height: 1.5;">4 alert types on, both channels. Which signals push is set per strategy's Notify threshold.</div>
+      <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid {{t.divider}}; font-size: 11px; color: {{t.subOnLight}};">aayan@example.com</div>
+    </div>
+
+    <div style="border-radius: 18px; padding: 16px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+      <div class="h" style="font-size: 14.5px; font-weight: 600; margin-bottom: 2px;">Account</div>
+      <div class="row" style="border-bottom: 1px solid {{t.divider}};">
+        <div style="display: flex; align-items: center; gap: 7px;"><span style="width: 7px; height: 7px; border-radius: 999px; background: {{t.greenText}};"></span><span style="font-size: 12.5px;">Trading 212 — ISA</span></div>
+        <span style="font-size: 10.5px; color: {{t.subOnLight}};">Live · connected</span>
+      </div>
+      <div class="row" style="border-bottom: 1px solid {{t.divider}};"><span style="font-size: 12.5px;">Currency</span><span class="m" style="font-size: 12px; color: {{t.subOnLight}};">GBP</span></div>
+      <div class="row">
+        <div style="display: flex; align-items: center; gap: 7px;"><span style="width: 7px; height: 7px; border-radius: 999px; background: {{t.greenText}};"></span><span style="font-size: 12.5px;">Installed on this device</span></div>
+        <span style="font-size: 10.5px; color: {{t.subOnLight}};">Push enabled</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"theme":{"editor":"enum","default":"light","options":["light","dark"]}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'light';
+    const light = {
+      frame: '#F3F2EF', cardLight: '#FFFFFF', cardLightBorder: '#E6E3DC', textOnLight: '#141519', subOnLight: '#6B7079',
+      cardDark: '#111214', cardDarkBorder: '#111214', textOnDark: '#F4F5F7', subOnDark: '#9BA1AC', greenText: '#0E8C66',
+      divider: '#ECEAE4',
+    };
+    const dark = {
+      frame: '#0B0C0F', cardLight: '#141519', cardLightBorder: '#262A31', textOnLight: '#F4F5F7', subOnLight: '#9BA1AC',
+      cardDark: '#101114', cardDarkBorder: '#262A31', textOnDark: '#F4F5F7', subOnDark: '#9BA1AC', greenText: '#7FF5CC',
+      divider: '#262A31',
+    };
+    return { t: theme === 'dark' ? dark : light };
+  }
+}
+</script>
+</body>
+</html>
