@@ -41,6 +41,24 @@ def test_position_commentary_for_a_manual_holding(client):
     assert "AAPL" in body["content"]
 
 
+def test_position_commentary_for_a_strategy_owned_position(client):
+    strategy_id = client.get("/strategies").json()[0]["id"]
+    client.patch(f"/strategies/{strategy_id}", json={"approval_mode": "auto"})
+
+    signals = client.post("/trading-pass/run", params={"environment": "demo"}).json()
+    executed = [s for s in signals if s["status"] == "executed"]
+    assert executed, "expected the auto-approved strategy to execute at least one order"
+    signal = executed[0]
+
+    resp = client.post(f"/insights/positions/{signal['book_id']}/{signal['instrument']}")
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["tier"] == "position"
+    assert body["signal_id"] is None
+    assert body["book_id"] == signal["book_id"]
+
+
 def test_position_commentary_404s_for_unknown_book(client):
     resp = client.post("/insights/positions/does-not-exist/AAPL")
     assert resp.status_code == 404

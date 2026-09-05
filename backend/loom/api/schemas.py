@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class StrategyOut(BaseModel):
@@ -110,7 +110,7 @@ class InsightOut(BaseModel):
 
 
 class AskIn(BaseModel):
-    question: str
+    question: str = Field(min_length=1)
     instrument: str | None = None
 
 

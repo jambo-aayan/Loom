@@ -38,6 +38,11 @@ def test_ask_can_be_scoped_to_an_instrument(client):
     assert "AAPL" in body["answer"]
 
 
+def test_ask_rejects_a_blank_question(client):
+    resp = client.post("/insights/ask", json={"question": "   "})
+    assert resp.status_code == 400
+
+
 def test_ask_produces_no_signal_order_or_approval_side_effects(client):
     signals_before = client.get("/signals", params={"environment": "demo"}).json()
 

@@ -102,8 +102,11 @@ def ask(body: AskIn, generator: InsightGenerator = Depends(get_insight_generator
     """On-demand "ask about this stock / this macro topic" research (story 51) — free-form,
     advisory-only, structurally incapable of becoming an order (story 53): purely a generated
     answer, no Signal, Order, or approval-pipeline side effect of any kind."""
-    answer = generator.answer_question(body.question, body.instrument)
-    return {"question": body.question, "instrument": body.instrument, "answer": answer}
+    question = body.question.strip()
+    if not question:
+        raise HTTPException(400, "question must not be blank")
+    answer = generator.answer_question(question, body.instrument)
+    return {"question": question, "instrument": body.instrument, "answer": answer}
 
 
 @router.get("/signals/{signal_id}/chart")
