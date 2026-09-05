@@ -1,0 +1,162 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'IBM Plex Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #6C7BFA; } a:hover { color: #4F5FE0; }
+    .h { font-family: 'Space Grotesk', system-ui, sans-serif; }
+    .m { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; }
+    .ico { width: 36px; height: 36px; border-radius: 999px; display: flex; align-items: center; justify-content: center; }
+  </style>
+</helmet>
+<div style="width: 1440px; height: 960px; padding: 20px 28px 28px; display: flex; flex-direction: column; gap: 18px; background: {{t.frame}}; color: {{t.textOnLight}};">
+
+  <div style="height: 56px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <svg width="30" height="30" viewBox="0 0 64 64" fill="none"><path d="M4,56 C24,56 32,26 58,12" stroke="#6C7BFA" stroke-opacity="0.3" stroke-width="4" stroke-linecap="round"/><path d="M4,46 C22,46 32,30 58,12" stroke="#6C7BFA" stroke-opacity="0.5" stroke-width="4" stroke-linecap="round"/><path d="M4,34 C24,34 30,32 58,12" stroke="#6C7BFA" stroke-opacity="0.75" stroke-width="4" stroke-linecap="round"/><path d="M4,20 C26,20 34,26 58,12" stroke="#6C7BFA" stroke-width="4" stroke-linecap="round"/><circle cx="58" cy="12" r="4" fill="#6C7BFA"/></svg>
+      <span style="font-family: 'Tiro Bangla', Georgia, serif; font-size: 27px; line-height: 1; color: {{t.textOnLight}};">loom</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 999px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+      <div class="ico" style="color: {{t.navText}};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg></div>
+      <div class="ico" style="color: {{t.navText}};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5 L11 15.5 L16 9.5"/></svg></div>
+      <div class="ico" style="color: {{t.navText}};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 8 L12 13 L3 8 Z"/><path d="M3 13 L12 18 L21 13"/></svg></div>
+      <div class="ico" style="color: {{t.navText}};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7 V12 L15.5 14"/></svg></div>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 0 16px 0 12px; height: 36px; border-radius: 999px; background: {{t.navPillBg}}; color: {{t.navPillText}}; font-size: 13.5px; font-weight: 500;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3 L14 9.5 L21 12 L14 14.5 L12 21 L10 14.5 L3 12 L10 9.5 Z"/></svg>
+        <span>Insights</span>
+      </div>
+      <div class="ico" style="color: {{t.navText}};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6 H20 M4 12 H20 M4 18 H14"/></svg></div>
+      <div class="ico" style="color: {{t.navText}};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2 V5 M12 19 V22 M4.2 4.2 L6.3 6.3 M17.7 17.7 L19.8 19.8 M2 12 H5 M19 12 H22 M4.2 19.8 L6.3 17.7 M17.7 6.3 L19.8 4.2"/></svg></div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+        <div style="padding: 6px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 600; background: {{t.navPillBg}}; color: {{t.navPillText}};">Demo</div>
+        <div style="padding: 6px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 500; color: {{t.navText}};">Live</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 7px; height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(242,85,90,0.45); color: #F2555A; font-size: 12.5px; font-weight: 600; background: {{t.cardLight}};">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F2555A" stroke-width="2.4" stroke-linecap="round"><path d="M12 2 V11"/><path d="M7 5.5 A9 9 0 1 0 17 5.5"/></svg>
+        <span>Kill switch</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; flex: 1;">
+
+    <div style="grid-column: span 7; display: flex; flex-direction: column; gap: 14px;">
+      <div style="padding: 0 4px;">
+        <div class="h" style="font-size: 24px; font-weight: 600; letter-spacing: -0.01em;">Ask about anything you hold — or might</div>
+        <div style="font-size: 13px; color: {{t.subOnLight}}; margin-top: 4px;">Research with sources. Insights inform you; they never place a trade.</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 18px; border-radius: 999px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6C7BFA" stroke-width="2" stroke-linejoin="round"><path d="M12 3 L14 9.5 L21 12 L14 14.5 L12 21 L10 14.5 L3 12 L10 9.5 Z"/></svg>
+        <div style="flex: 1; font-size: 14px; color: {{t.textOnLight}};">Why is VWRL down this week, and does it change the case for holding it?</div>
+        <div style="height: 40px; padding: 0 20px; border-radius: 999px; background: {{t.navPillBg}}; color: {{t.navPillText}}; font-size: 13.5px; font-weight: 600; display: flex; align-items: center;">Ask</div>
+      </div>
+
+      <div style="border-radius: 22px; padding: 24px; background: {{t.cardDark}}; border: 1px solid {{t.cardDarkBorder}}; color: {{t.textOnDark}}; flex: 1; display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: #6C7BFA; color: #0B0C0F;">Insight</span>
+          <span style="font-size: 11.5px; color: {{t.subOnDark}};">Advisory only · not a trade instruction · generated with web search</span>
+        </div>
+        <div class="h" style="font-size: 20px; font-weight: 600; letter-spacing: -0.01em;">VWRL is down about 1.2% on the week — mostly the dollar, not the companies.</div>
+        <div style="font-size: 14px; line-height: 1.65; color: {{t.textOnDark}};">
+          Roughly two-thirds of VWRL is US-listed, so a stronger pound this week mechanically lowered its GBP price even though the underlying index was flat to slightly up. Nothing in the constituents' news flow explains the move on its own.
+          <br><br>
+          For the Low-Vol Compounder's thesis that is a neutral-to-mild positive: the strategy's entry rule looks for exactly this kind of currency-driven dip in a broad index. The stop on the open position is not close to being tested.
+        </div>
+        <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
+          <div style="font-size: 11.5px; color: {{t.subOnDark}}; margin-bottom: 8px;">Sources — sample</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            <span style="font-size: 11.5px; padding: 5px 10px; border-radius: 999px; background: rgba(255,255,255,0.07);">Sample source · fund factsheet</span>
+            <span style="font-size: 11.5px; padding: 5px 10px; border-radius: 999px; background: rgba(255,255,255,0.07);">Sample source · GBP/USD daily</span>
+            <span style="font-size: 11.5px; padding: 5px 10px; border-radius: 999px; background: rgba(255,255,255,0.07);">Sample source · index weekly wrap</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="grid-column: span 5; display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; align-items: flex-end; justify-content: space-between; padding: 0 4px;">
+        <div class="h" style="font-size: 18px; font-weight: 600;">Why each signal fired</div>
+        <div style="display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}};">
+          <div style="padding: 5px 11px; border-radius: 999px; font-size: 11.5px; font-weight: 600; background: {{t.navPillBg}}; color: {{t.navPillText}};">Signals</div>
+          <div style="padding: 5px 11px; border-radius: 999px; font-size: 11.5px; color: {{t.navText}};">Digest</div>
+        </div>
+      </div>
+
+      <div style="border-radius: 18px; padding: 14px 16px; background: rgba(108,123,250,0.1); border: 1px solid rgba(108,123,250,0.28);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6C7BFA" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19 H20 M4 19 V9 L9 13 L13 6 L20 11"/></svg>
+          <span class="h" style="font-size: 13px; font-weight: 600;">Today's briefing</span>
+        </div>
+        <div style="font-size: 12.5px; line-height: 1.55; color: {{t.subOnLight}}; margin-top: 6px;">3 signals fired, all in calmer-than-usual names — no red flags in the news flow. Sterling strength is doing more to move index ETFs than the underlying companies this week, worth remembering before reading too much into any one dip.</div>
+      </div>
+
+      <div style="border-radius: 20px; padding: 16px 18px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; color: {{t.textOnLight}};">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 8px;"><span class="h" style="font-size: 14.5px; font-weight: 600;">MSFT · buy</span><span class="m" style="font-size: 11.5px; color: {{t.subOnLight}};">0.78</span><span style="font-size: 9.5px; font-weight: 600; padding: 1px 6px; border-radius: 999px; background: {{t.chipBg}}; color: {{t.subOnLight}};">Screening</span></div>
+          <span style="font-size: 11px; color: {{t.subOnLight}};">2h ago</span>
+        </div>
+        <svg width="100%" height="46" viewBox="0 0 300 46" preserveAspectRatio="none" style="margin-top: 8px; display: block;">
+          <path d="M0,14 L30,18 L60,24 L90,30 L120,34 L150,28 L180,22 L210,18 L240,14 L270,10 L300,8" fill="none" stroke="{{t.subOnLight}}" stroke-width="1.6" stroke-linejoin="round"/>
+          <circle cx="150" cy="28" r="4" fill="#6C7BFA"/>
+          <path d="M150,28 V4" stroke="#6C7BFA" stroke-width="1" stroke-dasharray="2 2"/>
+          <text x="150" y="12" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8" font-weight="600" fill="#6C7BFA">3-day pullback</text>
+        </svg>
+        <div style="font-size: 13px; line-height: 1.55; color: {{t.subOnLight}}; margin-top: 6px;">Three-day pullback to the 50-day average while relative strength against the sector stayed positive — historically a favourable entry for this strategy.</div>
+      </div>
+
+      <div style="border-radius: 20px; padding: 16px 18px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; color: {{t.textOnLight}};">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 8px;"><span class="h" style="font-size: 14.5px; font-weight: 600;">VWRL · buy</span><span class="m" style="font-size: 11.5px; color: {{t.subOnLight}};">0.61</span><span style="font-size: 9.5px; font-weight: 600; padding: 1px 6px; border-radius: 999px; background: {{t.chipBg}}; color: {{t.subOnLight}};">Screening</span><span style="font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 999px; background: rgba(242,85,90,0.14); color: #F2555A;">Live</span></div>
+          <span style="font-size: 11px; color: {{t.subOnLight}};">3h ago</span>
+        </div>
+        <div style="font-size: 13px; line-height: 1.55; color: {{t.subOnLight}}; margin-top: 8px;">Confidence is moderate: broad-market volatility ticked up this week, which widens this strategy's stop distance and shrinks the position it will propose.</div>
+      </div>
+
+      <div style="border-radius: 20px; padding: 16px 18px; background: {{t.cardLight}}; border: 1px solid {{t.cardLightBorder}}; color: {{t.textOnLight}};">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 8px;"><span class="h" style="font-size: 14.5px; font-weight: 600;">JNJ · sell</span><span class="m" style="font-size: 11.5px; color: {{t.subOnLight}};">0.44</span><span style="font-size: 9.5px; font-weight: 600; padding: 1px 6px; border-radius: 999px; background: {{t.chipBg}}; color: {{t.subOnLight}};">Screening</span></div>
+          <span style="font-size: 11px; color: {{t.subOnLight}};">1d ago</span>
+        </div>
+        <div style="font-size: 13px; line-height: 1.55; color: {{t.subOnLight}}; margin-top: 8px;">Follows a mild earnings-reaction dip; the position had already reached 80% of its profit target before pulling back, so the strategy is proposing to take what's there.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"theme":{"editor":"enum","default":"light","options":["light","dark"]}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'light';
+    const light = {
+      frame: '#F3F2EF', cardLight: '#FFFFFF', cardLightBorder: '#E6E3DC', textOnLight: '#141519', subOnLight: '#6B7079',
+      cardDark: '#111214', cardDarkBorder: '#111214', textOnDark: '#F4F5F7', subOnDark: '#9BA1AC', pos: '#7FF5CC', neg: '#FF8FCB', greenText: '#0E8C66', pinkText: '#C8368A', s1: '#C4B5FD', s2: '#8FE3FF', s3: '#FFE38A',
+      chipBg: '#F3F2EF', chipBorder: '#E6E3DC', divider: '#ECEAE4',
+      navPillBg: '#111214', navPillText: '#F4F5F7', navText: '#4B5058',
+      rangeActiveBg: '#F4F5F7', rangeActiveText: '#111214',
+      amberText: '#A86F0C', indigoText: '#4F5FE0',
+    };
+    const dark = {
+      frame: '#0B0C0F', cardLight: '#141519', cardLightBorder: '#262A31', textOnLight: '#F4F5F7', subOnLight: '#9BA1AC',
+      cardDark: '#101114', cardDarkBorder: '#262A31', textOnDark: '#F4F5F7', subOnDark: '#9BA1AC', pos: '#7FF5CC', neg: '#FF8FCB', greenText: '#7FF5CC', pinkText: '#FF8FCB', s1: '#C4B5FD', s2: '#8FE3FF', s3: '#FFE38A',
+      chipBg: '#1B1E24', chipBorder: '#262A31', divider: '#262A31',
+      navPillBg: '#6C7BFA', navPillText: '#0B0C0F', navText: '#9BA1AC',
+      rangeActiveBg: '#6C7BFA', rangeActiveText: '#0B0C0F',
+      amberText: '#F5B942', indigoText: '#8B97FC',
+    };
+    return { t: theme === 'dark' ? dark : light };
+  }
+}
+</script>
+</body>
+</html>

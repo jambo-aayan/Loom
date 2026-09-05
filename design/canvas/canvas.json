@@ -1,0 +1,253 @@
+{
+  "artboards": [
+    {
+      "file": "Landing.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1480,
+      "title": "Landing page"
+    },
+    {
+      "file": "Mobile.dc.html",
+      "x": 1540,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Phone · Overview"
+    },
+    {
+      "file": "MobileApprovals.dc.html",
+      "x": 2030,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Phone · Approvals"
+    },
+    {
+      "file": "MobileStrategies.dc.html",
+      "x": 2520,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Phone · Strategies"
+    },
+    {
+      "file": "MobileBacktest.dc.html",
+      "x": 3010,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Phone · Backtest"
+    },
+    {
+      "file": "MobileInsights.dc.html",
+      "x": 3500,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Phone · Insights"
+    },
+    {
+      "file": "MobileHistory.dc.html",
+      "x": 3990,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Phone · History"
+    },
+    {
+      "file": "MobileSettings.dc.html",
+      "x": 4480,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Phone · Settings"
+    },
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 1640,
+      "w": 1440,
+      "h": 1030,
+      "title": "Desktop · Overview"
+    },
+    {
+      "file": "Approvals.dc.html",
+      "x": 1540,
+      "y": 1640,
+      "w": 1440,
+      "h": 1030,
+      "title": "Desktop · Approvals"
+    },
+    {
+      "file": "Strategies.dc.html",
+      "x": 0,
+      "y": 2860,
+      "w": 1440,
+      "h": 960,
+      "title": "Desktop · Strategies"
+    },
+    {
+      "file": "Backtest.dc.html",
+      "x": 1540,
+      "y": 2860,
+      "w": 1440,
+      "h": 960,
+      "title": "Desktop · Backtest"
+    },
+    {
+      "file": "Insights.dc.html",
+      "x": 0,
+      "y": 3980,
+      "w": 1440,
+      "h": 960,
+      "title": "Desktop · Insights"
+    },
+    {
+      "file": "History.dc.html",
+      "x": 1540,
+      "y": 3980,
+      "w": 1440,
+      "h": 960,
+      "title": "Desktop · History"
+    },
+    {
+      "file": "Settings.dc.html",
+      "x": 0,
+      "y": 5100,
+      "w": 1440,
+      "h": 960,
+      "title": "Desktop · Settings"
+    },
+    {
+      "file": "Onboarding.dc.html",
+      "x": 1540,
+      "y": 5100,
+      "w": 1440,
+      "h": 960,
+      "title": "Onboarding · Connect account"
+    },
+    {
+      "file": "Performance.dc.html",
+      "x": 0,
+      "y": 6220,
+      "w": 1440,
+      "h": 960,
+      "title": "Drill-in · Compare performance"
+    },
+    {
+      "file": "Instrument.dc.html",
+      "x": 1540,
+      "y": 6220,
+      "w": 1440,
+      "h": 960,
+      "title": "Drill-in · Instrument (VUSA)"
+    },
+    {
+      "file": "BacktestCompare.dc.html",
+      "x": 0,
+      "y": 7340,
+      "w": 1440,
+      "h": 960,
+      "title": "Drill-in · Compare backtest runs"
+    },
+    {
+      "file": "StrategyDetail.dc.html",
+      "x": 1540,
+      "y": 7340,
+      "w": 1440,
+      "h": 1040,
+      "title": "Drill-in · Strategy detail (Low-Vol Compounder)"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "note-top",
+      "x": 0,
+      "y": -170,
+      "w": 760,
+      "text": "Every board has a light / dark chip above it — the whole app is themed from one token set, so flip any board to see it in dark mode. Row 1: the landing page (front door, pre-login) and the two phone screens."
+    },
+    {
+      "id": "note-phone",
+      "x": 1540,
+      "y": -110,
+      "w": 3330,
+      "text": "Phone: full parity now, all seven mobile screens. The 5-item bottom tab bar (Overview/Approvals/Strategies/Backtest/Insights) covers primary nav; History and Settings — not in the tab bar, no room for a 6th — are reached via two small icons in the header instead (visible on every phone screen), so no screen is more than one tap from either. Approve/Reject stay full-width thumb targets everywhere; tables become stacked cards (History); sliders become compact value rows (Settings); dense desktop content (Backtest's trade list, Insights' Ask panel) is trimmed to what's actually useful on a 390px screen, not squeezed in 1:1."
+    },
+    {
+      "id": "note-app",
+      "x": 0,
+      "y": 1530,
+      "w": 700,
+      "text": "Desktop app: Overview is the in-app home. Approvals · Strategies · Backtest · Insights · History · Settings share the same nav, now with two more icons for the pages below."
+    },
+    {
+      "id": "note-phase1",
+      "x": 1540,
+      "y": 1530,
+      "w": 700,
+      "text": "Phase 1 of the UI rebuild: Overview now shows a per-strategy (\"Book\") performance strip so strategies are comparable at a glance, not just an aggregate number. Approvals adds a Notify-threshold badge per signal (was it worth pushing to your phone?), a low-friction optional note field for the trade journal, and an \"Always manual\" badge on Volatility Harvester's add-to-a-losing-position action, which can never be auto-approved."
+    },
+    {
+      "id": "note-strategies",
+      "x": 0,
+      "y": 2750,
+      "w": 700,
+      "text": "Phase 2: Strategies now lists all five (was two), each tagged trading/investment style. Its detail panel gets a Notify-threshold slider alongside the auto-approve one, plus a \"View full details →\" link into the new Strategy detail drill-in (bottom-right, next to Backtest-compare) — plain-English explanation, current parameters with what each one controls, and a version changelog showing backtested performance before/after each change."
+    },
+    {
+      "id": "note-new",
+      "x": 0,
+      "y": 3870,
+      "w": 900,
+      "text": "New this pass, answering \"what's missing to feel complete\": History (full trade log, filterable, exportable — your ISA record) and Settings (risk limits, notification toggles, kill-switch panel, account status) are full nav destinations. Onboarding is the actual front door the Landing page's button now leads to. Phase 4: Insights (below) now has a \"Today's briefing\" digest above the per-signal list, a Screening tag on each signal (the cheap tier that runs on everything — a deeper research tier for candidates that clear the quant screen is a near-term fast-follow, not v1), and the top signal shows its trigger marked directly on a small price chart instead of only in text."
+    },
+    {
+      "id": "note-phase3-history",
+      "x": 1540,
+      "y": 3870,
+      "w": 700,
+      "text": "Phase 3: History's Status/Outcome columns now cover every decision, not just executed trades — a rejected or expired signal shows its counterfactual outcome (\"would have: −£11.20\") right next to real ones, plus your journal note. A new \"Your calls, in hindsight\" tile scores whether your own approve/reject judgment is adding value."
+    },
+    {
+      "id": "note-phase5-settings",
+      "x": 0,
+      "y": 4990,
+      "w": 900,
+      "text": "Phase 5: Settings' Notifications card now shows both channels — Push (this device) and Email, each event still toggled individually — and the Account card gains an \"Installed on this device\" row confirming the PWA is set up. This is account-wide notification plumbing; which specific signals actually push is still set per strategy on the Strategies page (its Notify threshold slider)."
+    },
+    {
+      "id": "note-drillin",
+      "x": 0,
+      "y": 6100,
+      "w": 900,
+      "text": "Performance, Instrument and Backtest-compare are drill-in pages, not top-level nav items — reached via a breadcrumb (e.g. \"Strategies / Compare performance\") from wherever they're relevant, the way a real app would route them rather than crowding the main nav further."
+    },
+    {
+      "id": "note-phase3-perf",
+      "x": 1540,
+      "y": 6100,
+      "w": 700,
+      "text": "Phase 3: Compare performance now covers all five strategies plus the benchmark (was two), adds Sharpe and profit factor next to win rate and drawdown, and a correlation matrix — a strategy with a great return that just tracks another one isn't really diversifying you."
+    },
+    {
+      "id": "note-phase4-backtest",
+      "x": 1540,
+      "y": 2750,
+      "w": 700,
+      "text": "Phase 4: Backtest gets a Config version selector (v3 current / v2 / start a new draft) and the strategy list covers all five. Saved runs are now labelled by the version they tested, not just a nickname — so \"which version is this\" is never ambiguous."
+    },
+    {
+      "id": "note-phase4-backtestcompare",
+      "x": 0,
+      "y": 7220,
+      "w": 900,
+      "text": "Phase 4: Compare backtest runs now shows the actual parameter diff between versions (\"Loss limit −2.5% → −2.0%\") right on each card, not just prose — this is the concrete moment a candidate version either becomes the new baseline or doesn't, feeding straight into the version changelog on the Strategy detail page."
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  }
+}
