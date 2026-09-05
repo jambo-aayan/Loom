@@ -23,8 +23,14 @@ The mechanism to immediately halt the bot from submitting further orders. Checke
 **Strategy**
 A pluggable component that generates `Signal`s from market data, current positions, and account state. The low-volatility large-cap/index approach is one `Strategy`, not the system's only one — the system must support multiple concurrent strategies, each independently identifiable (every `Signal` carries the `strategy_id` of the `Strategy` that produced it) and independently evaluable (performance is tracked per strategy, not just in aggregate).
 
+A `Strategy` has `live-enabled` (bool, default `false`): whether it's permitted to place real-money orders at all. This is a one-way-until-you-say-otherwise permission gate, not a phase it moves through — a `Strategy` can always be run against the `demo` `Environment` regardless of its `live-enabled` value; enabling it only additionally allows `live` orders. Promotion is a manual decision the user makes after reviewing the strategy's track record; there's no auto-promotion.
+
+**Environment**
+`demo` or `live` — which Trading 212 account (and therefore which base URL/API key) a given `Signal`, `Order`, or `Position` belongs to. Not a phase or a one-time deployment setting: both environments are always available side by side, and the UI has an explicit switch between them (comparable to an exchange's testnet/live toggle), so the user can test any `Strategy` against `demo` at any time independent of what's currently running on `live`.
+
+**Insight**
+LLM-generated advisory content — commentary on why a specific `Signal` fired, or on-demand research about a stock/macro topic. Deliberately distinct from `Signal`: an `Insight` is never actionable on its own and can never directly trigger an `Order`; it only informs a human or, if a future `Strategy` implementation chooses to use one as an input, that `Strategy`'s own signal generation (still subject to the same risk/sizing and approval gates as any other `Signal`).
+
 ## Open / not yet resolved
 
-- Precise definition of "record" (the bot's own persisted view of positions/trades vs. the Trading 212 API's own history) — under discussion.
 - Vocabulary for the strategy's target universe (e.g. "low-volatility large caps and indices") — not yet formalized as a term.
-- Canonical term for LLM-generated advisory content (commentary on a signal, or on-demand research about a stock/macro topic) — needs to be clearly distinguished from `Signal`, since it's non-actionable and must never itself trigger a trade. Proposed: `Insight`. Under discussion.
