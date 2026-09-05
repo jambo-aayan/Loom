@@ -1,6 +1,6 @@
 # Issue tracker: GitHub
 
-Issues and specs for this repo live as GitHub issues on `jambo-aayan/trader_bot_t212`.
+Issues and specs for this repo live as GitHub issues on `jambo-aayan/Loom` (renamed from `trader_bot_t212`).
 
 ## Conventions
 
@@ -30,7 +30,7 @@ Infer the repo from `git remote -v`; `gh` does this automatically when run insid
 
 ## When a skill says "publish to the issue tracker"
 
-Create a GitHub issue on `jambo-aayan/trader_bot_t212`.
+Create a GitHub issue on `jambo-aayan/Loom`.
 
 ## When a skill says "fetch the relevant ticket"
 
