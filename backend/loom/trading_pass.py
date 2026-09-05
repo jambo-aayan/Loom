@@ -34,6 +34,7 @@ from loom.strategy import (
     ExitPlan,
     MarketData,
     PositionSnapshot,
+    ProposedSignal,
     Strategy,
     StrategyConfig,
 )
@@ -110,6 +111,66 @@ def _decide_approval(
     return SignalStatus.pending_approval, True
 
 
+DEFAULT_SIGNAL_EXPIRY_HOURS = 24.0
+
+
+def expire_stale_signals(
+    session: Session,
+    environment: Environment,
+    market_data_source: MarketDataSource,
+    max_age_hours: float = DEFAULT_SIGNAL_EXPIRY_HOURS,
+    now: datetime | None = None,
+) -> list[Signal]:
+    """A Signal left un-actioned past `max_age_hours` becomes `expired` (CONTEXT.md "Signal"
+    lifecycle) — attaches a counterfactual outcome the same way rejection does (story 66/67),
+    since History treats rejected and expired signals identically."""
+    now = now or datetime.utcnow()
+    cutoff = now - timedelta(hours=max_age_hours)
+    stale = list(
+        session.execute(
+            select(Signal).where(
+                Signal.environment == environment,
+                Signal.status.in_((SignalStatus.pending_approval, SignalStatus.proposed)),
+                Signal.created_at < cutoff,
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+    for signal in stale:
+        signal.status = SignalStatus.expired
+        signal.decided_at = now
+        _attach_counterfactual(signal, market_data_source)
+    if stale:
+        session.commit()
+    return stale
+
+
+def refresh_counterfactuals(session: Session, environment: Environment, market_data_source: MarketDataSource) -> int:
+    """Re-simulates every rejected/expired signal whose shadow position hasn't resolved yet
+    ("still-open"). Called at the top of every trading pass, so — in this system's own
+    scheduled-single-pass architecture (ADR-0002; there is no long-running daemon to host a
+    literal background job) — a shadow position keeps updating on each subsequent pass until it
+    resolves or hits its max horizon, exactly as story 67 describes."""
+    unresolved = session.execute(
+        select(Signal).where(
+            Signal.environment == environment,
+            Signal.status.in_((SignalStatus.rejected, SignalStatus.expired)),
+        )
+    ).scalars().all()
+
+    updated = 0
+    for signal in unresolved:
+        outcome = signal.counterfactual_outcome
+        if outcome is None or outcome.get("status") == "still-open":
+            _attach_counterfactual(signal, market_data_source)
+            updated += 1
+    if updated:
+        session.commit()
+    return updated
+
+
 def run_trading_pass(
     environment: Environment,
     session: Session,
@@ -120,6 +181,9 @@ def run_trading_pass(
     lookback_days: int = 200,
     as_of: str | None = None,
 ) -> list[Signal]:
+    expire_stale_signals(session, environment, market_data_source)
+    refresh_counterfactuals(session, environment, market_data_source)
+
     as_of_date = datetime.utcnow().date() if as_of is None else datetime.fromisoformat(as_of).date()
     start = (as_of_date - timedelta(days=lookback_days)).isoformat()
     end = as_of_date.isoformat()
@@ -184,6 +248,21 @@ def run_trading_pass(
     return created
 
 
+def _enum_value(value: object) -> str:
+    return value.value if hasattr(value, "value") else str(value)
+
+
+def _failed_order(signal: Signal, idem_key: str) -> Order:
+    return Order(
+        signal_id=signal.id,
+        book_id=signal.book_id,
+        environment=signal.environment,
+        idempotency_key=idem_key,
+        status=OrderStatus.failed,
+        quantity=0,
+    )
+
+
 def execute_signal(session: Session, signal: Signal, broker: BrokerClient, limits: RiskLimits | None = None) -> Order:
     """Re-runs risk/sizing server-side and checks the kill switch immediately before submission —
     used identically whether the signal was auto-approved by the pass or approved via the API
@@ -196,26 +275,16 @@ def execute_signal(session: Session, signal: Signal, broker: BrokerClient, limit
         return existing
 
     if killswitch.is_engaged(signal.environment):
-        order = Order(
-            signal_id=signal.id,
-            book_id=signal.book_id,
-            environment=signal.environment,
-            idempotency_key=idem_key,
-            status=OrderStatus.failed,
-            quantity=0,
-        )
+        order = _failed_order(signal, idem_key)
         session.add(order)
         session.commit()
         return order
 
     account = account_state_for_book(session, signal.book_id, broker)
     account_value = account.cash + sum(p.quantity * signal.reference_price for p in account.positions)
-    from loom.strategy import ProposedSignal
-
-    signal_type_value = signal.signal_type.value if hasattr(signal.signal_type, "value") else signal.signal_type
     proposed = ProposedSignal(
         instrument=signal.instrument,
-        signal_type=signal_type_value,
+        signal_type=_enum_value(signal.signal_type),
         action=signal.action,
         confidence=signal.confidence,
         exit_plan=ExitPlan(**signal.exit_plan),
@@ -225,14 +294,7 @@ def execute_signal(session: Session, signal: Signal, broker: BrokerClient, limit
     decision = size_and_check(proposed, account, account_value, limits)
 
     if not decision.approved or decision.sized_order is None or decision.sized_order.quantity <= 0:
-        order = Order(
-            signal_id=signal.id,
-            book_id=signal.book_id,
-            environment=signal.environment,
-            idempotency_key=idem_key,
-            status=OrderStatus.failed,
-            quantity=0,
-        )
+        order = _failed_order(signal, idem_key)
     else:
         result = broker.submit_order(
             signal.instrument, decision.sized_order.action, decision.sized_order.quantity, idem_key

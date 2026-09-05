@@ -8,9 +8,10 @@ import click
 from sqlalchemy import select
 
 from loom import db, strategies  # noqa: F401  (registers strategies)
-from loom.api.deps import get_broker, get_market_data_source
+from loom.api.deps import get_broker, get_insight_generator, get_market_data_source
 from loom.backtest.engine import run_backtest
 from loom.config_versions import current_promoted
+from loom.insight.screening import run_screening_job
 from loom.models import BacktestRun, Environment
 from loom.models import Strategy as StrategyModel
 from loom.seed import seed_low_vol_compounder
@@ -97,6 +98,20 @@ def trade_pass(environment: str, universe: tuple[str, ...]):
             f"  [{s.status.value}] {s.action} {s.instrument} @ {s.reference_price:.2f} "
             f"(confidence {s.confidence:.2f})"
         )
+
+
+@cli.command("screen-insights")
+@click.option("--environment", type=click.Choice(["demo", "live"]), default="demo", show_default=True)
+def screen_insights(environment: str):
+    """The screening-tier Insight job (story 30, 52): runs on every signal candidate that
+    doesn't have one yet. Its own job, deliberately separate from `trade-pass` — run it on its
+    own schedule so a slow/costly LLM call never blocks order-related, rate-limit-sensitive work."""
+    db.init_db()
+    session = next(db.get_session())
+
+    generator = get_insight_generator()
+    created = run_screening_job(session, generator, environment=Environment(environment))
+    click.echo(f"Generated {len(created)} screening Insight(s) for {environment}.")
 
 
 if __name__ == "__main__":

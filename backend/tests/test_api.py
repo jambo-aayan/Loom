@@ -114,3 +114,20 @@ def test_draft_backtest_and_promote(client):
     promoted = client.post(f"/strategies/{strategy_id}/config-versions/{created['id']}/promote").json()
     assert promoted["status"] == "promoted"
     assert promoted["version_number"] == 2
+
+
+def test_screen_pending_job_covers_every_signal_without_an_insight(client):
+    client.post("/trading-pass/run", params={"environment": "demo"})
+    signals = client.get("/signals", params={"environment": "demo"}).json()
+    assert signals
+
+    created = client.post("/signals/screen-pending", params={"environment": "demo"}).json()
+
+    assert len(created) == len(signals)
+    for signal in signals:
+        insights = client.get(f"/signals/{signal['id']}/insights").json()
+        assert len(insights) == 1
+
+    # a second run is a no-op: every candidate already has a screening Insight
+    again = client.post("/signals/screen-pending", params={"environment": "demo"}).json()
+    assert again == []

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from loom.api.deps import get_broker, get_db, get_insight_generator, get_market_data_source
 from loom.api.schemas import InsightOut, SignalDecisionIn, SignalOut
 from loom.insight.generator import InsightGenerator
-from loom.insight.screening import generate_screening_insight
+from loom.insight.screening import generate_screening_insight, run_screening_job
 from loom.market_data.base import MarketDataSource
 from loom.models import Environment, Insight, Signal, SignalStatus
 from loom.trading_pass import approve_signal, reject_signal
@@ -50,6 +50,19 @@ def screen_signal(
     if signal is None:
         raise HTTPException(404, "signal not found")
     return generate_screening_insight(session, signal, generator)
+
+
+@router.post("/screen-pending", response_model=list[InsightOut])
+def screen_pending(
+    environment: str = "demo",
+    session: Session = Depends(get_db),
+    generator: InsightGenerator = Depends(get_insight_generator),
+):
+    """The screening-tier Insight job (story 30, 52, 54): runs on every signal candidate that
+    doesn't have one yet, as its own job — deliberately separate from /trading-pass/run, so it
+    can be scheduled independently (e.g. `loom screen-insights`) without a slow LLM call ever
+    blocking order-related work."""
+    return run_screening_job(session, generator, environment=Environment(environment))
 
 
 @router.post("/{signal_id}/approve", response_model=SignalOut)

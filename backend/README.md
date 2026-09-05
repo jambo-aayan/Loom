@@ -45,6 +45,7 @@ docs at `http://localhost:8000/docs`.
 ```bash
 loom backtest --start 2023-01-02 --end 2023-06-30          # story 41: runs in seconds, no keys needed
 loom trade-pass --environment demo                          # story 11/12
+loom screen-insights --environment demo                      # story 30/52: its own job, separate from trade-pass
 ```
 
 ### Tests, lint, types
