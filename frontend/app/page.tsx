@@ -8,6 +8,8 @@ export default function OverviewPage() {
   const [overview, setOverview] = useState<Overview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
+  const [commentary, setCommentary] = useState<Record<string, string>>({});
+  const [loadingCommentary, setLoadingCommentary] = useState<string | null>(null);
 
   async function load() {
     try {
@@ -31,6 +33,19 @@ export default function OverviewPage() {
       setError((e as Error).message);
     } finally {
       setRunning(false);
+    }
+  }
+
+  async function getInsight(bookId: string, instrument: string) {
+    const key = `${bookId}-${instrument}`;
+    setLoadingCommentary(key);
+    try {
+      const insight = await api.positionCommentary(bookId, instrument);
+      setCommentary((prev) => ({ ...prev, [key]: insight.content }));
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoadingCommentary(null);
     }
   }
 
@@ -67,21 +82,34 @@ export default function OverviewPage() {
               <p className="text-sm text-neutral-500">No open positions yet.</p>
             ) : (
               <div className="space-y-2">
-                {overview.positions.map((p) => (
-                  <div
-                    key={`${p.book_id}-${p.instrument}`}
-                    className="flex items-center justify-between rounded-xl border border-black/10 dark:border-white/10 p-3"
-                  >
-                    <div>
-                      <p className="font-medium">{p.instrument}</p>
-                      <p className="text-xs text-neutral-500">{p.book_name}</p>
+                {overview.positions.map((p) => {
+                  const key = `${p.book_id}-${p.instrument}`;
+                  return (
+                    <div key={key} className="rounded-xl border border-black/10 dark:border-white/10 p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{p.instrument}</p>
+                          <p className="text-xs text-neutral-500">{p.book_name}</p>
+                        </div>
+                        <div className="text-right font-numeric text-sm">
+                          <p>{p.quantity.toFixed(4)} units</p>
+                          <p className="text-neutral-500">avg £{p.average_price.toFixed(2)}</p>
+                        </div>
+                      </div>
+                      {commentary[key] ? (
+                        <p className="text-sm bg-black/5 dark:bg-white/5 rounded-xl p-3">{commentary[key]}</p>
+                      ) : (
+                        <button
+                          onClick={() => getInsight(p.book_id, p.instrument)}
+                          disabled={loadingCommentary === key}
+                          className="text-xs text-indigo dark:text-indigo-dark underline disabled:opacity-50"
+                        >
+                          {loadingCommentary === key ? "Generating…" : "Get Insight"}
+                        </button>
+                      )}
                     </div>
-                    <div className="text-right font-numeric text-sm">
-                      <p>{p.quantity.toFixed(4)} units</p>
-                      <p className="text-neutral-500">avg £{p.average_price.toFixed(2)}</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

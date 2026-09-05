@@ -6,6 +6,7 @@ from loom.api.deps import get_broker, get_db, get_fundamentals_provider
 from loom.api.schemas import OverviewOut, PositionOut, SignalOut
 from loom.fundamentals import FundamentalsProvider, filter_by_sector
 from loom.models import Book, Environment, Signal, SignalStatus
+from loom.reconciliation import manual_positions
 from loom.trading_pass import book_positions
 
 router = APIRouter(tags=["portfolio"])
@@ -30,6 +31,18 @@ def overview(environment: str = "demo", session: Session = Depends(get_db)):
                     average_price=snap.average_price,
                 )
             )
+
+    for snap in manual_positions(session, env, broker):
+        positions.append(
+            PositionOut(
+                book_id=snap.book_id,
+                book_name="Manual",
+                strategy_key=None,
+                instrument=snap.instrument,
+                quantity=snap.quantity,
+                average_price=snap.average_price,
+            )
+        )
 
     return OverviewOut(environment=environment, cash=broker.get_cash(), positions=positions)
 

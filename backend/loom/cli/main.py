@@ -16,6 +16,7 @@ from loom.insight.screening import run_screening_job
 from loom.models import BacktestRun, Environment
 from loom.models import Strategy as StrategyModel
 from loom.notifications.dispatch import notify_daily_loss_limit, notify_failed_auto_approvals, notify_new_signals
+from loom.reconciliation import manual_positions
 from loom.seed import seed_all_strategies
 from loom.settings import get_settings
 from loom.trading_pass import STRATEGY_REGISTRY, run_trading_pass
@@ -133,6 +134,26 @@ def screen_insights(environment: str):
     generator = get_insight_generator()
     created = run_screening_job(session, generator, environment=Environment(environment))
     click.echo(f"Generated {len(created)} screening Insight(s) for {environment}.")
+
+
+@cli.command("reconcile")
+@click.option("--environment", type=click.Choice(["demo", "live"]), default="demo", show_default=True)
+def reconcile(environment: str):
+    """Manual Book reconciliation (story 36, ticket #43): reports any broker position no
+    strategy Book fully accounts for — surfaces what Overview already computes live, for
+    visibility outside the dashboard."""
+    db.init_db()
+    session = next(db.get_session())
+
+    env = Environment(environment)
+    broker = get_broker(env)
+    manual = manual_positions(session, env, broker)
+    if not manual:
+        click.echo(f"No untracked positions for {environment} — every broker position is accounted for.")
+        return
+    click.echo(f"{len(manual)} untracked position(s) for {environment}, attributed to Manual:")
+    for snap in manual:
+        click.echo(f"  {snap.instrument}: {snap.quantity:g} @ {snap.average_price:.2f}")
 
 
 if __name__ == "__main__":

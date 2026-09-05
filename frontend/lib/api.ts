@@ -41,7 +41,9 @@ export interface Signal {
 
 export interface Insight {
   id: string;
-  signal_id: string;
+  signal_id: string | null;
+  book_id: string | null;
+  instrument: string | null;
   tier: string;
   content: string;
   created_at: string;
@@ -206,6 +208,8 @@ export const api = {
     request<Digest>(`/insights/digest?environment=${environment}&period=${period}`),
   signalChart: (signalId: string, windowDays = 30) =>
     request<SignalChart>(`/insights/signals/${signalId}/chart?window_days=${windowDays}`),
+  positionCommentary: (bookId: string, instrument: string) =>
+    request<Insight>(`/insights/positions/${bookId}/${encodeURIComponent(instrument)}`, { method: "POST" }),
 };
 
 export interface Metrics {

@@ -101,7 +101,9 @@ class SignalDecisionIn(BaseModel):
 class InsightOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: str
-    signal_id: str
+    signal_id: str | None = None
+    book_id: str | None = None
+    instrument: str | None = None
     tier: str
     content: str
     created_at: datetime

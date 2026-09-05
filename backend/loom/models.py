@@ -72,6 +72,7 @@ class OrderStatus(str, enum.Enum):
 class InsightTier(str, enum.Enum):
     screening = "screening"
     research = "research"
+    position = "position"  # advisory commentary about a held position, not a Signal (story 37)
 
 
 class Strategy(Base):
@@ -195,15 +196,22 @@ class KillSwitchEvent(Base):
 
 
 class Insight(Base):
+    """Either signal-keyed (`signal_id` set — screening/research tiers, story 50/54) or
+    position-keyed (`book_id` + `instrument` set, `signal_id` null — the `position` tier, story
+    37: advisory commentary about any held position, including `Manual` and other strategies'
+    Books, not just the bot's own proposed signals)."""
+
     __tablename__ = "insights"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
-    signal_id: Mapped[str] = mapped_column(ForeignKey("signals.id"))
+    signal_id: Mapped[str | None] = mapped_column(ForeignKey("signals.id"), nullable=True)
+    book_id: Mapped[str | None] = mapped_column(ForeignKey("books.id"), nullable=True)
+    instrument: Mapped[str | None] = mapped_column(String, nullable=True)
     tier: Mapped[InsightTier] = mapped_column(Enum(InsightTier))
     content: Mapped[str] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
 
-    signal: Mapped[Signal] = relationship(back_populates="insights")
+    signal: Mapped[Signal | None] = relationship(back_populates="insights")
 
 
 class BacktestRun(Base):

@@ -1,6 +1,8 @@
 """Insight generation (ADR-0009, ADR-0011). Structurally incapable of becoming an order —
-advisory only (story 53). Two tiers: a cheap screening pass on every candidate (this ticket,
-#30) and a deeper research pass reserved for M2. The LLM is one of the four external boundaries
+advisory only (story 53). A cheap screening pass runs on every signal candidate (#30); a deeper
+research pass is a near-term fast-follow, not built in v1 (BACKLOG.md); position commentary
+(#44) generates advisory text about any held position — including `Manual` and other strategies'
+Books — with no Signal involved at all (story 37). The LLM is one of the four external boundaries
 faked in tests (Testing Decisions, issue #1)."""
 
 from __future__ import annotations
@@ -13,6 +15,14 @@ from loom.models import Signal
 class InsightGenerator(ABC):
     @abstractmethod
     def generate_screening(self, signal: Signal) -> str:
+        raise NotImplementedError
+
+    @abstractmethod
+    def generate_position_commentary(
+        self, instrument: str, book_name: str, quantity: float, average_price: float
+    ) -> str:
+        """Advisory commentary about a held position, not tied to any Signal (story 37) — works
+        for a `Manual` holding or another strategy's Book just as well as the bot's own."""
         raise NotImplementedError
 
 
@@ -28,6 +38,14 @@ class FakeInsightGenerator(InsightGenerator):
             f"{signal.exit_plan}."
         )
 
+    def generate_position_commentary(
+        self, instrument: str, book_name: str, quantity: float, average_price: float
+    ) -> str:
+        return (
+            f"{book_name} holds {quantity:g} {instrument} at an average price of "
+            f"{average_price:.2f}. No strategy signal is currently attached to this position."
+        )
+
 
 class AnthropicInsightGenerator(InsightGenerator):
     def __init__(self, api_key: str, model: str = "claude-haiku-4-5-20251001"):
@@ -36,15 +54,28 @@ class AnthropicInsightGenerator(InsightGenerator):
         self._client = anthropic.Anthropic(api_key=api_key)
         self._model = model
 
-    def generate_screening(self, signal: Signal) -> str:
-        prompt = (
-            f"In two sentences, explain why a '{signal.action}' signal on {signal.instrument} "
-            f"fired for a systematic trading strategy, given confidence {signal.confidence:.2f} "
-            f"and exit plan {signal.exit_plan}. Be factual and concise, no advice to act."
-        )
+    def _complete(self, prompt: str) -> str:
         response = self._client.messages.create(
             model=self._model,
             max_tokens=200,
             messages=[{"role": "user", "content": prompt}],
         )
         return "".join(block.text for block in response.content if hasattr(block, "text"))
+
+    def generate_screening(self, signal: Signal) -> str:
+        prompt = (
+            f"In two sentences, explain why a '{signal.action}' signal on {signal.instrument} "
+            f"fired for a systematic trading strategy, given confidence {signal.confidence:.2f} "
+            f"and exit plan {signal.exit_plan}. Be factual and concise, no advice to act."
+        )
+        return self._complete(prompt)
+
+    def generate_position_commentary(
+        self, instrument: str, book_name: str, quantity: float, average_price: float
+    ) -> str:
+        prompt = (
+            f"In two sentences, give factual, advisory-only commentary about a held position: "
+            f"{quantity:g} shares of {instrument} at an average price of {average_price:.2f}, "
+            f"in the '{book_name}' book. No advice to act, no price target."
+        )
+        return self._complete(prompt)
