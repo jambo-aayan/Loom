@@ -39,8 +39,10 @@ class BrokerClient(ABC):
 
 class FakeBrokerClient(BrokerClient):
     """In-memory broker double: fills market orders instantly at a caller-supplied price,
-    de-dupes on idempotency_key (mirroring the real client's retry-safety contract, story 8),
-    and records every call for assertions."""
+    de-dupes on idempotency_key, and records every call for assertions. This de-dupe is a
+    convenience for tests that call submit_order twice with the same key, not a claim about the
+    real client: Trading212Client submits unconditionally (ADR-0014) — the actual retry-safety
+    guard is the DB-level Order.idempotency_key unique constraint, upstream of either broker."""
 
     def __init__(self, starting_cash: float = 100_000.0, fill_price: float = 100.0):
         self.cash = starting_cash
