@@ -2,10 +2,12 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from loom.api.deps import get_broker, get_db, get_fundamentals_provider
-from loom.api.schemas import OverviewOut, PositionOut, SignalOut
+from loom.api.deps import get_broker, get_db, get_fundamentals_provider, get_market_data_source
+from loom.api.schemas import BookPnlOut, OverviewOut, PositionOut, SignalOut
 from loom.fundamentals import FundamentalsProvider, filter_by_sector
+from loom.market_data.base import MarketDataSource
 from loom.models import Book, Environment, Signal, SignalStatus
+from loom.pnl import book_pnl
 from loom.reconciliation import manual_positions
 from loom.trading_pass import book_positions
 
@@ -13,14 +15,20 @@ router = APIRouter(tags=["portfolio"])
 
 
 @router.get("/overview", response_model=OverviewOut)
-def overview(environment: str = "demo", session: Session = Depends(get_db)):
+def overview(
+    environment: str = "demo",
+    session: Session = Depends(get_db),
+    source: MarketDataSource = Depends(get_market_data_source),
+):
     env = Environment(environment)
     broker = get_broker(env)
     books = session.execute(select(Book).where(Book.environment == env)).scalars().all()
 
     positions: list[PositionOut] = []
+    book_pnls: list[BookPnlOut] = []
     for book in books:
-        for snap in book_positions(session, book.id):
+        book_positions_ = book_positions(session, book.id)
+        for snap in book_positions_:
             positions.append(
                 PositionOut(
                     book_id=book.id,
@@ -31,8 +39,12 @@ def overview(environment: str = "demo", session: Session = Depends(get_db)):
                     average_price=snap.average_price,
                 )
             )
+        pnl = book_pnl(book, book_positions_, source)
+        if pnl is not None:
+            book_pnls.append(BookPnlOut(**pnl.__dict__))
 
-    for snap in manual_positions(session, env, broker):
+    manual_snaps = manual_positions(session, env, broker)
+    for snap in manual_snaps:
         positions.append(
             PositionOut(
                 book_id=snap.book_id,
@@ -43,8 +55,14 @@ def overview(environment: str = "demo", session: Session = Depends(get_db)):
                 average_price=snap.average_price,
             )
         )
+    if manual_snaps:
+        manual_book = session.get(Book, manual_snaps[0].book_id)
+        if manual_book is not None:
+            pnl = book_pnl(manual_book, manual_snaps, source)
+            if pnl is not None:
+                book_pnls.append(BookPnlOut(**pnl.__dict__))
 
-    return OverviewOut(environment=environment, cash=broker.get_cash(), positions=positions)
+    return OverviewOut(environment=environment, cash=broker.get_cash(), positions=positions, book_pnl=book_pnls)
 
 
 _DECIDED_STATUSES = (

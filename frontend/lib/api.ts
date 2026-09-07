@@ -58,10 +58,21 @@ export interface Position {
   average_price: number;
 }
 
+export interface BookPnl {
+  book_id: string;
+  book_name: string;
+  strategy_key: string | null;
+  cost_basis: number;
+  market_value: number;
+  unrealized_pnl: number;
+  unrealized_pnl_pct: number;
+}
+
 export interface Overview {
   environment: Environment;
   cash: number;
   positions: Position[];
+  book_pnl: BookPnl[];
 }
 
 export interface DigestEntry {

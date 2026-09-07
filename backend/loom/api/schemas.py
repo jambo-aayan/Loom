@@ -123,10 +123,21 @@ class PositionOut(BaseModel):
     average_price: float
 
 
+class BookPnlOut(BaseModel):
+    book_id: str
+    book_name: str
+    strategy_key: str | None
+    cost_basis: float
+    market_value: float
+    unrealized_pnl: float
+    unrealized_pnl_pct: float
+
+
 class OverviewOut(BaseModel):
     environment: str
     cash: float
     positions: list[PositionOut]
+    book_pnl: list[BookPnlOut] = []
 
 
 class KillSwitchOut(BaseModel):

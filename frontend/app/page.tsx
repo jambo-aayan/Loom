@@ -76,6 +76,27 @@ export default function OverviewPage() {
             <p className="font-numeric text-3xl">£{overview.cash.toFixed(2)}</p>
           </div>
 
+          {overview.book_pnl.length > 0 && (
+            <div>
+              <h2 className="text-lg mb-2">Books</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {overview.book_pnl.map((b) => {
+                  const gain = b.unrealized_pnl >= 0;
+                  return (
+                    <div key={b.book_id} className="rounded-xl border border-black/10 dark:border-white/10 p-3">
+                      <p className="font-medium text-sm">{b.book_name}</p>
+                      <p className="font-numeric text-lg">£{b.market_value.toFixed(2)}</p>
+                      <p className={`font-numeric text-sm ${gain ? "text-[#0E7D4D] dark:text-mint" : "text-danger"}`}>
+                        {gain ? "+" : ""}£{b.unrealized_pnl.toFixed(2)} ({gain ? "+" : ""}
+                        {(b.unrealized_pnl_pct * 100).toFixed(1)}%)
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div>
             <h2 className="text-lg mb-2">Positions</h2>
             {overview.positions.length === 0 ? (
