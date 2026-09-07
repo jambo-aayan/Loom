@@ -78,6 +78,20 @@ def test_generate_research_insight_persists_a_research_tier_insight(session):
     assert signal.instrument in insight.content
 
 
+def test_research_content_has_a_thesis_and_key_risks_shape_distinct_from_screening(session):
+    """Research commentary must actually look like a thesis, not just screening's one-line
+    "why this fired" text with a different tier label (ADR-0013: "a written thesis")."""
+    signal = _seed_signal(session, StrategyStyle.investment, SignalStatus.pending_approval)
+    generator = FakeInsightGenerator()
+
+    research = generate_research_insight(session, signal, generator)
+    screening_content = generator.generate_screening(signal)
+
+    assert "Thesis:" in research.content
+    assert "Key risks:" in research.content
+    assert research.content != screening_content
+
+
 def test_run_research_job_only_processes_eligible_signals(session):
     eligible = _seed_signal(session, StrategyStyle.investment, SignalStatus.pending_approval, key="dip-buyer")
     ineligible_style = _seed_signal(session, StrategyStyle.trading, SignalStatus.pending_approval, key="compounder")

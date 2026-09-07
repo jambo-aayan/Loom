@@ -25,7 +25,7 @@ export default function HistoryPage() {
     <div className="space-y-4">
       <h1 className="text-2xl">History</h1>
 
-      <div className="flex flex-wrap gap-2 items-center">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:items-center">
         <input
           placeholder="Filter by instrument"
           value={instrument}
@@ -38,14 +38,14 @@ export default function HistoryPage() {
           onChange={(e) => setSector(e.target.value)}
           className="rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-1.5 text-sm"
         />
-        <button onClick={load} className="px-3 py-1.5 rounded-full bg-indigo text-white text-sm">
+        <button onClick={load} className="px-3 py-1.5 rounded-full bg-indigo text-white text-sm self-start sm:self-auto">
           Apply
         </button>
       </div>
 
       {error && <p className="text-danger text-sm">{error}</p>}
       {signals.length === 0 && !error && <p className="text-sm text-neutral-500">No decisions match.</p>}
-      <div className="space-y-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
         {signals.map((s) => (
           <div key={s.id} className="rounded-xl border border-black/10 dark:border-white/10 p-3">
             <div className="flex items-center justify-between">

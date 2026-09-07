@@ -43,6 +43,8 @@ def book_pnl(book: Book, positions: tuple[PositionSnapshot, ...], source: Market
     cost_basis = sum(p.quantity * p.average_price for p in positions)
     market_value = sum(p.quantity * _latest_price(source, p.instrument, p.average_price) for p in positions)
     unrealized_pnl = market_value - cost_basis
+    # A zero cost basis (a free grant, say) has no meaningful "% gain" — 0.0 avoids division by
+    # zero while staying a plain float the frontend can render without special-casing.
     unrealized_pnl_pct = unrealized_pnl / cost_basis if cost_basis > 0 else 0.0
 
     return BookPnl(

@@ -126,7 +126,11 @@ function ApprovalsList() {
                   disabled={researching === signal.id}
                   className="text-xs text-indigo dark:text-indigo-dark underline disabled:opacity-50"
                 >
-                  {researching === signal.id ? "Researching…" : "Deep research (paid)"}
+                  {researching === signal.id
+                    ? "Researching…"
+                    : (insights[signal.id] ?? []).some((i) => i.tier === "research")
+                      ? "Re-run deep research (paid)"
+                      : "Deep research (paid)"}
                 </button>
               )}
             </div>

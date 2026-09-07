@@ -85,3 +85,16 @@ def test_book_pnl_manual_book_has_no_strategy_key():
 
     assert pnl.strategy_key is None
     assert pnl.book_name == "Manual"
+
+
+def test_book_pnl_zero_cost_basis_reports_zero_pct_not_a_crash():
+    # A deliberate choice, not an oversight: a zero-average-price position (e.g. a free grant)
+    # has no meaningful "% gain" — 0.0 avoids a ZeroDivisionError while staying a valid float the
+    # frontend can render, rather than None which would need special-casing everywhere it's used.
+    positions = (PositionSnapshot(instrument="FREE", quantity=10, average_price=0.0, book_id="book-1"),)
+
+    pnl = book_pnl(_book(), positions, _StubSource(latest_close=5.0))
+
+    assert pnl.cost_basis == 0.0
+    assert pnl.unrealized_pnl_pct == 0.0
+    assert pnl.market_value == 50.0
