@@ -11,7 +11,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import JSON, DateTime, Enum, Float, ForeignKey, String, UniqueConstraint, select
+from sqlalchemy import JSON, DateTime, Enum, Float, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, object_session, relationship
 
 
@@ -168,41 +168,16 @@ class Signal(Base):
 
     @property
     def booked_trade(self) -> "BookedTrade | None":
-        """The realized P&L this sell Signal's fill booked, if any (CONTEXT.md "Trade") —
-        aggregated from `trade_reconstruction.reconstruct_closed_trades` (ADR-0015), the FIFO
-        engine already used by Performance/evaluation, rather than a second cost-basis method.
-        A single sell fill can close more than one FIFO lot; this aggregates those into one
-        figure since the API only needs "what did we just book" as a single number."""
-        if self.action != "sell":
-            return None
+        """The realized P&L this sell Signal's fill booked, if any (CONTEXT.md "Trade") — a thin
+        delegation to `trade_reconstruction.booked_trade_for_signal`, which owns the actual
+        query/aggregation logic (ADR-0015). Kept as a property, not a plain function, so `SignalOut`
+        can pick it up via pydantic's `from_attributes` like any other field."""
         session = object_session(self)
         if session is None:
             return None
-        order = session.execute(
-            select(Order).where(Order.signal_id == self.id, Order.status == OrderStatus.filled)
-        ).scalar_one_or_none()
-        if order is None:
-            return None
-        from loom.trade_reconstruction import BookedTrade, reconstruct_closed_trades
+        from loom.trade_reconstruction import booked_trade_for_signal
 
-        closed = [
-            t
-            for t in reconstruct_closed_trades(session, self.book_id)
-            if t.exit_order_id == order.id
-        ]
-        if not closed:
-            return None
-        quantity = sum(t.quantity for t in closed)
-        realized_pnl = sum(t.pnl for t in closed)
-        cost_basis = sum(t.entry_price * t.quantity for t in closed)
-        return BookedTrade(
-            instrument=self.instrument,
-            quantity=quantity,
-            exit_price=order.fill_price or 0.0,
-            realized_pnl=realized_pnl,
-            realized_pnl_pct=realized_pnl / cost_basis if cost_basis else 0.0,
-            closed_at=order.filled_at,
-        )
+        return booked_trade_for_signal(session, self)
 
 
 class Order(Base):

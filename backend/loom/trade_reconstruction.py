@@ -51,6 +51,46 @@ class BookedTrade:
     closed_at: datetime | None
 
 
+def aggregate_realized(closed: list[ClosedTrade]) -> tuple[float | None, float | None]:
+    """(realized_pnl, realized_pnl_pct) for a group of `ClosedTrade` lots — e.g. every lot one
+    sell Order closed. `None, None` for an empty group, distinct from a real zero P&L. The one
+    place this math lives, so `Signal.booked_trade` and the Strategy trade log can't drift apart
+    (ADR-0015's whole point)."""
+    if not closed:
+        return None, None
+    realized_pnl = sum(t.pnl for t in closed)
+    cost_basis = sum(t.entry_price * t.quantity for t in closed)
+    realized_pnl_pct = realized_pnl / cost_basis if cost_basis else 0.0
+    return realized_pnl, realized_pnl_pct
+
+
+def booked_trade_for_signal(session: Session, signal: Signal) -> BookedTrade | None:
+    """What a sell Signal's fill booked (CONTEXT.md "Trade") — None for anything but a filled
+    sell. Lives here, not on `Signal` itself, since it's really a query over Order/Trade
+    reconstruction data that Signal has no other reason to know how to run."""
+    if signal.action != "sell":
+        return None
+    order = session.execute(
+        select(Order).where(Order.signal_id == signal.id, Order.status == OrderStatus.filled)
+    ).scalar_one_or_none()
+    if order is None:
+        return None
+
+    closed = [t for t in reconstruct_closed_trades(session, signal.book_id) if t.exit_order_id == order.id]
+    realized_pnl, realized_pnl_pct = aggregate_realized(closed)
+    if realized_pnl is None:
+        return None
+
+    return BookedTrade(
+        instrument=signal.instrument,
+        quantity=sum(t.quantity for t in closed),
+        exit_price=order.fill_price or 0.0,
+        realized_pnl=realized_pnl,
+        realized_pnl_pct=realized_pnl_pct,
+        closed_at=order.filled_at,
+    )
+
+
 def reconstruct_closed_trades(session: Session, book_id: str) -> list[ClosedTrade]:
     orders = (
         session.execute(

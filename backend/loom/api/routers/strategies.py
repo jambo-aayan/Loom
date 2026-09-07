@@ -23,7 +23,7 @@ from loom.models import (
     StrategyConfigVersion,
 )
 from loom.models import Strategy as StrategyModel
-from loom.trade_reconstruction import reconstruct_closed_trades
+from loom.trade_reconstruction import aggregate_realized, reconstruct_closed_trades
 from loom.trading_pass import STRATEGY_REGISTRY, get_or_create_book
 
 router = APIRouter(prefix="/strategies", tags=["strategies"])
@@ -114,9 +114,7 @@ def strategy_trade_log(strategy_id: str, environment: str = "demo", session: Ses
     for order in orders:
         signal = session.get(Signal, order.signal_id)
         closed = closed_by_order.get(order.id, [])
-        realized_pnl = sum(t.pnl for t in closed) if closed else None
-        cost_basis = sum(t.entry_price * t.quantity for t in closed)
-        realized_pnl_pct = (sum(t.pnl for t in closed) / cost_basis) if closed and cost_basis else None
+        realized_pnl, realized_pnl_pct = aggregate_realized(closed)
         trades.append(
             {
                 "order_id": order.id,
