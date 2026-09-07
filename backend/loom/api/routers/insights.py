@@ -20,9 +20,9 @@ _PERIOD_DAYS = {"daily": 1, "weekly": 7}
 
 @router.get("/digest")
 def digest(environment: str = "demo", period: str = "daily", session: Session = Depends(get_db)):
-    """A rolled-up summary of what fired and what the screening tier is watching (story 55, 56,
-    ticket #42) — built entirely from the screening-tier Insight data #30 already generates, no
-    new generation tier."""
+    """A rolled-up summary of what fired and what's being watched (story 55, 56, ticket #42) —
+    built from both screening-tier (#30) and research-tier (#48) Insight data, no separate
+    generation triggered from here."""
     if period not in _PERIOD_DAYS:
         raise HTTPException(400, f"period must be one of {list(_PERIOD_DAYS)}")
     since = datetime.utcnow() - timedelta(days=_PERIOD_DAYS[period])
@@ -30,7 +30,10 @@ def digest(environment: str = "demo", period: str = "daily", session: Session = 
     insights = (
         session.execute(
             select(Insight)
-            .where(Insight.tier == InsightTier.screening, Insight.created_at >= since)
+            .where(
+                Insight.tier.in_((InsightTier.screening, InsightTier.research)),
+                Insight.created_at >= since,
+            )
             .order_by(Insight.created_at.desc())
         )
         .scalars()
@@ -52,6 +55,7 @@ def digest(environment: str = "demo", period: str = "daily", session: Session = 
             "confidence": signal.confidence,
             "status": signal.status.value if hasattr(signal.status, "value") else signal.status,
             "insight": insight.content,
+            "tier": insight.tier.value,
             "created_at": insight.created_at,
         }
         if signal.status == SignalStatus.pending_approval:

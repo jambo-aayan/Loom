@@ -83,6 +83,7 @@ export interface DigestEntry {
   confidence: number;
   status: string;
   insight: string;
+  tier: "screening" | "research";
   created_at: string;
 }
 
@@ -164,6 +165,7 @@ export const api = {
     request<Signal[]>(`/signals?environment=${environment}${status ? `&status=${status}` : ""}`),
   signalInsights: (signalId: string) => request<Insight[]>(`/signals/${signalId}/insights`),
   screenSignal: (signalId: string) => request<Insight>(`/signals/${signalId}/screen`, { method: "POST" }),
+  researchSignal: (signalId: string) => request<Insight>(`/signals/${signalId}/research`, { method: "POST" }),
   approveSignal: (signalId: string, note?: string) =>
     request<Signal>(`/signals/${signalId}/approve`, { method: "POST", body: JSON.stringify({ note }) }),
   rejectSignal: (signalId: string, note?: string) =>

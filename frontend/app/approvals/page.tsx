@@ -2,19 +2,22 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { api, Insight, Signal } from "@/lib/api";
+import { api, Insight, Signal, Strategy } from "@/lib/api";
 
 function ApprovalsList() {
   const [signals, setSignals] = useState<Signal[]>([]);
   const [insights, setInsights] = useState<Record<string, Insight[]>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const [strategyStyles, setStrategyStyles] = useState<Record<string, string>>({});
+  const [researching, setResearching] = useState<string | null>(null);
   const highlightedSignalId = useSearchParams().get("signal");
 
   async function load() {
     try {
-      const pending = await api.signals("demo", "pending_approval");
+      const [pending, strategies] = await Promise.all([api.signals("demo", "pending_approval"), api.strategies()]);
       setSignals(pending);
+      setStrategyStyles(Object.fromEntries(strategies.map((s: Strategy) => [s.id, s.style])));
       setError(null);
     } catch (e) {
       setError((e as Error).message);
@@ -33,6 +36,22 @@ function ApprovalsList() {
   async function screen(signalId: string) {
     const insight = await api.screenSignal(signalId);
     setInsights((prev) => ({ ...prev, [signalId]: [...(prev[signalId] ?? []), insight] }));
+  }
+
+  async function research(signalId: string) {
+    const confirmed = window.confirm(
+      "Deep research uses a paid model and costs real money per call. Continue?",
+    );
+    if (!confirmed) return;
+    setResearching(signalId);
+    try {
+      const insight = await api.researchSignal(signalId);
+      setInsights((prev) => ({ ...prev, [signalId]: [...(prev[signalId] ?? []), insight] }));
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setResearching(null);
+    }
   }
 
   async function decide(signalId: string, decision: "approve" | "reject") {
@@ -84,15 +103,33 @@ function ApprovalsList() {
             </div>
 
             {(insights[signal.id] ?? []).map((insight) => (
-              <p key={insight.id} className="text-sm bg-black/5 dark:bg-white/5 rounded-xl p-3">
-                {insight.content}
-              </p>
+              <div key={insight.id} className="text-sm bg-black/5 dark:bg-white/5 rounded-xl p-3 space-y-1">
+                <span
+                  className={`text-xs rounded-full px-2 py-0.5 ${
+                    insight.tier === "research" ? "bg-indigo/15 text-indigo dark:text-indigo-dark" : "bg-black/10 dark:bg-white/10"
+                  }`}
+                >
+                  {insight.tier === "research" ? "Research" : "Screening"}
+                </span>
+                <p>{insight.content}</p>
+              </div>
             ))}
-            {!(insights[signal.id] ?? []).length && (
-              <button onClick={() => screen(signal.id)} className="text-xs text-indigo dark:text-indigo-dark underline">
-                Generate Insight commentary
-              </button>
-            )}
+            <div className="flex flex-wrap gap-3">
+              {!(insights[signal.id] ?? []).length && (
+                <button onClick={() => screen(signal.id)} className="text-xs text-indigo dark:text-indigo-dark underline">
+                  Generate Insight commentary
+                </button>
+              )}
+              {strategyStyles[signal.strategy_id] === "investment" && (
+                <button
+                  onClick={() => research(signal.id)}
+                  disabled={researching === signal.id}
+                  className="text-xs text-indigo dark:text-indigo-dark underline disabled:opacity-50"
+                >
+                  {researching === signal.id ? "Researching…" : "Deep research (paid)"}
+                </button>
+              )}
+            </div>
 
             <input
               placeholder="Optional note"

@@ -8,10 +8,18 @@ import click
 from sqlalchemy import select
 
 from loom import calibration, db, killswitch, strategies  # noqa: F401  (registers strategies)
-from loom.api.deps import get_broker, get_email_sender, get_insight_generator, get_market_data_source, get_push_sender
+from loom.api.deps import (
+    get_broker,
+    get_email_sender,
+    get_insight_generator,
+    get_market_data_source,
+    get_push_sender,
+    get_research_generator,
+)
 from loom.backtest.engine import run_backtest
 from loom.config_versions import current_promoted
 from loom.daily_loss import check_daily_loss_limit
+from loom.insight.research import run_research_job
 from loom.insight.screening import run_screening_job
 from loom.models import BacktestRun, Environment
 from loom.models import Strategy as StrategyModel
@@ -134,6 +142,21 @@ def screen_insights(environment: str):
     generator = get_insight_generator()
     created = run_screening_job(session, generator, environment=Environment(environment))
     click.echo(f"Generated {len(created)} screening Insight(s) for {environment}.")
+
+
+@cli.command("research-insights")
+@click.option("--environment", type=click.Choice(["demo", "live"]), default="demo", show_default=True)
+def research_insights(environment: str):
+    """The automatic, free-tier research pass (story 52, ADR-0013, ticket #48): sweeps
+    investment-style signals already at pending_approval/auto_approved that don't have research
+    commentary yet. The paid Sonnet tier is exclusively user-triggered from the dashboard — never
+    reachable from this or any other automatic job."""
+    db.init_db()
+    session = next(db.get_session())
+
+    generator = get_research_generator()
+    created = run_research_job(session, generator, environment=Environment(environment))
+    click.echo(f"Generated {len(created)} research Insight(s) for {environment}.")
 
 
 @cli.command("reconcile")

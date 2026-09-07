@@ -55,6 +55,9 @@ docs at `http://localhost:8000/docs`.
 loom backtest --start 2023-01-02 --end 2023-06-30          # story 41: runs in seconds, no keys needed
 loom trade-pass --environment demo                          # story 11/12
 loom screen-insights --environment demo                      # story 30/52: its own job, separate from trade-pass
+loom research-insights --environment demo                     # story 52, ADR-0013: free-tier research pass,
+                                                                 # investment-style signals only
+loom reconcile --environment demo                               # story 36, ticket #43
 ```
 
 ### Tests, lint, types

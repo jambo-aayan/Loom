@@ -65,6 +65,29 @@ def get_insight_generator() -> InsightGenerator:
     return FakeInsightGenerator()
 
 
+def get_research_generator() -> InsightGenerator:
+    """The research tier's automatic, free path (ADR-0013) — Gemini Flash when configured, else
+    the fake generator. Never falls back to a paid provider automatically."""
+    settings = get_settings()
+    if settings.google_api_key:
+        from loom.insight.generator import GeminiInsightGenerator
+
+        return GeminiInsightGenerator(api_key=settings.google_api_key)
+    return FakeInsightGenerator()
+
+
+def get_paid_research_generator() -> InsightGenerator:
+    """The research tier's manual-only, paid path (ADR-0013) — Claude Sonnet 5 when configured,
+    else the fake generator. Reachable only from the explicit user-triggered endpoint; no other
+    code in the codebase calls this."""
+    settings = get_settings()
+    if settings.anthropic_api_key:
+        from loom.insight.generator import AnthropicInsightGenerator
+
+        return AnthropicInsightGenerator(api_key=settings.anthropic_api_key, model="claude-sonnet-5")
+    return FakeInsightGenerator()
+
+
 def get_fundamentals_provider() -> FundamentalsProvider:
     """yfinance needs no API key (unlike Twelve Data/Trading 212/Anthropic), so this always
     returns the real source — callers (loom.fundamentals.safe_sector_for) wrap lookups so a

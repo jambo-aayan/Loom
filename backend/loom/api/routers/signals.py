@@ -3,9 +3,17 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from loom import killswitch
-from loom.api.deps import get_broker, get_db, get_email_sender, get_insight_generator, get_market_data_source
+from loom.api.deps import (
+    get_broker,
+    get_db,
+    get_email_sender,
+    get_insight_generator,
+    get_market_data_source,
+    get_paid_research_generator,
+)
 from loom.api.schemas import InsightOut, SignalDecisionIn, SignalOut
 from loom.insight.generator import InsightGenerator
+from loom.insight.research import generate_research_insight, is_research_eligible
 from loom.insight.screening import generate_screening_insight, run_screening_job
 from loom.market_data.base import MarketDataSource
 from loom.models import Environment, Insight, OrderStatus, Signal, SignalStatus
@@ -54,6 +62,25 @@ def screen_signal(
     if signal is None:
         raise HTTPException(404, "signal not found")
     return generate_screening_insight(session, signal, generator)
+
+
+@router.post("/{signal_id}/research", response_model=InsightOut)
+def research_signal(
+    signal_id: str,
+    session: Session = Depends(get_db),
+    generator: InsightGenerator = Depends(get_paid_research_generator),
+):
+    """The deeper, paid research pass (#48, ADR-0013) — exclusively user-triggered. No other
+    code path in this codebase calls `get_paid_research_generator`; there is no automatic,
+    scheduled, or batched way to reach this. Style-gated: 400s for a signal that isn't an
+    eligible `investment`-style, already-decided candidate, same restriction as the automatic
+    free-tier pass."""
+    signal = session.get(Signal, signal_id)
+    if signal is None:
+        raise HTTPException(404, "signal not found")
+    if not is_research_eligible(signal):
+        raise HTTPException(400, "research tier is only available for eligible investment-style signals")
+    return generate_research_insight(session, signal, generator)
 
 
 @router.post("/screen-pending", response_model=list[InsightOut])

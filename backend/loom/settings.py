@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     twelve_data_api_key: str = ""
     anthropic_api_key: str = ""
 
+    # The research tier's free-automatic provider (ADR-0013). Empty -> FakeInsightGenerator;
+    # never falls back to a paid provider automatically.
+    google_api_key: str = ""
+
     kill_switch_path: str = "./.loom_killswitch"
 
     api_base_url: str = "http://localhost:8000"

@@ -43,15 +43,15 @@ function DigestSection({ title, entries }: { title: string; entries: DigestEntry
   const [expanded, setExpanded] = useState<string | null>(null);
   const [charts, setCharts] = useState<Record<string, SignalChart>>({});
 
-  async function toggle(entry: DigestEntry) {
-    if (expanded === entry.signal_id) {
+  async function toggle(key: string, signalId: string) {
+    if (expanded === key) {
       setExpanded(null);
       return;
     }
-    setExpanded(entry.signal_id);
-    if (!charts[entry.signal_id]) {
-      const chart = await api.signalChart(entry.signal_id);
-      setCharts((prev) => ({ ...prev, [entry.signal_id]: chart }));
+    setExpanded(key);
+    if (!charts[signalId]) {
+      const chart = await api.signalChart(signalId);
+      setCharts((prev) => ({ ...prev, [signalId]: chart }));
     }
   }
 
@@ -60,30 +60,42 @@ function DigestSection({ title, entries }: { title: string; entries: DigestEntry
       <h2 className="text-lg">{title}</h2>
       {entries.length === 0 && <p className="text-sm text-neutral-500">Nothing here yet.</p>}
       <div className="space-y-2">
-        {entries.map((entry) => (
-          <div key={entry.signal_id} className="rounded-xl border border-black/10 dark:border-white/10 p-3 space-y-2">
-            <button className="w-full text-left" onClick={() => toggle(entry)}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-medium text-sm">
-                    {entry.action.toUpperCase()} {entry.instrument}
-                    {entry.strategy_name ? ` · ${entry.strategy_name}` : ""}
-                  </p>
-                  <p className="text-sm text-neutral-500 mt-1">{entry.insight}</p>
+        {entries.map((entry) => {
+          const key = `${entry.signal_id}-${entry.tier}`;
+          return (
+            <div key={key} className="rounded-xl border border-black/10 dark:border-white/10 p-3 space-y-2">
+              <button className="w-full text-left" onClick={() => toggle(key, entry.signal_id)}>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-medium text-sm">
+                      {entry.action.toUpperCase()} {entry.instrument}
+                      {entry.strategy_name ? ` · ${entry.strategy_name}` : ""}
+                    </p>
+                    <span
+                      className={`inline-block text-xs rounded-full px-2 py-0.5 mt-1 ${
+                        entry.tier === "research"
+                          ? "bg-indigo/15 text-indigo dark:text-indigo-dark"
+                          : "bg-black/10 dark:bg-white/10"
+                      }`}
+                    >
+                      {entry.tier === "research" ? "Research" : "Screening"}
+                    </span>
+                    <p className="text-sm text-neutral-500 mt-1">{entry.insight}</p>
+                  </div>
+                  <span className="text-xs rounded-full px-2 py-1 bg-amber/15 text-amber dark:text-amber-dark shrink-0">
+                    {entry.status.replace("_", " ")}
+                  </span>
                 </div>
-                <span className="text-xs rounded-full px-2 py-1 bg-amber/15 text-amber dark:text-amber-dark shrink-0">
-                  {entry.status.replace("_", " ")}
-                </span>
-              </div>
-            </button>
-            {expanded === entry.signal_id &&
-              (charts[entry.signal_id] ? (
-                <SignalChartView chart={charts[entry.signal_id]} />
-              ) : (
-                <p className="text-xs text-neutral-500">Loading chart…</p>
-              ))}
-          </div>
-        ))}
+              </button>
+              {expanded === key &&
+                (charts[entry.signal_id] ? (
+                  <SignalChartView chart={charts[entry.signal_id]} />
+                ) : (
+                  <p className="text-xs text-neutral-500">Loading chart…</p>
+                ))}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
