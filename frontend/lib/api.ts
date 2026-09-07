@@ -19,6 +19,15 @@ export interface ExitPlan {
   time_exit_days: number | null;
 }
 
+export interface BookedTrade {
+  instrument: string;
+  quantity: number;
+  exit_price: number;
+  realized_pnl: number;
+  realized_pnl_pct: number;
+  closed_at: string | null;
+}
+
 export interface Signal {
   id: string;
   strategy_id: string;
@@ -37,6 +46,7 @@ export interface Signal {
   counterfactual_outcome: Record<string, unknown> | null;
   created_at: string;
   decided_at: string | null;
+  booked_trade: BookedTrade | null;
 }
 
 export interface Insight {

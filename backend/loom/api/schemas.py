@@ -73,6 +73,16 @@ class DraftBacktestCompareRequest(BaseModel):
     starting_capital: float = 10_000.0
 
 
+class BookedTradeOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    instrument: str
+    quantity: float
+    exit_price: float
+    realized_pnl: float
+    realized_pnl_pct: float
+    closed_at: datetime | None
+
+
 class SignalOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: str
@@ -92,6 +102,7 @@ class SignalOut(BaseModel):
     counterfactual_outcome: dict | None
     created_at: datetime
     decided_at: datetime | None
+    booked_trade: BookedTradeOut | None = None
 
 
 class SignalDecisionIn(BaseModel):

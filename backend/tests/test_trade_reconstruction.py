@@ -67,6 +67,7 @@ def _fill(session, strategy, config, book, action, price, quantity, at):
     )
     session.add(order)
     session.commit()
+    return signal
 
 
 def test_simple_buy_then_sell_closes_one_trade(session):
@@ -95,6 +96,9 @@ def test_fifo_matches_oldest_lot_first_and_can_split_a_lot(session):
     assert len(trades) == 2
     assert trades[0].entry_price == 100.0 and trades[0].quantity == 10
     assert trades[1].entry_price == 120.0 and trades[1].quantity == 2
+    # one sell fill split across two FIFO lots -> both ClosedTrades share the same exit_order_id
+    assert trades[0].exit_order_id == trades[1].exit_order_id
+    assert trades[0].exit_order_id is not None
 
 
 def test_open_position_produces_no_closed_trades(session):

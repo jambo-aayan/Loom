@@ -1,4 +1,4 @@
-# 15. A real `Trade` ledger for live/demo trading, replacing the crude per-fill proxy
+# 15. Surfacing live/demo `Trade` realized P&L: reuse the existing FIFO reconstruction
 
 ## Status
 
@@ -6,48 +6,53 @@ Accepted
 
 ## Context
 
-The backtest engine already has a proper round-trip concept: `TradeRecord` (`backtest/engine.py`)
-pairs an entry fill with the exit fill that closed it, and carries a real computed P&L. Live and
-demo trading never got the equivalent. Today, `GET /strategies/{id}/trades` computes what its own
-code comments call "a crude realized-return proxy per fill": every `sell` fill's return is
-computed against that fill's own `Signal.reference_price` and summed cumulatively across the
-whole strategy, not against the actual position's cost basis, and with no notion of which entry a
-given exit closed out. It happens to be directionally right for a strategy that only ever holds
-one lot of one instrument at a time, but it isn't a real ledger, and it can't answer "what did we
-just book on that sell?" for a specific `Position`.
+The backtest engine already has a round-trip concept: `TradeRecord` (`backtest/engine.py`) pairs
+an entry fill with the exit fill that closed it, and carries a real computed P&L.
 
-The user asked for exactly the thing `TradeRecord` already models for backtests: the realized
-P&L of "we bought at X, sold at 1.2X" — plus wanting that number the moment a sell executes, not
-just aggregated on a chart.
+Live/demo trading turns out to already have a *better* equivalent than initially assumed:
+`loom/trade_reconstruction.py`'s `reconstruct_closed_trades()` does real FIFO lot-matching against
+a Book's filled `Order` history — the same reconstruction Performance/evaluation (#37) and
+correlation/fundamentals already depend on. It was never reused everywhere, though: the Strategy
+detail page's trade log (`GET /strategies/{id}/trades`) computed its own separate, cruder number
+instead — every `sell` fill's return against that fill's own `Signal.reference_price`, summed
+cumulatively, not the position's real FIFO cost basis, and with no notion of which entry a given
+exit closed out. An earlier version of this ADR proposed a brand-new `Trade` database table with
+its own average-cost accounting before this was noticed — that would have been a second,
+divergent cost-basis implementation sitting next to a better one already in the codebase, exactly
+the "Duplicated Code" problem to avoid. This ADR corrects course: extend and reuse
+`reconstruct_closed_trades`, don't duplicate it.
+
+The user asked for exactly what `TradeRecord`/`ClosedTrade` already models: the realized P&L of
+"we bought at X, sold at 1.2X" — plus wanting that number the moment a sell executes, not just
+aggregated on a chart.
 
 ## Decision
 
-- Introduce a `Trade` concept for live/demo trading, structurally mirroring backtest's
-  `TradeRecord`: one row per closed round-trip, referencing the entry `Order` and the exit
-  `Order` that closed it, with `quantity`, `entry_price`, `exit_price`, `realized_pnl`, and
-  `realized_pnl_pct`.
-- Cost basis is tracked per `Book` using the same running average-cost accounting
-  `trading_pass.py` already computes for open `PositionSnapshot`s (`book_positions()`), rather
-  than inventing a second cost-basis method: a sell fill closes out (up to) the position's whole
-  average-cost lot for that instrument, and the `Trade` record is built from that lot's average
-  entry price against the sell's fill price. `book_positions()` blends all buy fills for an
-  instrument into a single running average price, not discrete FIFO lots — v1's five strategies
-  each hold at most one lot per instrument, so this stays accurate for the trading this ledger
-  needs to cover today; a strategy that intentionally stacks distinct entry lots would need this
-  revisited to preserve per-lot P&L rather than an average.
-- A `Trade` is created synchronously at the moment a sell `Order` fills (`execute_signal`), not
-  computed lazily from a query — this is what makes "tell me what profit we're booking" possible
-  immediately, not just derivable after the fact from History.
-- The `GET /strategies/{id}/trades` endpoint's realized-return math is replaced by reading real
-  `Trade` rows instead of recomputing the proxy.
+- `ClosedTrade` (the dataclass `reconstruct_closed_trades` returns) gains an `exit_order_id`
+  field, so a caller can ask "which closed trade(s) did this specific sell Order produce?" — a
+  single sell fill can close more than one FIFO lot, so this is one-to-many, not one-to-one.
+- No new database table. Realized P&L is derived on read from existing `Order`/`Signal` history,
+  the same way `book_positions()` already derives open positions — there is nothing to keep in
+  sync, and it can never diverge from the numbers Performance/evaluation already show.
+- `Signal.booked_trade` (a Python property, not a mapped column) aggregates the `ClosedTrade`(s)
+  a sell `Signal`'s fill produced into one `BookedTrade` value — `instrument`, `quantity`,
+  `exit_price`, `realized_pnl`, `realized_pnl_pct` — exposed on `SignalOut` as `booked_trade`.
+  This is what makes "tell me what profit we're booking" available immediately on the same
+  response the approval/execution call already returns, and permanently thereafter on `History`
+  (CONTEXT.md's existing "everything about a decided signal stays visible" rule already covers
+  keeping it there).
+- `GET /strategies/{id}/trades`'s realized-return math is replaced with the same
+  `reconstruct_closed_trades` call, grouped by `exit_order_id`, instead of its old proxy.
 
 ## Consequences
 
-- Replaces an approximation with an actually-correct number, at the cost of a new table and a
-  small amount of bookkeeping in the fill path (`execute_signal`), which already has access to
-  everything a `Trade` needs (the filling `Order`, its `Signal`, and the `Book`'s open lots).
-- The average-cost logic isn't new — it already exists for computing open positions — this reuses
-  it rather than adding a second, possibly-diverging cost-basis implementation.
+- One correct FIFO cost-basis implementation instead of a proposed second, divergent one — the
+  fix this ADR should have proposed from the start.
+- `Signal.booked_trade` re-walks the whole Book's order history on each access
+  (`reconstruct_closed_trades` isn't incremental). Fine at v1's per-strategy order volumes; if
+  this becomes a real cost, memoizing or incrementalizing `reconstruct_closed_trades` itself
+  would benefit every caller, not just this one — another reason not to have built a second,
+  narrower implementation.
 - A strategy that only ever holds a single lot of a single instrument (true of v1's five
-  strategies today) will see identical numbers to before; the correctness improvement matters the
-  moment any strategy holds multiple concurrent lots or instruments.
+  strategies today) sees numbers that already matched what Performance/evaluation compute; only
+  the old Strategy-detail trade log's numbers actually change (from proxy to correct).

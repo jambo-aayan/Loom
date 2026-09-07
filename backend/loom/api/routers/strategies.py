@@ -23,6 +23,7 @@ from loom.models import (
     StrategyConfigVersion,
 )
 from loom.models import Strategy as StrategyModel
+from loom.trade_reconstruction import reconstruct_closed_trades
 from loom.trading_pass import STRATEGY_REGISTRY, get_or_create_book
 
 router = APIRouter(prefix="/strategies", tags=["strategies"])
@@ -99,11 +100,23 @@ def strategy_trade_log(strategy_id: str, environment: str = "demo", session: Ses
         .all()
     )
 
+    # FIFO-matched closed trades (ADR-0015), the same reconstruction Performance/evaluation
+    # already uses — grouped by the exit Order that closed them, since one sell fill can close
+    # more than one FIFO lot.
+    closed_by_order: dict[str, list] = {}
+    for closed_trade in reconstruct_closed_trades(session, book.id):
+        if closed_trade.exit_order_id:
+            closed_by_order.setdefault(closed_trade.exit_order_id, []).append(closed_trade)
+
     trades = []
     cumulative_return = 0.0
     curve = []
     for order in orders:
         signal = session.get(Signal, order.signal_id)
+        closed = closed_by_order.get(order.id, [])
+        realized_pnl = sum(t.pnl for t in closed) if closed else None
+        cost_basis = sum(t.entry_price * t.quantity for t in closed)
+        realized_pnl_pct = (sum(t.pnl for t in closed) / cost_basis) if closed and cost_basis else None
         trades.append(
             {
                 "order_id": order.id,
@@ -112,12 +125,13 @@ def strategy_trade_log(strategy_id: str, environment: str = "demo", session: Ses
                 "quantity": order.quantity,
                 "fill_price": order.fill_price,
                 "filled_at": order.filled_at,
+                "realized_pnl": realized_pnl,
+                "realized_pnl_pct": realized_pnl_pct,
             }
         )
-        if signal and signal.action == "sell" and order.fill_price:
-            # crude realized-return proxy per fill; a full FIFO cost-basis ledger is a natural
-            # M2 deepening once volume grows past a single-book strategy.
-            cumulative_return += (order.fill_price - signal.reference_price) / signal.reference_price
+        if realized_pnl_pct is not None:
+            # Real per-Trade realized return, replacing the old crude per-fill proxy.
+            cumulative_return += realized_pnl_pct
         filled_at = order.filled_at.isoformat() if order.filled_at else None
         curve.append({"date": filled_at, "cumulative_return": cumulative_return})
 

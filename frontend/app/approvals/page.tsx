@@ -11,6 +11,9 @@ function ApprovalsList() {
   const [error, setError] = useState<string | null>(null);
   const [strategyStyles, setStrategyStyles] = useState<Record<string, string>>({});
   const [researching, setResearching] = useState<string | null>(null);
+  const [lastBooked, setLastBooked] = useState<{ instrument: string; realized_pnl: number; realized_pnl_pct: number } | null>(
+    null,
+  );
   const highlightedSignalId = useSearchParams().get("signal");
 
   async function load() {
@@ -57,7 +60,8 @@ function ApprovalsList() {
   async function decide(signalId: string, decision: "approve" | "reject") {
     const note = notes[signalId];
     if (decision === "approve") {
-      await api.approveSignal(signalId, note);
+      const decided = await api.approveSignal(signalId, note);
+      setLastBooked(decided.booked_trade);
     } else {
       await api.rejectSignal(signalId, note);
     }
@@ -68,6 +72,22 @@ function ApprovalsList() {
     <div className="space-y-4">
       <h1 className="text-2xl">Approvals</h1>
       {error && <p className="text-danger text-sm">{error}</p>}
+      {lastBooked && (
+        <div
+          className={`rounded-xl p-3 text-sm flex items-center justify-between ${
+            lastBooked.realized_pnl >= 0 ? "bg-mint/15" : "bg-danger/15"
+          }`}
+        >
+          <span className="font-numeric">
+            Sold {lastBooked.instrument}, booked {lastBooked.realized_pnl >= 0 ? "+" : ""}£
+            {lastBooked.realized_pnl.toFixed(2)} ({lastBooked.realized_pnl >= 0 ? "+" : ""}
+            {(lastBooked.realized_pnl_pct * 100).toFixed(1)}%)
+          </span>
+          <button onClick={() => setLastBooked(null)} className="text-xs underline shrink-0 ml-3">
+            Dismiss
+          </button>
+        </div>
+      )}
       {signals.length === 0 && !error && (
         <p className="text-sm text-neutral-500">Nothing pending — run a trading pass from Overview.</p>
       )}

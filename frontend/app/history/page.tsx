@@ -60,7 +60,16 @@ export default function HistoryPage() {
                 {s.status}
               </span>
             </div>
-            {s.status === "executed" || s.status === "approved" ? (
+            {s.booked_trade ? (
+              <p className="text-xs mt-1 font-numeric">
+                Booked{" "}
+                <span className={s.booked_trade.realized_pnl >= 0 ? "text-[#0E7D4D] dark:text-mint" : "text-danger"}>
+                  {s.booked_trade.realized_pnl >= 0 ? "+" : ""}
+                  £{s.booked_trade.realized_pnl.toFixed(2)} ({s.booked_trade.realized_pnl >= 0 ? "+" : ""}
+                  {(s.booked_trade.realized_pnl_pct * 100).toFixed(1)}%)
+                </span>
+              </p>
+            ) : s.status === "executed" || s.status === "approved" ? (
               <p className="text-xs text-neutral-500 mt-1">Actual outcome tracked from real fills.</p>
             ) : s.counterfactual_outcome ? (
               <p className="text-xs text-neutral-500 mt-1">

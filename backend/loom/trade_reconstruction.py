@@ -22,6 +22,7 @@ class ClosedTrade:
     entry_price: float
     exit_price: float
     quantity: float
+    exit_order_id: str | None = None
 
     @property
     def pnl(self) -> float:
@@ -34,6 +35,20 @@ class ClosedTrade:
     @property
     def hold_days(self) -> int:
         return max(0, (self.exit_date - self.entry_date).days)
+
+
+@dataclass(frozen=True)
+class BookedTrade:
+    """What a single sell Order booked (CONTEXT.md "Trade") — one or more `ClosedTrade` FIFO lots
+    that Order's fill closed, aggregated into one realized-P&L figure (story: "tell me what
+    profit we're booking" the moment a sell executes)."""
+
+    instrument: str
+    quantity: float
+    exit_price: float
+    realized_pnl: float
+    realized_pnl_pct: float
+    closed_at: datetime | None
 
 
 def reconstruct_closed_trades(session: Session, book_id: str) -> list[ClosedTrade]:
@@ -75,6 +90,7 @@ def reconstruct_closed_trades(session: Session, book_id: str) -> list[ClosedTrad
                     entry_price=entry_price,
                     exit_price=order.fill_price,
                     quantity=matched,
+                    exit_order_id=order.id,
                 )
             )
             lot_qty -= matched

@@ -11,8 +11,8 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import JSON, DateTime, Enum, Float, ForeignKey, String, UniqueConstraint
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy import JSON, DateTime, Enum, Float, ForeignKey, String, UniqueConstraint, select
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, object_session, relationship
 
 
 def _uuid() -> str:
@@ -165,6 +165,44 @@ class Signal(Base):
     strategy: Mapped[Strategy] = relationship()
     orders: Mapped[list[Order]] = relationship(back_populates="signal")
     insights: Mapped[list[Insight]] = relationship(back_populates="signal")
+
+    @property
+    def booked_trade(self) -> "BookedTrade | None":
+        """The realized P&L this sell Signal's fill booked, if any (CONTEXT.md "Trade") —
+        aggregated from `trade_reconstruction.reconstruct_closed_trades` (ADR-0015), the FIFO
+        engine already used by Performance/evaluation, rather than a second cost-basis method.
+        A single sell fill can close more than one FIFO lot; this aggregates those into one
+        figure since the API only needs "what did we just book" as a single number."""
+        if self.action != "sell":
+            return None
+        session = object_session(self)
+        if session is None:
+            return None
+        order = session.execute(
+            select(Order).where(Order.signal_id == self.id, Order.status == OrderStatus.filled)
+        ).scalar_one_or_none()
+        if order is None:
+            return None
+        from loom.trade_reconstruction import BookedTrade, reconstruct_closed_trades
+
+        closed = [
+            t
+            for t in reconstruct_closed_trades(session, self.book_id)
+            if t.exit_order_id == order.id
+        ]
+        if not closed:
+            return None
+        quantity = sum(t.quantity for t in closed)
+        realized_pnl = sum(t.pnl for t in closed)
+        cost_basis = sum(t.entry_price * t.quantity for t in closed)
+        return BookedTrade(
+            instrument=self.instrument,
+            quantity=quantity,
+            exit_price=order.fill_price or 0.0,
+            realized_pnl=realized_pnl,
+            realized_pnl_pct=realized_pnl / cost_basis if cost_basis else 0.0,
+            closed_at=order.filled_at,
+        )
 
 
 class Order(Base):
