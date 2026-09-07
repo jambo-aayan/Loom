@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from loom import calibration, killswitch
+from loom import auto_trading_gate, calibration, killswitch, live_trading_gate
 from loom.execution.broker import BrokerClient
 from loom.market_data.base import MarketDataSource
 from loom.models import (
@@ -104,6 +104,10 @@ def _decide_approval(
 ) -> tuple[SignalStatus, bool]:
     if manual_override:
         return SignalStatus.pending_approval, True
+    if not auto_trading_gate.is_enabled():
+        # Global circuit breaker (CONTEXT.md "Auto-trading gate"): force manual regardless of
+        # this Strategy's own configured approval_mode, without mutating that stored value.
+        return SignalStatus.pending_approval, True
     if strategy_row.approval_mode == ApprovalMode.auto:
         return SignalStatus.auto_approved, False
     if strategy_row.approval_mode == ApprovalMode.auto_above_threshold:
@@ -183,6 +187,12 @@ def run_trading_pass(
     lookback_days: int = 200,
     as_of: str | None = None,
 ) -> list[Signal]:
+    if environment == Environment.live and not live_trading_gate.is_enabled():
+        # Global gate (CONTEXT.md "Live trading gate"): backend refuses to run a live pass at
+        # all while off, independent of any per-Strategy live_enabled value or what the
+        # frontend currently shows.
+        return []
+
     expire_stale_signals(session, environment, market_data_source)
     refresh_counterfactuals(session, environment, market_data_source)
 
@@ -283,6 +293,14 @@ def execute_signal(session: Session, signal: Signal, broker: BrokerClient, limit
         return existing
 
     if killswitch.is_engaged(signal.environment):
+        order = _failed_order(signal, idem_key)
+        session.add(order)
+        session.commit()
+        return order
+
+    if signal.environment == Environment.live and not live_trading_gate.is_enabled():
+        # Same chokepoint as the kill switch check above (story 65): a live Signal approved
+        # while the gate happens to be off must still be blocked here, not just at pass time.
         order = _failed_order(signal, idem_key)
         session.add(order)
         session.commit()

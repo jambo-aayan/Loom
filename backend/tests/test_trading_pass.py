@@ -146,3 +146,64 @@ def test_live_environment_skips_strategies_without_live_enabled(session):
     )
 
     assert signals == []
+
+
+def test_live_trading_gate_off_blocks_a_live_pass_even_with_live_enabled_strategy(session, tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "loom.live_trading_gate.get_settings",
+        lambda: type("S", (), {"live_trading_gate_path": str(tmp_path / "live_gate")})(),
+    )
+    strategy, _ = _seed_compounder(session, approval_mode=ApprovalMode.auto)
+    strategy.live_enabled = True
+    session.commit()
+    broker = FakeBrokerClient(starting_cash=10_000, fill_price=100.0)
+    source = FixtureMarketDataSource()
+
+    signals = run_trading_pass(
+        Environment.live, session, broker, source, universe=source.universe(), as_of="2023-08-01"
+    )
+
+    assert signals == []
+    assert broker.calls == []
+
+
+def test_live_trading_gate_off_blocks_manual_approval_of_an_already_pending_live_signal(session, tmp_path, monkeypatch):
+    strategy, config = _seed_compounder(session, approval_mode=ApprovalMode.manual)
+    strategy.live_enabled = True
+    session.commit()
+    broker = FakeBrokerClient(starting_cash=10_000, fill_price=100.0)
+    source = FixtureMarketDataSource()
+    signals = run_trading_pass(
+        Environment.live, session, broker, source, universe=source.universe(), as_of="2023-08-01"
+    )
+    assert signals, "fixture universe should produce at least one entry signal"
+    signal = signals[0]
+
+    monkeypatch.setattr(
+        "loom.live_trading_gate.get_settings",
+        lambda: type("S", (), {"live_trading_gate_path": str(tmp_path / "live_gate")})(),
+    )
+    order = approve_signal(session, signal, broker)
+
+    assert order.status == OrderStatus.failed
+    assert broker.calls == []  # blocked before ever reaching the broker
+
+
+def test_auto_trading_gate_off_forces_manual_approval_regardless_of_strategy_mode(session, tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "loom.auto_trading_gate.get_settings",
+        lambda: type("S", (), {"auto_trading_gate_path": str(tmp_path / "auto_gate")})(),
+    )
+    strategy, _ = _seed_compounder(session, approval_mode=ApprovalMode.auto)
+
+    broker = FakeBrokerClient(starting_cash=10_000, fill_price=100.0)
+    source = FixtureMarketDataSource()
+    signals = run_trading_pass(
+        Environment.demo, session, broker, source, universe=source.universe(), as_of="2023-08-01"
+    )
+
+    assert len(signals) > 0
+    assert all(s.status == SignalStatus.pending_approval for s in signals)
+    assert broker.calls == []
+    # the strategy's own configured approval_mode is untouched — a non-destructive circuit breaker
+    assert strategy.approval_mode == ApprovalMode.auto

@@ -88,6 +88,34 @@ def test_kill_switch_engage_blocks_approval(client):
     assert client.get("/settings/kill-switch", params={"environment": "demo"}).json()["engaged"] is False
 
 
+def test_live_trading_gate_defaults_disabled_and_toggles(client, tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "loom.live_trading_gate.get_settings",
+        lambda: type("S", (), {"live_trading_gate_path": str(tmp_path / "api_live_gate")})(),
+    )
+    assert client.get("/settings/live-trading-gate").json()["enabled"] is False
+
+    assert client.post("/settings/live-trading-gate/enable").json()["enabled"] is True
+    assert client.get("/settings/live-trading-gate").json()["enabled"] is True
+
+    assert client.post("/settings/live-trading-gate/disable").json()["enabled"] is False
+    assert client.get("/settings/live-trading-gate").json()["enabled"] is False
+
+
+def test_auto_trading_gate_defaults_disabled_and_toggles(client, tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "loom.auto_trading_gate.get_settings",
+        lambda: type("S", (), {"auto_trading_gate_path": str(tmp_path / "api_auto_gate")})(),
+    )
+    assert client.get("/settings/auto-trading-gate").json()["enabled"] is False
+
+    assert client.post("/settings/auto-trading-gate/enable").json()["enabled"] is True
+    assert client.get("/settings/auto-trading-gate").json()["enabled"] is True
+
+    assert client.post("/settings/auto-trading-gate/disable").json()["enabled"] is False
+    assert client.get("/settings/auto-trading-gate").json()["enabled"] is False
+
+
 def test_draft_backtest_and_promote(client):
     strategy_id = client.get("/strategies").json()[0]["id"]
 

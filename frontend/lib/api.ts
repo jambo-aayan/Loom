@@ -190,6 +190,18 @@ export const api = {
       method: "POST",
     }),
 
+  liveTradingGate: () => request<{ enabled: boolean }>(`/settings/live-trading-gate`),
+  enableLiveTradingGate: () =>
+    request<{ enabled: boolean }>(`/settings/live-trading-gate/enable`, { method: "POST" }),
+  disableLiveTradingGate: () =>
+    request<{ enabled: boolean }>(`/settings/live-trading-gate/disable`, { method: "POST" }),
+
+  autoTradingGate: () => request<{ enabled: boolean }>(`/settings/auto-trading-gate`),
+  enableAutoTradingGate: () =>
+    request<{ enabled: boolean }>(`/settings/auto-trading-gate/enable`, { method: "POST" }),
+  disableAutoTradingGate: () =>
+    request<{ enabled: boolean }>(`/settings/auto-trading-gate/disable`, { method: "POST" }),
+
   runTradingPass: (environment: Environment = "demo") =>
     request<Signal[]>(`/trading-pass/run?environment=${environment}`, { method: "POST" }),
 

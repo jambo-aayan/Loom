@@ -195,6 +195,30 @@ class KillSwitchEvent(Base):
     at: Mapped[datetime] = mapped_column(DateTime, default=_now)
 
 
+class LiveTradingGateEvent(Base):
+    """Audit trail for the global live-trading gate (CONTEXT.md "Live trading gate", ADR-0002-era
+    Phase 1/Phase 2 launch plan) — the deliberate, one-time step of leaving demo-only Phase 1."""
+
+    __tablename__ = "live_trading_gate_events"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    enabled: Mapped[bool] = mapped_column()
+    actor: Mapped[str] = mapped_column(String, default="user")
+    at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+
+class AutoTradingGateEvent(Base):
+    """Audit trail for the global auto-trading gate (CONTEXT.md "Auto-trading gate") — a
+    non-destructive circuit breaker over every Strategy's own Approval mode."""
+
+    __tablename__ = "auto_trading_gate_events"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    enabled: Mapped[bool] = mapped_column()
+    actor: Mapped[str] = mapped_column(String, default="user")
+    at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+
 class Insight(Base):
     """Either signal-keyed (`signal_id` set — screening/research tiers, story 50/54) or
     position-keyed (`book_id` + `instrument` set, `signal_id` null — the `position` tier, story

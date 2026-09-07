@@ -143,3 +143,11 @@ class OverviewOut(BaseModel):
 class KillSwitchOut(BaseModel):
     environment: str
     engaged: bool
+
+
+class LiveTradingGateOut(BaseModel):
+    enabled: bool
+
+
+class AutoTradingGateOut(BaseModel):
+    enabled: bool

@@ -22,6 +22,11 @@ class Settings(BaseSettings):
 
     kill_switch_path: str = "./.loom_killswitch"
 
+    # Global gates (Phase 1/Phase 2 launch plan, CONTEXT.md "Live trading gate" / "Auto-trading
+    # gate"). Both off by default: Phase 1 launches demo-only, manual-approval-only.
+    live_trading_gate_path: str = "./.loom_live_trading_gate"
+    auto_trading_gate_path: str = "./.loom_auto_trading_gate"
+
     api_base_url: str = "http://localhost:8000"
     frontend_base_url: str = "http://localhost:3000"
 
