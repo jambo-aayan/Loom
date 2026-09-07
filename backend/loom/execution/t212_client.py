@@ -3,6 +3,15 @@ headers rather than fixed sleeps (story 9), logs every request/response (story 1
 built against FakeBrokerClient's contract in tests — this class itself is exercised separately
 against recorded HTTP fixtures (Testing Decisions, issue #1), not by the main test suite, since
 it needs a real Demo API key and network access this sandbox doesn't have.
+
+Auth is HTTP Basic: the API key as username, the API secret as password (per T212's own API
+docs) — not the raw key alone as earlier code assumed.
+
+Order idempotency: T212's own order endpoints are documented as not idempotent, and don't accept
+or honor any client-supplied order identifier — there is no `clientOrderId` field, so a
+pre-submission "does this already exist" check can't actually prevent a duplicate. Loom instead
+relies entirely on the DB-level `Order.idempotency_key` unique constraint, generated before this
+client is ever called (ADR-0014); this client submits every call it's given.
 """
 
 from __future__ import annotations
@@ -17,12 +26,17 @@ from loom.execution.broker import BrokerClient, BrokerPosition, OrderResult
 logger = logging.getLogger("loom.t212")
 
 
+class Trading212ResponseError(RuntimeError):
+    """A T212 response didn't match the shape this client expects — raised rather than silently
+    defaulting to a placeholder value (e.g. treating an account with an unrecognized cash shape
+    as having £0 available), since a wrong number here is a real-money mistake waiting to happen."""
+
+
 class Trading212Client(BrokerClient):
-    def __init__(self, base_url: str, api_key: str, client: httpx.Client | None = None):
+    def __init__(self, base_url: str, api_key: str, api_secret: str, client: httpx.Client | None = None):
         self.base_url = base_url
-        self.api_key = api_key
         self._client = client or httpx.Client(
-            base_url=base_url, headers={"Authorization": api_key}, timeout=15.0
+            base_url=base_url, auth=httpx.BasicAuth(api_key, api_secret), timeout=15.0
         )
 
     def _request(self, method: str, path: str, **kwargs) -> httpx.Response:
@@ -43,32 +57,13 @@ class Trading212Client(BrokerClient):
             except ValueError:
                 pass
 
-    def find_pending_order(self, idempotency_key: str) -> dict | None:
-        """Checked before resubmission so a retried/timed-out request never double-submits a
-        real trade (story 8) — Trading 212's own order endpoints aren't idempotent."""
-        response = self._request("GET", "/equity/orders")
-        response.raise_for_status()
-        for order in response.json():
-            if order.get("clientOrderId") == idempotency_key:
-                return order
-        return None
-
     def submit_order(self, instrument: str, side: str, quantity: float, idempotency_key: str) -> OrderResult:
-        existing = self.find_pending_order(idempotency_key)
-        if existing is not None:
-            return OrderResult(
-                broker_order_id=str(existing.get("id")),
-                status=existing.get("status", "submitted"),
-                fill_price=existing.get("fillPrice"),
-            )
-
         response = self._request(
             "POST",
             "/equity/orders/market",
             json={
                 "ticker": instrument,
                 "quantity": quantity if side in ("buy", "add") else -quantity,
-                "clientOrderId": idempotency_key,
             },
         )
         response.raise_for_status()
@@ -80,7 +75,7 @@ class Trading212Client(BrokerClient):
         )
 
     def get_positions(self) -> list[BrokerPosition]:
-        response = self._request("GET", "/equity/portfolio")
+        response = self._request("GET", "/equity/positions")
         response.raise_for_status()
         return [
             BrokerPosition(
@@ -90,6 +85,15 @@ class Trading212Client(BrokerClient):
         ]
 
     def get_cash(self) -> float:
-        response = self._request("GET", "/equity/account/cash")
+        """Reads `GET /equity/account/summary`'s nested `cash.availableToTrade` (the current
+        T212 API shape) — fails loudly on anything else rather than defaulting to 0.0, since a
+        silent wrong answer here would misprice every subsequent sizing decision."""
+        response = self._request("GET", "/equity/account/summary")
         response.raise_for_status()
-        return float(response.json().get("free", 0.0))
+        payload = response.json()
+        cash = payload.get("cash")
+        if not isinstance(cash, dict) or "availableToTrade" not in cash:
+            raise Trading212ResponseError(
+                f"unexpected /equity/account/summary shape, expected cash.availableToTrade: {payload!r}"
+            )
+        return float(cash["availableToTrade"])
