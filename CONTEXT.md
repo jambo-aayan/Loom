@@ -32,7 +32,6 @@ A `Strategy` has `live-enabled` (bool, default `false`): whether it's permitted 
 
 A `Strategy` also has a **style**: `trading` (shorter hold, technical, exits are frequent) or `investment` (longer hold, conviction-based, benefits most from deep `Insight` research). This is descriptive metadata, not a behavioral gate — it informs which strategies get the deeper research tier and how their `Book`'s performance should be read, not a hard rule enforced by the system.
 
-**Strategy config version**
 **Trade**
 A round-trip: an entry `Order` fill paired with the exit `Order` fill that closed it, carrying a realized P&L. Distinct from `Signal` (the proposal), `Order` (the sized instruction sent to the broker), and `Position` (the current open holding) — a `Trade` only exists once a `Position` has actually been closed out. The backtest engine already has this concept (`TradeRecord`): entry price, exit price, exit reason, quantity, computed P&L. Live/demo trading does not yet have an equivalent persisted record — today it only computes a crude per-fill realized-return proxy (summed across every sell against each sell's own `Signal.reference_price`, not a real FIFO cost basis) for the Strategy detail page's trade log. See `docs/adr/0015-live-trade-ledger.md` for the live-trading `Trade` ledger design.
 
