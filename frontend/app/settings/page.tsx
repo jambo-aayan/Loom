@@ -43,7 +43,7 @@ export default function SettingsPage() {
       {error && <p className="text-danger text-sm">{error}</p>}
 
       <div className="rounded-2xl border border-black/10 dark:border-white/10 p-5 space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <p className="font-medium">Kill switch (demo)</p>
             <p className="text-xs text-neutral-500">
@@ -53,7 +53,7 @@ export default function SettingsPage() {
           </div>
           <button
             onClick={toggleKillSwitch}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium ${
+            className={`shrink-0 self-start sm:self-auto px-4 py-1.5 rounded-full text-sm font-medium ${
               killEngaged ? "bg-danger text-white" : "bg-black/10 dark:bg-white/10"
             }`}
           >
@@ -64,24 +64,26 @@ export default function SettingsPage() {
 
       <div className="space-y-3">
         <h2 className="text-lg">Strategies</h2>
-        {strategies.map((s) => (
-          <div key={s.id} className="rounded-xl border border-black/10 dark:border-white/10 p-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="font-medium">{s.name}</p>
-              <button
-                onClick={() => toggleLiveEnabled(s)}
-                className={`text-xs px-3 py-1 rounded-full ${
-                  s.live_enabled ? "bg-mint/30" : "bg-black/10 dark:bg-white/10"
-                }`}
-              >
-                Live: {s.live_enabled ? "enabled" : "disabled"}
-              </button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {strategies.map((s) => (
+            <div key={s.id} className="rounded-xl border border-black/10 dark:border-white/10 p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="font-medium">{s.name}</p>
+                <button
+                  onClick={() => toggleLiveEnabled(s)}
+                  className={`text-xs px-3 py-1 rounded-full ${
+                    s.live_enabled ? "bg-mint/30" : "bg-black/10 dark:bg-white/10"
+                  }`}
+                >
+                  Live: {s.live_enabled ? "enabled" : "disabled"}
+                </button>
+              </div>
+              <p className="text-xs text-neutral-500">
+                Approval mode: {s.approval_mode} · threshold {s.approval_threshold} · notify {s.notify_threshold}
+              </p>
             </div>
-            <p className="text-xs text-neutral-500">
-              Approval mode: {s.approval_mode} · threshold {s.approval_threshold} · notify {s.notify_threshold}
-            </p>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -18,7 +18,7 @@ export default function BacktestPage() {
         Run backtests from the CLI (<code className="font-mono">loom backtest --start … --end …</code>) or open a
         strategy to backtest a draft parameter change and compare it against the current version.
       </p>
-      <div className="space-y-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {strategies.map((s) => (
           <Link
             key={s.id}
