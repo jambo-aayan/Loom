@@ -70,15 +70,16 @@ echo "==> Secret Manager stubs (fill real values with: gcloud secrets versions a
 # deliberately only one loom-t212-api-key/loom-t212-api-secret pair here, used with both base
 # URLs (settings.py already picks the URL per Environment); the "Live trading gate" in Settings,
 # not a separate credential, is what actually stands between this key and a real order.
-for SECRET in loom-database-url loom-t212-api-key loom-t212-api-secret loom-anthropic-api-key loom-google-api-key; do
-  if ! gcloud secrets describe "$SECRET" --project "$PROJECT_ID" >/dev/null 2>&1; then
-    gcloud secrets create "$SECRET" --replication-policy="automatic" --project "$PROJECT_ID"
-    # A secret with zero versions makes ":latest" unresolvable, which fails the Cloud Run deploy
-    # below outright — give every secret an initial empty version so :latest always resolves.
-    # An empty value is itself meaningful here (ADR-0004: blank credential -> Loom's settings
-    # fall back to the fake/no-op implementation for that integration), not a placeholder hack.
-    printf '' | gcloud secrets versions add "$SECRET" --data-file=- --project "$PROJECT_ID" >/dev/null
-  fi
+declare -A SECRET_ENV_MAP=(
+  [loom-database-url]=DATABASE_URL
+  [loom-t212-api-key]=T212_API_KEY
+  [loom-t212-api-secret]=T212_API_SECRET
+  [loom-anthropic-api-key]=ANTHROPIC_API_KEY
+  [loom-google-api-key]=GOOGLE_API_KEY
+)
+for SECRET in "${!SECRET_ENV_MAP[@]}"; do
+  gcloud secrets describe "$SECRET" --project "$PROJECT_ID" >/dev/null 2>&1 || \
+  gcloud secrets create "$SECRET" --replication-policy="automatic" --project "$PROJECT_ID"
 done
 
 cat <<'NOTE'
@@ -105,7 +106,26 @@ done
 echo "==> Build and push the image once (subsequent pushes happen via CI — see .github/workflows/deploy-backend.yml)"
 gcloud builds submit ./backend --tag "$IMAGE" --project "$PROJECT_ID"
 
-SECRET_FLAGS="--set-secrets=DATABASE_URL=loom-database-url:latest,T212_API_KEY=loom-t212-api-key:latest,T212_API_SECRET=loom-t212-api-secret:latest,ANTHROPIC_API_KEY=loom-anthropic-api-key:latest,GOOGLE_API_KEY=loom-google-api-key:latest"
+# Secret Manager rejects an empty payload outright, so a secret you haven't filled in yet
+# (e.g. an optional one like GOOGLE_API_KEY) genuinely has zero versions — and ":latest" can't
+# resolve against zero versions, which would fail the deploy below. Rather than force a fake
+# non-empty placeholder in (which would make Loom think a real credential is configured), just
+# omit that secret from --set-secrets entirely when it has no version yet; the env var is then
+# simply absent in the container, and Loom's settings already default it to "" (ADR-0004: blank
+# -> the fake/no-op implementation) — the exact same effective behavior, no placeholder needed.
+SECRET_FLAG_PARTS=()
+for SECRET in "${!SECRET_ENV_MAP[@]}"; do
+  if gcloud secrets versions list "$SECRET" --project "$PROJECT_ID" --filter="state=ENABLED" --limit=1 --format="value(name)" 2>/dev/null | grep -q .; then
+    SECRET_FLAG_PARTS+=("${SECRET_ENV_MAP[$SECRET]}=${SECRET}:latest")
+  else
+    echo "    (skipping ${SECRET_ENV_MAP[$SECRET]}: $SECRET has no version yet — fill it with"
+    echo "     'gcloud secrets versions add $SECRET --data-file=-' then re-run this script)"
+  fi
+done
+SECRET_FLAGS=""
+if [ ${#SECRET_FLAG_PARTS[@]} -gt 0 ]; then
+  SECRET_FLAGS="--set-secrets=$(IFS=,; echo "${SECRET_FLAG_PARTS[*]}")"
+fi
 
 echo "==> Deploying Cloud Run Service (the always-on API)"
 gcloud run deploy "$SERVICE" \
