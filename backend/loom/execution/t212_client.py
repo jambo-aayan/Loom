@@ -48,12 +48,20 @@ class Trading212Client(BrokerClient):
 
     @staticmethod
     def _pace_from_headers(headers: httpx.Headers) -> None:
+        """`x-ratelimit-reset` is a Unix epoch timestamp for when the window resets, not a
+        duration — sleeping on the raw header value (an earlier version of this did) means
+        sleeping until some time in the 2080s, hanging the request indefinitely. Convert to a
+        delta from now, and cap it: T212's per-endpoint windows are on the order of seconds
+        (confirmed against a real response: limit=1, period=1s), so anything requesting a wait
+        longer than that is itself a signal something's wrong with the header value, not a
+        legitimate pace-back that's safe to block a live HTTP request on."""
         remaining = headers.get("x-ratelimit-remaining")
-        reset_seconds = headers.get("x-ratelimit-reset")
-        if remaining is not None and reset_seconds is not None:
+        reset_epoch = headers.get("x-ratelimit-reset")
+        if remaining is not None and reset_epoch is not None:
             try:
                 if int(remaining) <= 0:
-                    time.sleep(max(0.0, float(reset_seconds)))
+                    delay = float(reset_epoch) - time.time()
+                    time.sleep(min(max(0.0, delay), 30.0))
             except ValueError:
                 pass
 
