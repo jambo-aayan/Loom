@@ -107,8 +107,51 @@ Actions):
 | Secret | Value |
 |---|---|
 | `GCP_PROJECT_ID` | your GCP project id |
-| `GCP_DEPLOY_SA_KEY` | a JSON key for a service account with `roles/run.admin`, `roles/artifactregistry.writer`, and `roles/iam.serviceAccountUser` — create with `gcloud iam service-accounts keys create` |
+| `GCP_WORKLOAD_IDENTITY_PROVIDER` | full resource name of the Workload Identity Federation provider (see below) |
+| `GCP_SERVICE_ACCOUNT` | `loom-deploy@<project-id>.iam.gserviceaccount.com` |
 | `DATABASE_URL` | the same Neon connection string, `postgresql+psycopg://...` scheme |
+
+Auth uses Workload Identity Federation, not a downloadable service account key — many projects now
+default to `constraints/iam.disableServiceAccountKeyCreation`, and WIF is the better approach
+regardless (GitHub Actions gets a short-lived OIDC-derived token per run; no long-lived key ever
+exists to leak or rotate). One-time setup for the deploy service account and its trust to this
+specific repo:
+
+```bash
+PROJECT_ID=<your-project-id>
+REPO=jambo-aayan/Loom
+
+gcloud iam service-accounts create loom-deploy \
+  --display-name="Loom GitHub Actions deployer" --project "$PROJECT_ID"
+
+for ROLE in roles/run.admin roles/artifactregistry.writer roles/iam.serviceAccountUser; do
+  gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+    --member="serviceAccount:loom-deploy@${PROJECT_ID}.iam.gserviceaccount.com" \
+    --role="$ROLE" --condition=None
+done
+
+gcloud iam workload-identity-pools create github-pool \
+  --project="$PROJECT_ID" --location="global" --display-name="GitHub Actions"
+
+gcloud iam workload-identity-pools providers create-oidc github-provider \
+  --project="$PROJECT_ID" --location="global" --workload-identity-pool="github-pool" \
+  --display-name="GitHub" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
+  --attribute-condition="assertion.repository=='${REPO}'" \
+  --issuer-uri="https://token.actions.githubusercontent.com"
+
+PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')
+
+gcloud iam service-accounts add-iam-policy-binding \
+  "loom-deploy@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --project="$PROJECT_ID" --role="roles/iam.workloadIdentityUser" \
+  --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/github-pool/attribute.repository/${REPO}"
+
+# The value for the GCP_WORKLOAD_IDENTITY_PROVIDER secret:
+gcloud iam workload-identity-pools providers describe github-provider \
+  --project="$PROJECT_ID" --location="global" --workload-identity-pool="github-pool" \
+  --format="value(name)"
+```
 
 `DATABASE_URL` deliberately lives in two places — this GitHub secret (used to run migrations from
 CI) and the `loom-database-url` Secret Manager secret (used by the running Service/Jobs) — nothing
