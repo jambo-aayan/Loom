@@ -66,7 +66,11 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --condition=None >/dev/null
 
 echo "==> Secret Manager stubs (fill real values with: gcloud secrets versions add SECRET --data-file=-)"
-for SECRET in loom-database-url loom-t212-demo-api-key loom-t212-demo-api-secret loom-anthropic-api-key loom-google-api-key; do
+# A T212 account issues one key+secret pair total — not one per demo/live — so there is
+# deliberately only one loom-t212-api-key/loom-t212-api-secret pair here, used with both base
+# URLs (settings.py already picks the URL per Environment); the "Live trading gate" in Settings,
+# not a separate credential, is what actually stands between this key and a real order.
+for SECRET in loom-database-url loom-t212-api-key loom-t212-api-secret loom-anthropic-api-key loom-google-api-key; do
   gcloud secrets describe "$SECRET" --project "$PROJECT_ID" >/dev/null 2>&1 || \
   gcloud secrets create "$SECRET" --replication-policy="automatic" --project "$PROJECT_ID"
 done
@@ -74,7 +78,7 @@ done
 cat <<'NOTE'
 ==> Secrets created empty. Fill each one now, e.g.:
       echo -n "postgresql+psycopg://..." | gcloud secrets versions add loom-database-url --data-file=-
-    Repeat for loom-t212-demo-api-key, loom-t212-demo-api-secret, loom-anthropic-api-key,
+    Repeat for loom-t212-api-key, loom-t212-api-secret, loom-anthropic-api-key,
     loom-google-api-key. Leave a secret's value blank (empty string version) for anything you're
     not using yet (e.g. GOOGLE_API_KEY in early dev) — Loom's settings all default to "" meaning
     "use the fake/no-op implementation" (ADR-0004).
@@ -83,7 +87,7 @@ NOTE
 echo "==> Build and push the image once (subsequent pushes happen via CI — see .github/workflows/deploy-backend.yml)"
 gcloud builds submit ./backend --tag "$IMAGE" --project "$PROJECT_ID"
 
-SECRET_FLAGS="--set-secrets=DATABASE_URL=loom-database-url:latest,T212_DEMO_API_KEY=loom-t212-demo-api-key:latest,T212_DEMO_API_SECRET=loom-t212-demo-api-secret:latest,ANTHROPIC_API_KEY=loom-anthropic-api-key:latest,GOOGLE_API_KEY=loom-google-api-key:latest"
+SECRET_FLAGS="--set-secrets=DATABASE_URL=loom-database-url:latest,T212_API_KEY=loom-t212-api-key:latest,T212_API_SECRET=loom-t212-api-secret:latest,ANTHROPIC_API_KEY=loom-anthropic-api-key:latest,GOOGLE_API_KEY=loom-google-api-key:latest"
 
 echo "==> Deploying Cloud Run Service (the always-on API)"
 gcloud run deploy "$SERVICE" \

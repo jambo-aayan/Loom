@@ -7,8 +7,13 @@ hosting discussion this repo's history records). This doc is the manual/one-time
 deploys after this are just `git push` (backend: GitHub Actions; frontend: Vercel's own git
 integration).
 
-Phase 1 is demo-only (CONTEXT.md's "Live trading gate" defaults off) — nothing here ever sets a
-`T212_LIVE_API_KEY`, which stays the strongest safety net regardless of what else is configured.
+A T212 account issues one API key+secret pair total, not one per demo/live — it authenticates
+identically against either base URL. That means, unlike an earlier assumption in this repo's
+history, there's no separate "live" credential to simply withhold as a safety net: the moment
+`T212_API_KEY`/`T212_API_SECRET` are configured at all, they're capable of a live order. The
+**only** thing standing between that key and a real trade is the "Live trading gate" (CONTEXT.md)
+defaulting off — treat flipping it on as the one deliberate, real step into Phase 2, not a
+formality.
 
 ## 1. Neon (database)
 
@@ -43,15 +48,17 @@ Fill the secrets the script creates empty:
 
 ```bash
 echo -n "postgresql+psycopg://..." | gcloud secrets versions add loom-database-url --data-file=-
-echo -n "<your T212 demo API key>" | gcloud secrets versions add loom-t212-demo-api-key --data-file=-
-echo -n "<your T212 demo API secret>" | gcloud secrets versions add loom-t212-demo-api-secret --data-file=-
+echo -n "<your T212 API key>" | gcloud secrets versions add loom-t212-api-key --data-file=-
+echo -n "<your T212 API secret>" | gcloud secrets versions add loom-t212-api-secret --data-file=-
 echo -n "<your Anthropic key>" | gcloud secrets versions add loom-anthropic-api-key --data-file=-
 echo -n "<your Google (Gemini) key, or leave blank>" | gcloud secrets versions add loom-google-api-key --data-file=-
 ```
 
 T212 key + secret: generate together from "New API key" in the T212 app — the secret is shown
-once at creation, save it then. This is the **Demo** account's key; nothing here ever touches the
-Live one.
+once at creation, save it then. There's only one pair per account; it works against both
+`demo.trading212.com` and `live.trading212.com` — Loom picks the URL per `Environment`, the
+credential itself doesn't distinguish them. This is exactly why the Live trading gate matters:
+nothing about the credential stops it from placing a live order once the gate is on.
 
 Re-run `gcloud run services update loom-api --region "$REGION"` (or just redeploy) after changing
 a secret's value for it to pick up the new version.
@@ -103,13 +110,18 @@ pass. This is a real gap, deliberately not papered over with a shared-secret hea
 the frontend's client-side JS, since that wouldn't actually be secret in a browser — a proper fix
 needs real session auth (a login), which is out of scope for a single-user Phase 1 launch.
 
-The mitigating factor: Phase 1 is demo-only. `T212_LIVE_API_KEY` is never set, the live-trading
-gate defaults off and independently blocks the backend from ever placing a live order (CONTEXT.md
-"Live trading gate"), and it's a single paper-trading account — the worst an unauthenticated
-caller can do during Phase 1 is generate or approve demo trades with fake money. Revisit this
-before Phase 2 (turning live trading on): options include Cloud Run IAM (`--no-allow-unauthenticated`
-+ a lightweight authenticated proxy the frontend calls through), Vercel's deployment protection
-password-gating the whole frontend, or building real session auth.
+Be honest about what actually protects you here. The live-trading gate defaults off, but its own
+toggle endpoint (`POST /settings/live-trading-gate/enable`) is just as unauthenticated as
+everything else — anyone who finds the Cloud Run URL could flip it on themselves, then approve a
+signal in the `live` environment. T212 issuing one key for both environments (no separate,
+withheld live credential) means there's nothing else standing behind the gate either. So the gate
+protects you from your *own* accidental clicks, not from an outside actor who has the URL. What's
+actually doing the work right now is that the URL itself is unguessable (Cloud Run assigns a
+random hostname like `loom-api-<hash>-<region>.a.run.app`, never linked anywhere public or
+indexed) — weak, but real, and the reason this is an acceptable Phase 1 posture rather than an
+active incident. Do not point a custom domain at this service, and do not treat "add live
+credentials" and "fix API auth" as separable tasks — build real auth (Cloud Run IAM + an
+authenticated proxy, or session auth) *before* a live key ever goes into Secret Manager, not after.
 
 ## Day-to-day
 
@@ -117,7 +129,7 @@ password-gating the whole frontend, or building real session auth.
 - **Frontend**: `git push` → Vercel deploys automatically.
 - **Scheduled jobs**: run on their own via Cloud Scheduler; check `gcloud run jobs executions list
   --job=<job-name> --region=<region>` if one seems to have stopped firing.
-- **Turning on live trading (Phase 2)**: create `loom-t212-live-api-key` /
-  `loom-t212-live-api-secret` secrets, wire them into the Cloud Run Service/Jobs' `--set-secrets`
-  as `T212_LIVE_API_KEY` / `T212_LIVE_API_SECRET`, then flip the Live trading gate on in Settings
-  — in that order, so the gate is the last, deliberate step, not an afterthought.
+- **Turning on live trading (Phase 2)**: the same `T212_API_KEY`/`T212_API_SECRET` already
+  configured for demo already work against live — there's no separate credential to add. Fix the
+  API-auth gap above *first*, then flip the Live trading gate on in Settings as the final,
+  deliberate step.

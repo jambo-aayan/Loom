@@ -28,15 +28,15 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def get_broker(environment: Environment = Environment.demo) -> BrokerClient:
+    """One T212 key+secret pair authenticates against either base URL (settings.py) — demo vs
+    live is which URL a request goes to, not which credential; only the base URL varies here."""
     settings = get_settings()
     is_demo = environment == Environment.demo
-    key = settings.t212_demo_api_key if is_demo else settings.t212_live_api_key
-    secret = settings.t212_demo_api_secret if is_demo else settings.t212_live_api_secret
-    if key and secret:
+    if settings.t212_api_key and settings.t212_api_secret:
         from loom.execution.t212_client import Trading212Client
 
         base_url = settings.t212_demo_base_url if is_demo else settings.t212_live_base_url
-        return Trading212Client(base_url=base_url, api_key=key, api_secret=secret)
+        return Trading212Client(base_url=base_url, api_key=settings.t212_api_key, api_secret=settings.t212_api_secret)
 
     if environment not in _fake_brokers:
         _fake_brokers[environment] = FakeBrokerClient(starting_cash=10_000, fill_price=100.0)
