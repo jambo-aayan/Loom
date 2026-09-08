@@ -11,6 +11,7 @@ function ApprovalsList() {
   const [error, setError] = useState<string | null>(null);
   const [strategyStyles, setStrategyStyles] = useState<Record<string, string>>({});
   const [researching, setResearching] = useState<string | null>(null);
+  const [deciding, setDeciding] = useState<string | null>(null);
   const [lastBooked, setLastBooked] = useState<{ instrument: string; realized_pnl: number; realized_pnl_pct: number } | null>(
     null,
   );
@@ -58,14 +59,32 @@ function ApprovalsList() {
   }
 
   async function decide(signalId: string, decision: "approve" | "reject") {
+    if (deciding) return; // a click already in flight for some signal — ignore repeats/other clicks
+    setDeciding(signalId);
     const note = notes[signalId];
-    if (decision === "approve") {
-      const decided = await api.approveSignal(signalId, note);
-      setLastBooked(decided.booked_trade);
-    } else {
-      await api.rejectSignal(signalId, note);
+    try {
+      if (decision === "approve") {
+        const decided = await api.approveSignal(signalId, note);
+        setLastBooked(decided.booked_trade);
+      } else {
+        await api.rejectSignal(signalId, note);
+      }
+      setError(null);
+      await load();
+    } catch (e) {
+      // A prior attempt on this exact signal may have already succeeded server-side even though
+      // this request failed (a dropped response, a retry) — a 409 here means it already went
+      // through, so just refresh instead of showing a confusing "already approved" error for
+      // what the user experiences as their first click.
+      const message = (e as Error).message;
+      if (message.includes("-> 409")) {
+        await load();
+      } else {
+        setError(message);
+      }
+    } finally {
+      setDeciding(null);
     }
-    await load();
   }
 
   return (
@@ -165,15 +184,17 @@ function ApprovalsList() {
             <div className="flex gap-2">
               <button
                 onClick={() => decide(signal.id, "approve")}
-                className="flex-1 rounded-full bg-mint text-black py-1.5 text-sm font-medium"
+                disabled={deciding === signal.id}
+                className="flex-1 rounded-full bg-mint text-black py-1.5 text-sm font-medium disabled:opacity-50"
               >
-                Approve
+                {deciding === signal.id ? "Approving…" : "Approve"}
               </button>
               <button
                 onClick={() => decide(signal.id, "reject")}
-                className="flex-1 rounded-full bg-pink text-black py-1.5 text-sm font-medium"
+                disabled={deciding === signal.id}
+                className="flex-1 rounded-full bg-pink text-black py-1.5 text-sm font-medium disabled:opacity-50"
               >
-                Reject
+                {deciding === signal.id ? "Rejecting…" : "Reject"}
               </button>
             </div>
           </div>
