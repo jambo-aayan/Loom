@@ -39,22 +39,38 @@ class Trading212Client(BrokerClient):
             base_url=base_url, auth=httpx.BasicAuth(api_key, api_secret), timeout=15.0
         )
 
+    _MAX_ATTEMPTS = 4
+
     def _request(self, method: str, path: str, **kwargs) -> httpx.Response:
-        logger.info("t212 request %s %s params=%s json=%s", method, path, kwargs.get("params"), kwargs.get("json"))
-        response = self._client.request(method, path, **kwargs)
-        logger.info("t212 response %s %s -> %s %s", method, path, response.status_code, response.text[:500])
-        self._pace_from_headers(response.headers)
+        """Paces off `x-ratelimit-*` headers after every response (so the *next* call already
+        knows to slow down), and additionally retries with backoff when a call itself comes back
+        429 — confirmed necessary against T212's real demo API: its window is tight enough
+        (observed: limit=1, period=1s) that a request issued shortly after an unrelated prior call
+        can still get rejected even though pacing looked fine going in, since pacing only reacts
+        to the *previous* response's headers, not a live/racing rate-limit state."""
+        for attempt in range(1, self._MAX_ATTEMPTS + 1):
+            logger.info("t212 request %s %s params=%s json=%s", method, path, kwargs.get("params"), kwargs.get("json"))
+            response = self._client.request(method, path, **kwargs)
+            logger.info("t212 response %s %s -> %s %s", method, path, response.status_code, response.text[:500])
+            if response.status_code == 429 and attempt < self._MAX_ATTEMPTS:
+                if not self._pace_from_headers(response.headers):
+                    time.sleep(1.0)
+                continue
+            self._pace_from_headers(response.headers)
+            return response
         return response
 
     @staticmethod
-    def _pace_from_headers(headers: httpx.Headers) -> None:
+    def _pace_from_headers(headers: httpx.Headers) -> bool:
         """`x-ratelimit-reset` is a Unix epoch timestamp for when the window resets, not a
         duration — sleeping on the raw header value (an earlier version of this did) means
         sleeping until some time in the 2080s, hanging the request indefinitely. Convert to a
         delta from now, and cap it: T212's per-endpoint windows are on the order of seconds
         (confirmed against a real response: limit=1, period=1s), so anything requesting a wait
         longer than that is itself a signal something's wrong with the header value, not a
-        legitimate pace-back that's safe to block a live HTTP request on."""
+        legitimate pace-back that's safe to block a live HTTP request on. Returns whether it
+        actually paced (headers present and usable), so a 429 retry can fall back to a fixed
+        delay when the response carries no usable rate-limit headers at all."""
         remaining = headers.get("x-ratelimit-remaining")
         reset_epoch = headers.get("x-ratelimit-reset")
         if remaining is not None and reset_epoch is not None:
@@ -62,8 +78,10 @@ class Trading212Client(BrokerClient):
                 if int(remaining) <= 0:
                     delay = float(reset_epoch) - time.time()
                     time.sleep(min(max(0.0, delay), 30.0))
+                return True
             except ValueError:
-                pass
+                return False
+        return False
 
     def submit_order(self, instrument: str, side: str, quantity: float, idempotency_key: str) -> OrderResult:
         response = self._request(
