@@ -71,13 +71,24 @@ a secret's value for it to pick up the new version.
 
 ## 3. Database migrations
 
-Run once against the real Neon database (also runs automatically on every deploy via GitHub
-Actions — see step 5):
+Run once against the real Neon database, **before** the Cloud Run Service ever serves its first
+request (also runs automatically on every deploy via GitHub Actions — see step 5, in the correct
+order):
 
 ```bash
 cd backend
 DATABASE_URL="postgresql+psycopg://..." alembic upgrade head
 ```
+
+`loom.db.init_db()` only auto-creates the schema (`Base.metadata.create_all()`) for sqlite —
+against a real Postgres database, Alembic is the sole source of schema truth, on purpose: an
+earlier version of this ran unconditionally, so the very first request to a freshly deployed
+Cloud Run service created the whole schema directly from the models before `alembic upgrade head`
+ever got a chance to run, and Alembic's own migration then failed with `DuplicateObject` trying to
+create objects that already existed. If you ever hit that error against a database you're sure is
+otherwise correct (schema matches current models, just never went through Alembic — e.g. it was
+provisioned by an old build before this fix), the recovery is `alembic stamp head`, which records
+the migration history as up to date without re-running any DDL — not `alembic upgrade head`.
 
 ## 4. Vercel (frontend)
 

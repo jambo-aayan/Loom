@@ -21,7 +21,14 @@ def init_db(database_url: str | None = None) -> None:
     global _engine, _SessionLocal
     _engine = make_engine(database_url)
     _SessionLocal = sessionmaker(bind=_engine, expire_on_commit=False)
-    Base.metadata.create_all(_engine)
+    # sqlite only: local dev/tests want a ready schema with no separate migration step. A real
+    # deployment (Postgres) must go through Alembic as the sole source of truth for schema — this
+    # ran unconditionally once, and a freshly deployed Cloud Run service's first request created
+    # the whole schema (including enum types) directly via create_all() *before* `alembic upgrade
+    # head` ever got a chance to run against the same database, so Alembic found its target
+    # objects already existing and failed. See docs/deployment.md's migration step.
+    if _engine.dialect.name == "sqlite":
+        Base.metadata.create_all(_engine)
 
 
 def get_session() -> Generator[Session, None, None]:
