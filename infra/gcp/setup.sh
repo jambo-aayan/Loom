@@ -71,8 +71,14 @@ echo "==> Secret Manager stubs (fill real values with: gcloud secrets versions a
 # URLs (settings.py already picks the URL per Environment); the "Live trading gate" in Settings,
 # not a separate credential, is what actually stands between this key and a real order.
 for SECRET in loom-database-url loom-t212-api-key loom-t212-api-secret loom-anthropic-api-key loom-google-api-key; do
-  gcloud secrets describe "$SECRET" --project "$PROJECT_ID" >/dev/null 2>&1 || \
-  gcloud secrets create "$SECRET" --replication-policy="automatic" --project "$PROJECT_ID"
+  if ! gcloud secrets describe "$SECRET" --project "$PROJECT_ID" >/dev/null 2>&1; then
+    gcloud secrets create "$SECRET" --replication-policy="automatic" --project "$PROJECT_ID"
+    # A secret with zero versions makes ":latest" unresolvable, which fails the Cloud Run deploy
+    # below outright — give every secret an initial empty version so :latest always resolves.
+    # An empty value is itself meaningful here (ADR-0004: blank credential -> Loom's settings
+    # fall back to the fake/no-op implementation for that integration), not a placeholder hack.
+    printf '' | gcloud secrets versions add "$SECRET" --data-file=- --project "$PROJECT_ID" >/dev/null
+  fi
 done
 
 cat <<'NOTE'
