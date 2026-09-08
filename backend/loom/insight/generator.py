@@ -151,7 +151,7 @@ class GeminiInsightGenerator(InsightGenerator):
     `InsightGenerator` interface like any other provider, even though `loom.api.deps` only ever
     wires this one in for the research tier today."""
 
-    def __init__(self, api_key: str, model: str = "gemini-3-flash"):
+    def __init__(self, api_key: str, model: str = "gemini-3.8-flash"):
         from google import genai
 
         self._client = genai.Client(api_key=api_key)
