@@ -1,0 +1,83 @@
+name: Deploy backend to Cloud Run
+
+# Runs on pushes to main once the backend actually changes. Runs the test suite first — a build
+# that ships is one that already passed CI, not a separate leap of faith.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-backend.yml"
+  workflow_dispatch: {}
+
+env:
+  REGION: europe-west2
+  REPO: loom
+  SERVICE: loom-api
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e ".[dev]"
+      - run: pytest -q
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_DEPLOY_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${{ env.REGION }}-docker.pkg.dev" --quiet
+
+      - name: Build and push image
+        working-directory: backend
+        run: |
+          IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/api:${{ github.sha }}"
+          docker build -t "$IMAGE" -t "${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/api:latest" .
+          docker push "$IMAGE"
+          docker push "${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/api:latest"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      - name: Run database migrations
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          pip install -e .
+          alembic upgrade head
+
+      - name: Deploy Cloud Run Service
+        run: |
+          gcloud run deploy "${{ env.SERVICE }}" \
+            --image "$IMAGE" \
+            --region "${{ env.REGION }}" \
+            --project "${{ secrets.GCP_PROJECT_ID }}" \
+            --quiet
+
+      - name: Update Cloud Run Jobs to the new image
+        run: |
+          for JOB in loom-trade-pass loom-screen-insights loom-research-insights loom-reconcile; do
+            gcloud run jobs update "$JOB" \
+              --image "$IMAGE" \
+              --region "${{ env.REGION }}" \
+              --project "${{ secrets.GCP_PROJECT_ID }}" \
+              --quiet
+          done
