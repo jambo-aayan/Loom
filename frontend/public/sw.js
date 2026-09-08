@@ -14,7 +14,16 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
+  // Only the app shell is cached (install handler above) — cross-origin requests (the API,
+  // on a different host entirely) must pass straight through the network uninvolved. Catching
+  // them here and falling back to caches.match() would resolve to undefined (never cached),
+  // and respondWith(undefined) throws "Failed to convert value to 'Response'", masking whatever
+  // the real network error was.
+  if (new URL(event.request.url).origin !== self.location.origin) return;
+
+  event.respondWith(
+    fetch(event.request).catch(() => caches.match(event.request).then((cached) => cached ?? Response.error())),
+  );
 });
 
 self.addEventListener("push", (event) => {
