@@ -84,6 +84,18 @@ cat <<'NOTE'
     "use the fake/no-op implementation" (ADR-0004).
 NOTE
 
+echo "==> Granting Cloud Build's runtime identity what it needs"
+# gcloud builds submit runs as the Compute Engine default service account, which on a fresh
+# project has none of these by default — without them the build fails trying to read back its
+# own uploaded source (storage.objectViewer), push the built image (artifactregistry.writer), or
+# write build logs (logging.logWriter). Idempotent: re-granting an existing binding is a no-op.
+PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')
+COMPUTE_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+for ROLE in roles/storage.objectViewer roles/artifactregistry.writer roles/logging.logWriter; do
+  gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+    --member="serviceAccount:${COMPUTE_SA}" --role="$ROLE" --condition=None >/dev/null
+done
+
 echo "==> Build and push the image once (subsequent pushes happen via CI — see .github/workflows/deploy-backend.yml)"
 gcloud builds submit ./backend --tag "$IMAGE" --project "$PROJECT_ID"
 
