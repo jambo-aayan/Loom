@@ -78,6 +78,7 @@ declare -A SECRET_ENV_MAP=(
   [loom-t212-live-api-secret]=T212_LIVE_API_SECRET
   [loom-anthropic-api-key]=ANTHROPIC_API_KEY
   [loom-google-api-key]=GOOGLE_API_KEY
+  [loom-twelve-data-api-key]=TWELVE_DATA_API_KEY
 )
 for SECRET in "${!SECRET_ENV_MAP[@]}"; do
   gcloud secrets describe "$SECRET" --project "$PROJECT_ID" >/dev/null 2>&1 || \
