@@ -4,6 +4,8 @@ in tests and the CLI's zero-dependency default."""
 
 from __future__ import annotations
 
+import math
+
 import httpx
 
 from loom.market_data.base import MarketDataSource
@@ -34,15 +36,15 @@ class TwelveDataSource(MarketDataSource):
         if payload.get("status") == "error":
             raise RuntimeError(f"Twelve Data error for {instrument}: {payload.get('message')}")
 
-        bars = tuple(
-            Bar(
-                date=row["datetime"],
-                open=float(row["open"]),
-                high=float(row["high"]),
-                low=float(row["low"]),
-                close=float(row["close"]),
-                volume=float(row.get("volume") or 0.0),
+        bars = []
+        for row in payload.get("values", []):
+            open_, high, low, close = float(row["open"]), float(row["high"]), float(row["low"]), float(row["close"])
+            # A live feed can hand back a gap/glitch day (NaN or inf) that a strategy's stats
+            # (e.g. statistics.pstdev) will choke on in a confusing way far from this source —
+            # drop it here instead, at the boundary, same as any other malformed external input.
+            if not all(math.isfinite(v) for v in (open_, high, low, close)):
+                continue
+            bars.append(
+                Bar(date=row["datetime"], open=open_, high=high, low=low, close=close, volume=float(row.get("volume") or 0.0))
             )
-            for row in payload.get("values", [])
-        )
-        return InstrumentHistory(instrument=instrument, bars=bars)
+        return InstrumentHistory(instrument=instrument, bars=tuple(bars))

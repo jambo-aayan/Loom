@@ -6,6 +6,8 @@ supplement the CLI backtest's acceptance criteria calls out."""
 
 from __future__ import annotations
 
+import math
+
 from loom.fundamentals import FundamentalsProvider
 from loom.market_data.base import MarketDataSource
 from loom.strategy import Bar, InstrumentHistory
@@ -17,18 +19,24 @@ class YFinanceSource(MarketDataSource, FundamentalsProvider):
 
         ticker = yf.Ticker(instrument)
         df = ticker.history(start=start, end=end, interval="1d")
-        bars = tuple(
-            Bar(
-                date=index.date().isoformat(),
-                open=float(row["Open"]),
-                high=float(row["High"]),
-                low=float(row["Low"]),
-                close=float(row["Close"]),
-                volume=float(row.get("Volume", 0.0)),
+        bars = []
+        for index, row in df.iterrows():
+            open_, high, low, close = float(row["Open"]), float(row["High"]), float(row["Low"]), float(row["Close"])
+            # Same reasoning as TwelveDataSource: drop a bad/gap day at the boundary rather than
+            # let a NaN/inf close silently break a strategy's stats far from where it came from.
+            if not all(math.isfinite(v) for v in (open_, high, low, close)):
+                continue
+            bars.append(
+                Bar(
+                    date=index.date().isoformat(),
+                    open=open_,
+                    high=high,
+                    low=low,
+                    close=close,
+                    volume=float(row.get("Volume", 0.0)),
+                )
             )
-            for index, row in df.iterrows()
-        )
-        return InstrumentHistory(instrument=instrument, bars=bars)
+        return InstrumentHistory(instrument=instrument, bars=tuple(bars))
 
     def get_fundamentals(self, instrument: str) -> dict:
         """P/E, dividend yield, debt/equity, and sector/industry — used by the Value/Quality
