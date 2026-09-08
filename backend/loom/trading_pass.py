@@ -242,7 +242,23 @@ def run_trading_pass(
         strategy_impl = strategy_cls.from_config(config_version.params)
         proposed = strategy_impl.generate_signals(market_data, account, account)
 
+        # Nothing else skips re-proposing an instrument that already has an un-actioned Signal
+        # sitting in Approvals — only an instrument already *held* is skipped (above). Re-running
+        # a pass the same day (nothing stops that; there's no cooldown yet — see BACKLOG.md)
+        # would otherwise duplicate every still-pending proposal each time.
+        already_pending = {
+            (s.instrument, s.signal_type)
+            for s in session.execute(
+                select(Signal).where(
+                    Signal.book_id == book.id,
+                    Signal.status == SignalStatus.pending_approval,
+                )
+            ).scalars()
+        }
+
         for p in proposed:
+            if (p.instrument, p.signal_type) in already_pending:
+                continue
             confidence = p.confidence
             if p.signal_type == "entry" and p.strength is not None:
                 calibrated = calibration.get_confidence(session, strategy_row.id, config_version.id, p.strength)
