@@ -7,6 +7,12 @@ hosting discussion this repo's history records). This doc is the manual/one-time
 deploys after this are just `git push` (backend: GitHub Actions; frontend: Vercel's own git
 integration).
 
+**Fastest path through this**: `./scripts/deploy-wizard.sh` from the repo root walks through
+every stage below interactively — opens each dashboard, tells you what to click/copy, and writes
+the values where they belong (`backend/.env`, GCP Secret Manager, GitHub Actions secrets). Safe
+to stop and re-run; it remembers what you've already entered. The rest of this doc is the
+reference for what it's doing and why, and how to do any of it by hand if you'd rather.
+
 A T212 account issues one API key+secret pair total, not one per demo/live — it authenticates
 identically against either base URL. That means, unlike an earlier assumption in this repo's
 history, there's no separate "live" credential to simply withhold as a safety net: the moment
