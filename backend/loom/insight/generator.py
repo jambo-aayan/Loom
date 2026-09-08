@@ -151,7 +151,12 @@ class GeminiInsightGenerator(InsightGenerator):
     `InsightGenerator` interface like any other provider, even though `loom.api.deps` only ever
     wires this one in for the research tier today."""
 
-    def __init__(self, api_key: str, model: str = "gemini-3.8-flash"):
+    # Deliberately not the newest Flash release: Google tightens free-tier daily quotas hard on
+    # brand-new models (as of Sep 2026, the newest one's free tier was reported at ~20
+    # requests/day vs. ~1,500/day on established models like this one) — headroom for an
+    # unattended job that runs indefinitely matters more here than frontier capability this task
+    # doesn't need. Re-check current quotas before bumping this rather than assuming newest=best.
+    def __init__(self, api_key: str, model: str = "gemini-3-flash"):
         from google import genai
 
         self._client = genai.Client(api_key=api_key)
