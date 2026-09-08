@@ -96,10 +96,6 @@ def test_push_subscriptions_are_scoped_per_environment(session):
 
 
 def test_notify_failed_auto_approvals_skips_when_kill_switch_engaged(session, tmp_path, monkeypatch):
-    monkeypatch.setattr(
-        "loom.killswitch.get_settings",
-        lambda: type("S", (), {"kill_switch_path": str(tmp_path / "killswitch")})(),
-    )
     from loom import killswitch
 
     _seed(session, approval_mode=ApprovalMode.auto)

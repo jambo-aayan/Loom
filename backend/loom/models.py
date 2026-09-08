@@ -10,9 +10,13 @@ from __future__ import annotations
 import enum
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import JSON, DateTime, Enum, Float, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, object_session, relationship
+
+if TYPE_CHECKING:
+    from loom.trade_reconstruction import BookedTrade
 
 
 def _uuid() -> str:
@@ -167,7 +171,7 @@ class Signal(Base):
     insights: Mapped[list[Insight]] = relationship(back_populates="signal")
 
     @property
-    def booked_trade(self) -> "BookedTrade | None":
+    def booked_trade(self) -> BookedTrade | None:
         """The realized P&L this sell Signal's fill booked, if any (CONTEXT.md "Trade") — a thin
         delegation to `trade_reconstruction.booked_trade_for_signal`, which owns the actual
         query/aggregation logic (ADR-0015). Kept as a property, not a plain function, so `SignalOut`

@@ -7,10 +7,6 @@ from loom import db
 @pytest.fixture()
 def client(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path}/overview_pnl_test.db")
-    monkeypatch.setattr(
-        "loom.killswitch.get_settings",
-        lambda: type("S", (), {"kill_switch_path": str(tmp_path / "killswitch")})(),
-    )
     monkeypatch.setattr("loom.api.deps._fake_brokers", {})
     from loom.api.main import app
 
@@ -23,6 +19,7 @@ def client(tmp_path, monkeypatch):
 def test_overview_reports_per_book_pnl_for_a_strategy_book(client):
     strategy_id = client.get("/strategies").json()[0]["id"]
     client.patch(f"/strategies/{strategy_id}", json={"approval_mode": "auto"})
+    client.post("/settings/auto-trading-gate/enable")
     client.post("/trading-pass/run", params={"environment": "demo"})
 
     overview = client.get("/overview", params={"environment": "demo"}).json()

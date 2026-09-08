@@ -111,7 +111,7 @@ def trade_pass(environment: str, universe: tuple[str, ...]):
     email_sender = get_email_sender()
     push_sender = get_push_sender()
 
-    was_engaged = killswitch.is_engaged(env)
+    was_engaged = killswitch.is_engaged(session, env)
     breached, loss_pct = check_daily_loss_limit(session, env, broker)
     if breached and not was_engaged:
         killswitch.engage(session, env, actor="daily-loss-limit")

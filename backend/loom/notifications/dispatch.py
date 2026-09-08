@@ -62,7 +62,7 @@ def notify_failed_auto_approvals(
     """A signal the pass auto-approved but never reached `executed` means its order failed —
     the kill switch already gets its own notification when it's engaged, so this only fires for
     a genuine risk/sizing rejection (story 58's "order failed" event), not a kill-switch block."""
-    if killswitch.is_engaged(environment):
+    if killswitch.is_engaged(session, environment):
         return
     for signal in signals:
         if signal.status != SignalStatus.auto_approved:

@@ -1,4 +1,4 @@
-from loom import killswitch, strategies  # noqa: F401  (registers strategies)
+from loom import auto_trading_gate, killswitch, live_trading_gate, strategies  # noqa: F401  (registers strategies)
 from loom.execution.broker import FakeBrokerClient
 from loom.market_data.fixture import FixtureMarketDataSource
 from loom.models import (
@@ -101,10 +101,6 @@ def test_reject_signal_records_decision_without_ordering(session):
 
 
 def test_kill_switch_blocks_execution(session, tmp_path, monkeypatch):
-    monkeypatch.setattr(
-        "loom.killswitch.get_settings",
-        lambda: type("S", (), {"kill_switch_path": str(tmp_path / "killswitch")})(),
-    )
     _seed_compounder(session, approval_mode=ApprovalMode.manual)
     broker = FakeBrokerClient(starting_cash=10_000, fill_price=100.0)
     source = FixtureMarketDataSource()
@@ -148,11 +144,8 @@ def test_live_environment_skips_strategies_without_live_enabled(session):
     assert signals == []
 
 
-def test_live_trading_gate_off_blocks_a_live_pass_even_with_live_enabled_strategy(session, tmp_path, monkeypatch):
-    monkeypatch.setattr(
-        "loom.live_trading_gate.get_settings",
-        lambda: type("S", (), {"live_trading_gate_path": str(tmp_path / "live_gate")})(),
-    )
+def test_live_trading_gate_off_blocks_a_live_pass_even_with_live_enabled_strategy(session):
+    live_trading_gate.disable(session)
     strategy, _ = _seed_compounder(session, approval_mode=ApprovalMode.auto)
     strategy.live_enabled = True
     session.commit()
@@ -167,7 +160,7 @@ def test_live_trading_gate_off_blocks_a_live_pass_even_with_live_enabled_strateg
     assert broker.calls == []
 
 
-def test_live_trading_gate_off_blocks_manual_approval_of_an_already_pending_live_signal(session, tmp_path, monkeypatch):
+def test_live_trading_gate_off_blocks_manual_approval_of_an_already_pending_live_signal(session):
     strategy, config = _seed_compounder(session, approval_mode=ApprovalMode.manual)
     strategy.live_enabled = True
     session.commit()
@@ -179,21 +172,15 @@ def test_live_trading_gate_off_blocks_manual_approval_of_an_already_pending_live
     assert signals, "fixture universe should produce at least one entry signal"
     signal = signals[0]
 
-    monkeypatch.setattr(
-        "loom.live_trading_gate.get_settings",
-        lambda: type("S", (), {"live_trading_gate_path": str(tmp_path / "live_gate")})(),
-    )
+    live_trading_gate.disable(session)
     order = approve_signal(session, signal, broker)
 
     assert order.status == OrderStatus.failed
     assert broker.calls == []  # blocked before ever reaching the broker
 
 
-def test_auto_trading_gate_off_forces_manual_approval_regardless_of_strategy_mode(session, tmp_path, monkeypatch):
-    monkeypatch.setattr(
-        "loom.auto_trading_gate.get_settings",
-        lambda: type("S", (), {"auto_trading_gate_path": str(tmp_path / "auto_gate")})(),
-    )
+def test_auto_trading_gate_off_forces_manual_approval_regardless_of_strategy_mode(session):
+    auto_trading_gate.disable(session)
     strategy, _ = _seed_compounder(session, approval_mode=ApprovalMode.auto)
 
     broker = FakeBrokerClient(starting_cash=10_000, fill_price=100.0)

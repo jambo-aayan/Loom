@@ -18,7 +18,12 @@ def _client(handler) -> Trading212Client:
         auth=httpx.BasicAuth("test-key", "test-secret"),
         transport=transport,
     )
-    return Trading212Client(base_url="https://demo.trading212.com/api/v0", api_key="test-key", api_secret="test-secret", client=http_client)
+    return Trading212Client(
+        base_url="https://demo.trading212.com/api/v0",
+        api_key="test-key",
+        api_secret="test-secret",
+        client=http_client,
+    )
 
 
 def test_requests_use_http_basic_auth_with_key_and_secret():

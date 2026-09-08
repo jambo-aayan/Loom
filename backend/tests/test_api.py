@@ -11,10 +11,6 @@ from loom import db
 @pytest.fixture()
 def client(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path}/api_test.db")
-    monkeypatch.setattr(
-        "loom.killswitch.get_settings",
-        lambda: type("S", (), {"kill_switch_path": str(tmp_path / "killswitch")})(),
-    )
     from loom.api.main import app
 
     with TestClient(app) as c:
@@ -88,11 +84,7 @@ def test_kill_switch_engage_blocks_approval(client):
     assert client.get("/settings/kill-switch", params={"environment": "demo"}).json()["engaged"] is False
 
 
-def test_live_trading_gate_defaults_disabled_and_toggles(client, tmp_path, monkeypatch):
-    monkeypatch.setattr(
-        "loom.live_trading_gate.get_settings",
-        lambda: type("S", (), {"live_trading_gate_path": str(tmp_path / "api_live_gate")})(),
-    )
+def test_live_trading_gate_defaults_disabled_and_toggles(client):
     assert client.get("/settings/live-trading-gate").json()["enabled"] is False
 
     assert client.post("/settings/live-trading-gate/enable").json()["enabled"] is True
@@ -102,11 +94,7 @@ def test_live_trading_gate_defaults_disabled_and_toggles(client, tmp_path, monke
     assert client.get("/settings/live-trading-gate").json()["enabled"] is False
 
 
-def test_auto_trading_gate_defaults_disabled_and_toggles(client, tmp_path, monkeypatch):
-    monkeypatch.setattr(
-        "loom.auto_trading_gate.get_settings",
-        lambda: type("S", (), {"auto_trading_gate_path": str(tmp_path / "api_auto_gate")})(),
-    )
+def test_auto_trading_gate_defaults_disabled_and_toggles(client):
     assert client.get("/settings/auto-trading-gate").json()["enabled"] is False
 
     assert client.post("/settings/auto-trading-gate/enable").json()["enabled"] is True

@@ -100,11 +100,11 @@ def account_state_for_book(session: Session, book_id: str, broker: BrokerClient)
 
 
 def _decide_approval(
-    strategy_row: StrategyModel, confidence: float, manual_override: bool | None
+    session: Session, strategy_row: StrategyModel, confidence: float, manual_override: bool | None
 ) -> tuple[SignalStatus, bool]:
     if manual_override:
         return SignalStatus.pending_approval, True
-    if not auto_trading_gate.is_enabled():
+    if not auto_trading_gate.is_enabled(session):
         # Global circuit breaker (CONTEXT.md "Auto-trading gate"): force manual regardless of
         # this Strategy's own configured approval_mode, without mutating that stored value.
         return SignalStatus.pending_approval, True
@@ -187,7 +187,7 @@ def run_trading_pass(
     lookback_days: int = 200,
     as_of: str | None = None,
 ) -> list[Signal]:
-    if environment == Environment.live and not live_trading_gate.is_enabled():
+    if environment == Environment.live and not live_trading_gate.is_enabled(session):
         # Global gate (CONTEXT.md "Live trading gate"): backend refuses to run a live pass at
         # all while off, independent of any per-Strategy live_enabled value or what the
         # frontend currently shows.
@@ -238,7 +238,7 @@ def run_trading_pass(
             status, requires_manual = (
                 (SignalStatus.auto_approved, False)
                 if auto_approve_all
-                else _decide_approval(strategy_row, confidence, p.requires_manual_approval_override)
+                else _decide_approval(session, strategy_row, confidence, p.requires_manual_approval_override)
             )
             signal = Signal(
                 strategy_id=strategy_row.id,
@@ -292,13 +292,13 @@ def execute_signal(session: Session, signal: Signal, broker: BrokerClient, limit
     if existing is not None:
         return existing
 
-    if killswitch.is_engaged(signal.environment):
+    if killswitch.is_engaged(session, signal.environment):
         order = _failed_order(signal, idem_key)
         session.add(order)
         session.commit()
         return order
 
-    if signal.environment == Environment.live and not live_trading_gate.is_enabled():
+    if signal.environment == Environment.live and not live_trading_gate.is_enabled(session):
         # Same chokepoint as the kill switch check above (story 65): a live Signal approved
         # while the gate happens to be off must still be blocked here, not just at pass time.
         order = _failed_order(signal, idem_key)

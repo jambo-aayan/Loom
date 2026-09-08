@@ -13,9 +13,9 @@ router = APIRouter(prefix="/settings", tags=["settings"])
 
 
 @router.get("/kill-switch", response_model=KillSwitchOut)
-def get_kill_switch(environment: str = "demo"):
+def get_kill_switch(environment: str = "demo", session: Session = Depends(get_db)):
     env = Environment(environment)
-    return KillSwitchOut(environment=environment, engaged=killswitch.is_engaged(env))
+    return KillSwitchOut(environment=environment, engaged=killswitch.is_engaged(session, env))
 
 
 @router.post("/kill-switch/engage", response_model=KillSwitchOut)
@@ -39,8 +39,8 @@ def resume_kill_switch(
 
 
 @router.get("/live-trading-gate", response_model=LiveTradingGateOut)
-def get_live_trading_gate():
-    return LiveTradingGateOut(enabled=live_trading_gate.is_enabled())
+def get_live_trading_gate(session: Session = Depends(get_db)):
+    return LiveTradingGateOut(enabled=live_trading_gate.is_enabled(session))
 
 
 @router.post("/live-trading-gate/enable", response_model=LiveTradingGateOut)
@@ -56,8 +56,8 @@ def disable_live_trading_gate(session: Session = Depends(get_db)):
 
 
 @router.get("/auto-trading-gate", response_model=AutoTradingGateOut)
-def get_auto_trading_gate():
-    return AutoTradingGateOut(enabled=auto_trading_gate.is_enabled())
+def get_auto_trading_gate(session: Session = Depends(get_db)):
+    return AutoTradingGateOut(enabled=auto_trading_gate.is_enabled(session))
 
 
 @router.post("/auto-trading-gate/enable", response_model=AutoTradingGateOut)

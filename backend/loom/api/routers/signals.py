@@ -111,7 +111,7 @@ def approve(
     broker = get_broker(signal.environment)  # the signal's own environment decides the broker
     order = approve_signal(session, signal, broker, note=body.note)
 
-    if order.status == OrderStatus.failed and not killswitch.is_engaged(signal.environment):
+    if order.status == OrderStatus.failed and not killswitch.is_engaged(session, signal.environment):
         notify_order_failed(email_sender, get_settings().notify_email, signal, "risk/sizing check rejected the order")
     return signal
 

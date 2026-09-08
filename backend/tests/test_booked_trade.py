@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from tests.test_trade_reconstruction import _fill, _seed_book
 from loom.models import Strategy as StrategyModel
+from tests.test_trade_reconstruction import _fill, _seed_book
 
 
 def test_booked_trade_none_for_a_buy_signal(session):

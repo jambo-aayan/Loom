@@ -78,7 +78,7 @@ def booked_trade_for_signal(session: Session, signal: Signal) -> BookedTrade | N
 
     closed = [t for t in reconstruct_closed_trades(session, signal.book_id) if t.exit_order_id == order.id]
     realized_pnl, realized_pnl_pct = aggregate_realized(closed)
-    if realized_pnl is None:
+    if realized_pnl is None or realized_pnl_pct is None:
         return None
 
     return BookedTrade(

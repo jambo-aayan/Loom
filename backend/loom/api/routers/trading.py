@@ -37,7 +37,7 @@ def trigger_trading_pass(
     broker: BrokerClient = get_broker(env)
     to_email = get_settings().notify_email
 
-    was_engaged = killswitch.is_engaged(env)
+    was_engaged = killswitch.is_engaged(session, env)
     breached, loss_pct = check_daily_loss_limit(session, env, broker)
     if breached and not was_engaged:
         killswitch.engage(session, env, actor="daily-loss-limit")

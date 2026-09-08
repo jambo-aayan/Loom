@@ -7,10 +7,6 @@ from loom import db
 @pytest.fixture()
 def client(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path}/position_insight_test.db")
-    monkeypatch.setattr(
-        "loom.killswitch.get_settings",
-        lambda: type("S", (), {"kill_switch_path": str(tmp_path / "killswitch")})(),
-    )
     monkeypatch.setattr("loom.api.deps._fake_brokers", {})
     from loom.api.main import app
 
@@ -44,6 +40,7 @@ def test_position_commentary_for_a_manual_holding(client):
 def test_position_commentary_for_a_strategy_owned_position(client):
     strategy_id = client.get("/strategies").json()[0]["id"]
     client.patch(f"/strategies/{strategy_id}", json={"approval_mode": "auto"})
+    client.post("/settings/auto-trading-gate/enable")
 
     signals = client.post("/trading-pass/run", params={"environment": "demo"}).json()
     executed = [s for s in signals if s["status"] == "executed"]

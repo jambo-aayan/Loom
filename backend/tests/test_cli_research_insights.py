@@ -5,10 +5,6 @@ from loom.cli.main import cli
 
 def test_research_insights_reports_zero_when_nothing_eligible(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path}/cli_research.db")
-    monkeypatch.setattr(
-        "loom.killswitch.get_settings",
-        lambda: type("S", (), {"kill_switch_path": str(tmp_path / "killswitch")})(),
-    )
     monkeypatch.setattr("loom.api.deps._fake_brokers", {})
 
     runner = CliRunner()
@@ -20,10 +16,6 @@ def test_research_insights_reports_zero_when_nothing_eligible(tmp_path, monkeypa
 
 def test_research_insights_generates_for_an_eligible_investment_style_signal(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path}/cli_research2.db")
-    monkeypatch.setattr(
-        "loom.killswitch.get_settings",
-        lambda: type("S", (), {"kill_switch_path": str(tmp_path / "killswitch")})(),
-    )
     monkeypatch.setattr("loom.api.deps._fake_brokers", {})
 
     from loom import db as db_module

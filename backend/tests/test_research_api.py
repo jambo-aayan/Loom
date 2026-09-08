@@ -7,10 +7,6 @@ from loom import db
 @pytest.fixture()
 def client(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path}/research_test.db")
-    monkeypatch.setattr(
-        "loom.killswitch.get_settings",
-        lambda: type("S", (), {"kill_switch_path": str(tmp_path / "killswitch")})(),
-    )
     monkeypatch.setattr("loom.api.deps._fake_brokers", {})
     from loom.api.main import app
 
@@ -96,6 +92,7 @@ def test_research_endpoint_rejects_a_trading_style_signal(client):
     strategies = client.get("/strategies").json()
     compounder_id = next(s["id"] for s in strategies if s["key"] == "low_vol_compounder")
     client.patch(f"/strategies/{compounder_id}", json={"approval_mode": "auto"})
+    client.post("/settings/auto-trading-gate/enable")
 
     signals = client.post("/trading-pass/run", params={"environment": "demo"}).json()
     compounder_signal = next((s for s in signals if s["strategy_id"] == compounder_id), None)
