@@ -91,8 +91,19 @@ confirm() {
 # _existing KEY: current value of KEY in ENV_FILE, if any.
 _existing() {
   [[ -f "$ENV_FILE" ]] || return 1
-  local line; line=$(grep -E "^${1}=" "$ENV_FILE" | tail -n1) || return 1
-  printf '%s' "${line#*=}"
+  local line value; line=$(grep -E "^${1}=" "$ENV_FILE" | tail -n1) || return 1
+  value="${line#*=}"
+  # write_env wraps values in double quotes (see below) so a shell-special character like the
+  # & in a DB connection string survives being `source`d; strip that wrapping back off here so
+  # re-runs don't offer a quote-included string as the "keep current" default.
+  if [[ "$value" == \"*\" ]]; then
+    value="${value#\"}"
+    value="${value%\"}"
+    value="${value//\\\"/\"}"
+    value="${value//\\\$/\$}"
+    value="${value//\\\\/\\}"
+  fi
+  printf '%s' "$value"
 }
 
 # ask KEY "Prompt" reads a value into $KEY. Offers the existing .env value as
@@ -128,11 +139,18 @@ ask_secret() {
 # write_env KEY VALUE upserts KEY=VALUE into ENV_FILE (creates it; replaces
 # any existing line). Idempotent.
 write_env() {
-  local key="$1" value="$2" tmp
+  local key="$1" value="$2" tmp escaped
   touch "$ENV_FILE"
   tmp=$(mktemp)
   grep -vE "^${key}=" "$ENV_FILE" > "$tmp" || true
-  printf '%s=%s\n' "$key" "$value" >> "$tmp"
+  # Double-quoted: a DB connection string or similar very commonly contains &, ?, or = — written
+  # unquoted, an unescaped & is silently parsed by bash as "run this in the background" the
+  # moment this file is `source`d, leaving the variable empty with no error (confirmed the hard
+  # way). Quoting also keeps this readable by python-dotenv, which Loom's own settings use.
+  escaped=${value//\\/\\\\}
+  escaped=${escaped//\"/\\\"}
+  escaped=${escaped//\$/\\$}
+  printf '%s="%s"\n' "$key" "$escaped" >> "$tmp"
   mv "$tmp" "$ENV_FILE"
   WRITTEN_ENV+=("$key")
   printf '  %s✓ wrote%s %s → %s\n' "$GREEN" "$RESET" "$key" "$ENV_FILE"
