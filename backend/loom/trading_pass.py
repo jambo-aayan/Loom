@@ -95,8 +95,18 @@ def book_positions(session: Session, book_id: str) -> tuple[PositionSnapshot, ..
     )
 
 
-def account_state_for_book(session: Session, book_id: str, broker: BrokerClient) -> AccountState:
-    return AccountState(cash=broker.get_cash(), positions=book_positions(session, book_id))
+def account_state_for_book(
+    session: Session, book_id: str, broker: BrokerClient, cash: float | None = None
+) -> AccountState:
+    """`cash=None` fetches it live from the broker (the correctness-critical path — a one-off
+    approval right before submitting real money must see the current balance). A caller looping
+    over many books in one pass (run_trading_pass) should fetch cash once and pass it through
+    instead: T212's demo API rate-limits this endpoint tightly (confirmed live: 1 request per 5
+    seconds), and cash doesn't meaningfully change across a single pass's few seconds of signal
+    generation anyway."""
+    return AccountState(
+        cash=cash if cash is not None else broker.get_cash(), positions=book_positions(session, book_id)
+    )
 
 
 def _decide_approval(
@@ -196,6 +206,10 @@ def run_trading_pass(
     expire_stale_signals(session, environment, market_data_source)
     refresh_counterfactuals(session, environment, market_data_source)
 
+    # Fetched once for the whole pass, not per book/signal (see account_state_for_book) — this is
+    # what actually keeps a multi-strategy pass within T212's real rate limits.
+    cash = broker.get_cash()
+
     as_of_date = datetime.utcnow().date() if as_of is None else datetime.fromisoformat(as_of).date()
     start = (as_of_date - timedelta(days=lookback_days)).isoformat()
     end = as_of_date.isoformat()
@@ -224,7 +238,7 @@ def run_trading_pass(
             continue
 
         book = get_or_create_book(session, strategy_row.id, environment, f"{strategy_row.name} · {environment.value}")
-        account = account_state_for_book(session, book.id, broker)
+        account = account_state_for_book(session, book.id, broker, cash=cash)
         strategy_impl = strategy_cls.from_config(config_version.params)
         proposed = strategy_impl.generate_signals(market_data, account, account)
 
@@ -260,7 +274,7 @@ def run_trading_pass(
             created.append(signal)
 
             if status == SignalStatus.auto_approved:
-                execute_signal(session, signal, broker)
+                execute_signal(session, signal, broker, cash=cash)
 
     session.commit()
     return created
@@ -281,10 +295,15 @@ def _failed_order(signal: Signal, idem_key: str) -> Order:
     )
 
 
-def execute_signal(session: Session, signal: Signal, broker: BrokerClient, limits: RiskLimits | None = None) -> Order:
+def execute_signal(
+    session: Session, signal: Signal, broker: BrokerClient, limits: RiskLimits | None = None, cash: float | None = None
+) -> Order:
     """Re-runs risk/sizing server-side and checks the kill switch immediately before submission —
     used identically whether the signal was auto-approved by the pass or approved via the API
-    (story 29, story 65: the fast path never bypasses the safety layer)."""
+    (story 29, story 65: the fast path never bypasses the safety layer). `cash=None` (the
+    approve_signal/API path) fetches live, matching a one-off approval's correctness needs; the
+    trading pass's inline auto-approval path passes the pass's already-fetched cash instead, to
+    avoid a second broker call for the same book within the same few seconds."""
     limits = limits or RiskLimits()
     idem_key = f"signal-{signal.id}"
 
@@ -306,7 +325,7 @@ def execute_signal(session: Session, signal: Signal, broker: BrokerClient, limit
         session.commit()
         return order
 
-    account = account_state_for_book(session, signal.book_id, broker)
+    account = account_state_for_book(session, signal.book_id, broker, cash=cash)
     account_value = account.cash + sum(p.quantity * signal.reference_price for p in account.positions)
     proposed = ProposedSignal(
         instrument=signal.instrument,
