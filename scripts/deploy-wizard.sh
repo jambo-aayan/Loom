@@ -188,7 +188,9 @@ TOTAL_STAGES=9
 
 # Run this from the repo root (it shells into backend/ and infra/gcp/ as needed).
 # Values captured here are stored in backend/.env — the same file the app itself reads locally.
-ENV_FILE="${ENV_FILE:-backend/.env}"
+# NOT `${ENV_FILE:-backend/.env}` — the library above already set ENV_FILE to ".env" (line 26),
+# so that fallback would never trigger; this must unconditionally override it.
+ENV_FILE="backend/.env"
 
 banner "Loom deployment: Vercel + Neon + Cloud Run + Cloud Scheduler"
 
