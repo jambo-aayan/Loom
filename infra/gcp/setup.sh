@@ -66,14 +66,16 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --condition=None >/dev/null
 
 echo "==> Secret Manager stubs (fill real values with: gcloud secrets versions add SECRET --data-file=-)"
-# A T212 account issues one key+secret pair total — not one per demo/live — so there is
-# deliberately only one loom-t212-api-key/loom-t212-api-secret pair here, used with both base
-# URLs (settings.py already picks the URL per Environment); the "Live trading gate" in Settings,
-# not a separate credential, is what actually stands between this key and a real order.
+# T212's Practice (demo) mode and live mode are separate API systems with separate credentials —
+# a key generated in one mode does not authenticate against the other's base URL (confirmed the
+# hard way: a fully-permissioned live-mode key 401s on every demo endpoint). So there are
+# deliberately separate secrets per environment here, not a shared pair.
 declare -A SECRET_ENV_MAP=(
   [loom-database-url]=DATABASE_URL
-  [loom-t212-api-key]=T212_API_KEY
-  [loom-t212-api-secret]=T212_API_SECRET
+  [loom-t212-demo-api-key]=T212_DEMO_API_KEY
+  [loom-t212-demo-api-secret]=T212_DEMO_API_SECRET
+  [loom-t212-live-api-key]=T212_LIVE_API_KEY
+  [loom-t212-live-api-secret]=T212_LIVE_API_SECRET
   [loom-anthropic-api-key]=ANTHROPIC_API_KEY
   [loom-google-api-key]=GOOGLE_API_KEY
 )
@@ -85,10 +87,12 @@ done
 cat <<'NOTE'
 ==> Secrets created empty. Fill each one now, e.g.:
       echo -n "postgresql+psycopg://..." | gcloud secrets versions add loom-database-url --data-file=-
-    Repeat for loom-t212-api-key, loom-t212-api-secret, loom-anthropic-api-key,
-    loom-google-api-key. Leave a secret's value blank (empty string version) for anything you're
-    not using yet (e.g. GOOGLE_API_KEY in early dev) — Loom's settings all default to "" meaning
-    "use the fake/no-op implementation" (ADR-0004).
+    Repeat for loom-t212-demo-api-key, loom-t212-demo-api-secret, loom-t212-live-api-key,
+    loom-t212-live-api-secret, loom-anthropic-api-key, loom-google-api-key. Generate the T212
+    demo/live key pairs from their respective modes in the T212 app — a key generated in one mode
+    will not authenticate against the other's base URL. Leave a secret's value blank (empty string
+    version) for anything you're not using yet (e.g. GOOGLE_API_KEY or the live pair in early dev)
+    — Loom's settings all default to "" meaning "use the fake/no-op implementation" (ADR-0004).
 NOTE
 
 echo "==> Granting Cloud Build's runtime identity what it needs"

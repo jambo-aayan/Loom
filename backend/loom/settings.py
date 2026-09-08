@@ -8,15 +8,18 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite:///./loom_dev.db"
 
-    # T212's API uses HTTP Basic Auth: the API key as username, the API secret as password
-    # (ADR-0014-era T212 docs review — NOT the raw key alone as a bearer-style header, which
-    # earlier code incorrectly assumed). A T212 account issues exactly one key+secret pair total
-    # — it is NOT scoped to demo vs live, and authenticates identically against either base URL.
-    # Demo vs live is entirely which base URL a request goes to, not which credential; the
-    # "Live trading gate" (CONTEXT.md) is what actually stands between this key and a real order,
-    # not a separate credential.
-    t212_api_key: str = ""
-    t212_api_secret: str = ""
+    # T212's API uses HTTP Basic Auth: the API key as username, the API secret as password. T212's
+    # Practice (demo) mode runs a genuinely separate API/account system from live — a key
+    # generated while switched to Practice mode only ever authenticates against
+    # demo.trading212.com, and a key generated in live mode only against live.trading212.com; they
+    # are not interchangeable (confirmed the hard way: a fully-permissioned live-mode key 401s on
+    # every demo endpoint no matter the auth method). So, unlike an earlier assumption in this
+    # repo's history, there IS a separate credential per environment — generate one from each mode
+    # in the T212 app.
+    t212_demo_api_key: str = ""
+    t212_demo_api_secret: str = ""
+    t212_live_api_key: str = ""
+    t212_live_api_secret: str = ""
     t212_demo_base_url: str = "https://demo.trading212.com/api/v0"
     t212_live_base_url: str = "https://live.trading212.com/api/v0"
 

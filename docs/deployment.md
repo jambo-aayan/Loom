@@ -13,13 +13,16 @@ the values where they belong (`backend/.env`, GCP Secret Manager, GitHub Actions
 to stop and re-run; it remembers what you've already entered. The rest of this doc is the
 reference for what it's doing and why, and how to do any of it by hand if you'd rather.
 
-A T212 account issues one API key+secret pair total, not one per demo/live — it authenticates
-identically against either base URL. That means, unlike an earlier assumption in this repo's
-history, there's no separate "live" credential to simply withhold as a safety net: the moment
-`T212_API_KEY`/`T212_API_SECRET` are configured at all, they're capable of a live order. The
-**only** thing standing between that key and a real trade is the "Live trading gate" (CONTEXT.md)
-defaulting off — treat flipping it on as the one deliberate, real step into Phase 2, not a
-formality.
+T212's Practice (demo) mode and live mode are genuinely separate API systems — a key generated
+while switched to Practice mode in the T212 app only ever authenticates against
+`demo.trading212.com`, and a key generated in live mode only against `live.trading212.com`; they
+are not interchangeable (confirmed the hard way during this project's own deploy: a
+fully-permissioned live-mode key 401s on every demo endpoint, regardless of auth method). So,
+unlike an earlier assumption in this repo's history, there **is** a separate credential per
+environment — switch modes in the T212 app before generating each key. This does mean there's a
+real, separate "live" credential that simply isn't configured until Phase 2 — not configuring
+`T212_LIVE_API_KEY`/`T212_LIVE_API_SECRET` is itself a meaningful safety backstop, on top of the
+"Live trading gate" (CONTEXT.md) defaulting off.
 
 ## 1. Neon (database)
 
@@ -41,7 +44,7 @@ PROJECT_ID=<your-project-id> REGION=europe-west2 ./infra/gcp/setup.sh
 ```
 
 This creates: an Artifact Registry repo, two service accounts (`loom-runtime` for the app,
-`loom-scheduler` scoped to only trigger Cloud Run Jobs), five Secret Manager secrets (empty —
+`loom-scheduler` scoped to only trigger Cloud Run Jobs), seven Secret Manager secrets (empty —
 fill them next), the Cloud Run Service (the always-on API), four Cloud Run Jobs mirroring the
 existing `loom trade-pass` / `screen-insights` / `research-insights` / `reconcile` CLI commands
 (ADR-0002: this was already designed as "invoked either manually (CLI) or by a scheduler" — Cloud
@@ -54,17 +57,19 @@ Fill the secrets the script creates empty:
 
 ```bash
 echo -n "postgresql+psycopg://..." | gcloud secrets versions add loom-database-url --data-file=-
-echo -n "<your T212 API key>" | gcloud secrets versions add loom-t212-api-key --data-file=-
-echo -n "<your T212 API secret>" | gcloud secrets versions add loom-t212-api-secret --data-file=-
+echo -n "<your T212 demo API key>" | gcloud secrets versions add loom-t212-demo-api-key --data-file=-
+echo -n "<your T212 demo API secret>" | gcloud secrets versions add loom-t212-demo-api-secret --data-file=-
 echo -n "<your Anthropic key>" | gcloud secrets versions add loom-anthropic-api-key --data-file=-
 echo -n "<your Google (Gemini) key, or leave blank>" | gcloud secrets versions add loom-google-api-key --data-file=-
+# Leave loom-t212-live-api-key / -secret empty until Phase 2 — see "Turning on live trading" below.
 ```
 
-T212 key + secret: generate together from "New API key" in the T212 app — the secret is shown
-once at creation, save it then. There's only one pair per account; it works against both
-`demo.trading212.com` and `live.trading212.com` — Loom picks the URL per `Environment`, the
-credential itself doesn't distinguish them. This is exactly why the Live trading gate matters:
-nothing about the credential stops it from placing a live order once the gate is on.
+T212 key + secret: **switch to Practice (demo) mode in the T212 app first**, then generate a key
+from Settings → API — the secret is shown once at creation, save it then. Practice mode and live
+mode are separate API systems; a key generated in one mode will not authenticate against the
+other's base URL (`demo.trading212.com` vs `live.trading212.com`) no matter how it's configured or
+which permissions are enabled — generate a second, separate pair from live mode only when you're
+actually ready for Phase 2.
 
 Re-run `gcloud run services update loom-api --region "$REGION"` (or just redeploy) after changing
 a secret's value for it to pick up the new version.
@@ -173,15 +178,18 @@ needs real session auth (a login), which is out of scope for a single-user Phase
 Be honest about what actually protects you here. The live-trading gate defaults off, but its own
 toggle endpoint (`POST /settings/live-trading-gate/enable`) is just as unauthenticated as
 everything else — anyone who finds the Cloud Run URL could flip it on themselves, then approve a
-signal in the `live` environment. T212 issuing one key for both environments (no separate,
-withheld live credential) means there's nothing else standing behind the gate either. So the gate
-protects you from your *own* accidental clicks, not from an outside actor who has the URL. What's
-actually doing the work right now is that the URL itself is unguessable (Cloud Run assigns a
-random hostname like `loom-api-<hash>-<region>.a.run.app`, never linked anywhere public or
-indexed) — weak, but real, and the reason this is an acceptable Phase 1 posture rather than an
-active incident. Do not point a custom domain at this service, and do not treat "add live
-credentials" and "fix API auth" as separable tasks — build real auth (Cloud Run IAM + an
-authenticated proxy, or session auth) *before* a live key ever goes into Secret Manager, not after.
+signal in the `live` environment. Right now, though, there's a second real backstop: the
+`loom-t212-live-api-key`/`loom-t212-live-api-secret` secrets are simply never filled in Phase 1
+(only the demo pair is), so `get_broker(Environment.live)` falls back to the fake broker
+regardless — an attacker flipping the gate on can't place a real order because there's no live
+credential configured for it to use. That backstop disappears the moment live credentials are
+added, so what's doing the work right now is the *combination* of the gate defaulting off and no
+live credential existing at all; once you add the live pair for Phase 2, you're down to the gate
+alone plus the URL itself being unguessable (Cloud Run assigns a random hostname like
+`loom-api-<hash>-<region>.a.run.app`, never linked anywhere public or indexed) — weak, but real.
+Do not point a custom domain at this service, and do not treat "add live credentials" and "fix API
+auth" as separable tasks — build real auth (Cloud Run IAM + an authenticated proxy, or session
+auth) *before* the live T212 key ever goes into Secret Manager, not after.
 
 ## Day-to-day
 
@@ -189,7 +197,9 @@ authenticated proxy, or session auth) *before* a live key ever goes into Secret 
 - **Frontend**: `git push` → Vercel deploys automatically.
 - **Scheduled jobs**: run on their own via Cloud Scheduler; check `gcloud run jobs executions list
   --job=<job-name> --region=<region>` if one seems to have stopped firing.
-- **Turning on live trading (Phase 2)**: the same `T212_API_KEY`/`T212_API_SECRET` already
-  configured for demo already work against live — there's no separate credential to add. Fix the
-  API-auth gap above *first*, then flip the Live trading gate on in Settings as the final,
-  deliberate step.
+- **Turning on live trading (Phase 2)**: switch to live mode in the T212 app, generate a new key
+  there (separate from the demo one — see above), and fill `loom-t212-live-api-key` /
+  `loom-t212-live-api-secret` in Secret Manager. Fix the API-auth gap above *first* — adding this
+  credential is what removes the "no live credential configured" backstop described above, so
+  don't do it until real auth is in place. Then flip the Live trading gate on in Settings as the
+  final, deliberate step.

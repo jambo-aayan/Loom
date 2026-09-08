@@ -247,19 +247,22 @@ write_env DATABASE_URL "$DATABASE_URL"
 note "rewrote the scheme to postgresql+psycopg:// (the driver Loom's SQLAlchemy setup expects)"
 
 # ── Stage 3: Trading 212 ────────────────────────────────────────────────────
-stage "Trading 212: API key + secret"
-say "A T212 account issues ONE key+secret pair total — it authenticates against both"
-say "demo.trading212.com and live.trading212.com; the base URL picks the environment, not the"
-say "credential. Generate it once here, it covers both."
+stage "Trading 212: demo API key + secret"
+say "T212's Practice (demo) mode and live mode are separate API systems with separate"
+say "credentials — a key generated in one mode will NOT authenticate against the other's base"
+say "URL. Generating the demo pair only for now; the live pair comes later, deliberately, in"
+say "Phase 2 (see docs/deployment.md)."
 warn "I don't have a guaranteed deep link to T212's key-generation page — opening the app;"
 warn "look for Settings → API (Beta) or similar. If you can't find it, check T212's own docs."
 open_url "https://www.trading212.com/login"
-step "Log in, find the API key section, choose 'New API key', and generate one."
+step "Log in, switch your account to Practice (demo) mode — this matters, do it before generating"
+step "the key. Then find the API key section, choose 'New API key', enable every permission"
+step "toggle, and generate one."
 step "Copy the key, then copy the secret — the secret is shown once, at creation time."
-ask T212_API_KEY "Paste the T212 API key:"
-ask_secret T212_API_SECRET "Paste the T212 API secret:"
-write_env T212_API_KEY "$T212_API_KEY"
-write_env T212_API_SECRET "$T212_API_SECRET"
+ask T212_DEMO_API_KEY "Paste the T212 demo API key:"
+ask_secret T212_DEMO_API_SECRET "Paste the T212 demo API secret:"
+write_env T212_DEMO_API_KEY "$T212_DEMO_API_KEY"
+write_env T212_DEMO_API_SECRET "$T212_DEMO_API_SECRET"
 
 # ── Stage 4: LLM provider keys ──────────────────────────────────────────────
 stage "LLM providers: Anthropic + Google (Gemini)"
@@ -284,7 +287,7 @@ fi
 # ── Stage 5: Provision GCP infrastructure ───────────────────────────────────
 stage "Provision GCP infrastructure"
 say "About to run infra/gcp/setup.sh — creates real, billable cloud resources:"
-say "Artifact Registry, two service accounts, five empty Secret Manager secrets, the Cloud Run"
+say "Artifact Registry, two service accounts, seven empty Secret Manager secrets, the Cloud Run"
 say "Service, four Cloud Run Jobs, and Cloud Scheduler entries. Safe to re-run (idempotent)."
 if confirm "Run infra/gcp/setup.sh against project $GCP_PROJECT_ID now?"; then
   PROJECT_ID="$GCP_PROJECT_ID" REGION="$GCP_REGION" ./infra/gcp/setup.sh
@@ -302,11 +305,12 @@ fi
 
 # ── Stage 6: Fill the real secret values ────────────────────────────────────
 stage "Fill Secret Manager with the real values"
-say "infra/gcp/setup.sh created five secrets empty. Filling them now with what you've already"
-say "entered in stages 2-4 — nothing to re-type."
+say "infra/gcp/setup.sh created seven secrets empty. Filling in what you've already entered in"
+say "stages 2-4 — nothing to re-type. loom-t212-live-api-key/-secret stay empty for now"
+say "(Phase 2 — see docs/deployment.md)."
 printf '%s' "$DATABASE_URL" | gcloud secrets versions add loom-database-url --data-file=- --project "$GCP_PROJECT_ID"
-printf '%s' "$T212_API_KEY" | gcloud secrets versions add loom-t212-api-key --data-file=- --project "$GCP_PROJECT_ID"
-printf '%s' "$T212_API_SECRET" | gcloud secrets versions add loom-t212-api-secret --data-file=- --project "$GCP_PROJECT_ID"
+printf '%s' "$T212_DEMO_API_KEY" | gcloud secrets versions add loom-t212-demo-api-key --data-file=- --project "$GCP_PROJECT_ID"
+printf '%s' "$T212_DEMO_API_SECRET" | gcloud secrets versions add loom-t212-demo-api-secret --data-file=- --project "$GCP_PROJECT_ID"
 printf '%s' "$ANTHROPIC_API_KEY" | gcloud secrets versions add loom-anthropic-api-key --data-file=- --project "$GCP_PROJECT_ID"
 printf '%s' "$GOOGLE_API_KEY" | gcloud secrets versions add loom-google-api-key --data-file=- --project "$GCP_PROJECT_ID"
 say "Redeploying the Cloud Run Service so it picks up these new secret versions"
