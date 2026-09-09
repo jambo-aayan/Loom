@@ -73,6 +73,24 @@ def test_submit_order_negates_quantity_for_a_sell():
     assert captured["body"]["quantity"] == -5
 
 
+def test_submit_order_rounds_quantity_down_to_four_decimal_places():
+    """T212 rejects a market order with more than 4 decimal places of quantity precision
+    (confirmed live: "invalid quantity precision 4") — our own sizing math produces full float
+    precision. Rounds down, not to nearest, so it never requests more than risk/sizing approved."""
+    captured = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        import json
+
+        captured["body"] = json.loads(request.content)
+        return httpx.Response(200, json={"id": 1, "status": "submitted"})
+
+    client = _client(handler)
+    client.submit_order("VUSA.L", "buy", 3.582431566679713, idempotency_key="signal-abc")
+
+    assert captured["body"]["quantity"] == 3.5824
+
+
 def test_submit_order_translates_to_t212s_own_ticker():
     """T212 uses its own internal ticker codes, not the market-data-style ones the rest of Loom
     uses — confirmed live: submitting "TSLA" as-is 404s, T212 only recognizes "TSLA_US_EQ"."""

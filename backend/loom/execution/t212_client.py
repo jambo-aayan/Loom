@@ -17,6 +17,7 @@ client is ever called (ADR-0014); this client submits every call it's given.
 from __future__ import annotations
 
 import logging
+import math
 import time
 
 import httpx
@@ -85,12 +86,18 @@ class Trading212Client(BrokerClient):
         return False
 
     def submit_order(self, instrument: str, side: str, quantity: float, idempotency_key: str) -> OrderResult:
+        # T212 rejects a market order with more than 4 decimal places of quantity precision
+        # ("invalid quantity precision 4", confirmed live) — our own sizing math produces full
+        # float precision (account_value fractions, division by price), which routinely has far
+        # more digits than that. Round down, never up: overshooting what risk/sizing actually
+        # approved by a rounding error is the wrong direction to err in for a real-money order.
+        rounded_quantity = math.floor(quantity * 10_000) / 10_000
         response = self._request(
             "POST",
             "/equity/orders/market",
             json={
                 "ticker": to_t212(instrument),
-                "quantity": quantity if side in ("buy", "add") else -quantity,
+                "quantity": rounded_quantity if side in ("buy", "add") else -rounded_quantity,
             },
         )
         response.raise_for_status()
