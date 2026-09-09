@@ -43,12 +43,13 @@ def test_requests_use_http_basic_auth_with_key_and_secret():
 
 def test_submit_order_sends_no_client_order_id_and_never_pre_checks(monkeypatch):
     """ADR-0014: no fabricated clientOrderId, and no pre-submission duplicate-check call —
-    every submit_order call results in exactly one HTTP request."""
+    every submit_order call results in exactly one HTTP request (a terminal status straight
+    away means no polling follow-up either)."""
     requests_seen = []
 
     def handler(request: httpx.Request) -> httpx.Response:
         requests_seen.append(request)
-        return httpx.Response(200, json={"id": 42, "status": "submitted"})
+        return httpx.Response(200, json={"id": 42, "status": "FILLED", "filledQuantity": 5, "filledValue": 500.0})
 
     client = _client(handler)
     client.submit_order("VUSA.L", "buy", 5, idempotency_key="signal-abc")
@@ -65,7 +66,7 @@ def test_submit_order_negates_quantity_for_a_sell():
         import json
 
         captured["body"] = json.loads(request.content)
-        return httpx.Response(200, json={"id": 1, "status": "submitted"})
+        return httpx.Response(200, json={"id": 1, "status": "FILLED", "filledQuantity": 5, "filledValue": 500.0})
 
     client = _client(handler)
     client.submit_order("VUSA.L", "sell", 5, idempotency_key="signal-abc")
@@ -83,12 +84,53 @@ def test_submit_order_rounds_quantity_down_to_four_decimal_places():
         import json
 
         captured["body"] = json.loads(request.content)
-        return httpx.Response(200, json={"id": 1, "status": "submitted"})
+        return httpx.Response(200, json={"id": 1, "status": "FILLED", "filledQuantity": 3.5824, "filledValue": 358.24})
 
     client = _client(handler)
     client.submit_order("VUSA.L", "buy", 3.582431566679713, idempotency_key="signal-abc")
 
     assert captured["body"]["quantity"] == 3.5824
+
+
+def test_submit_order_polls_when_the_synchronous_response_is_not_yet_filled(monkeypatch):
+    """Confirmed live: a real market order's synchronous POST response can come back "NEW"
+    (filledQuantity=0), then actually fill moments later. submit_order must poll
+    GET /equity/orders/{id} rather than recording a live fill as a failure."""
+    monkeypatch.setattr("time.sleep", lambda _: None)
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append((request.method, str(request.url)))
+        if request.method == "POST":
+            return httpx.Response(200, json={"id": 99, "status": "NEW", "filledQuantity": 0})
+        assert str(request.url).endswith("/equity/orders/99")
+        if len(calls) < 3:
+            return httpx.Response(200, json={"id": 99, "status": "NEW", "filledQuantity": 0})
+        return httpx.Response(200, json={"id": 99, "status": "FILLED", "filledQuantity": 5, "filledValue": 500.0})
+
+    client = _client(handler)
+    result = client.submit_order("VUSA.L", "buy", 5, idempotency_key="signal-abc")
+
+    assert result.status == "filled"
+    assert result.fill_price == 100.0
+    assert len(calls) == 3  # 1 POST + 2 polls before reaching FILLED
+
+
+def test_submit_order_stops_polling_after_a_max_number_of_attempts(monkeypatch):
+    """An order stuck non-terminal (never resolves within the poll budget) must not hang the
+    request forever — give up and record it as failed rather than loop indefinitely."""
+    monkeypatch.setattr("time.sleep", lambda _: None)
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.method)
+        return httpx.Response(200, json={"id": 1, "status": "NEW", "filledQuantity": 0})
+
+    client = _client(handler)
+    result = client.submit_order("VUSA.L", "buy", 5, idempotency_key="signal-abc")
+
+    assert result.status == "failed"
+    assert len(calls) == 9  # 1 POST + 8 polls, then give up
 
 
 def test_submit_order_normalizes_t212s_uppercase_filled_status():
@@ -139,7 +181,7 @@ def test_submit_order_translates_to_t212s_own_ticker():
         import json
 
         captured["body"] = json.loads(request.content)
-        return httpx.Response(200, json={"id": 1, "status": "submitted"})
+        return httpx.Response(200, json={"id": 1, "status": "FILLED", "filledQuantity": 5, "filledValue": 500.0})
 
     client = _client(handler)
     client.submit_order("TSLA", "buy", 5, idempotency_key="signal-abc")
@@ -157,15 +199,29 @@ def test_submit_order_fails_loudly_for_an_unmapped_instrument():
 
 
 def test_get_positions_hits_equity_positions():
+    """Real shape confirmed live against a non-empty position (never exercised before — every
+    earlier check happened to see an empty account): ticker is nested under "instrument", and
+    the price field is "averagePricePaid", not the flat "ticker"/"averagePrice" once assumed."""
+
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.url.path == "/api/v0/equity/positions"
-        return httpx.Response(200, json=[{"ticker": "VUSAl_EQ", "quantity": 10, "averagePrice": 100.0}])
+        return httpx.Response(
+            200,
+            json=[
+                {
+                    "instrument": {"ticker": "VUSAl_EQ", "name": "Vanguard S&P 500 (Dist)"},
+                    "quantity": 10,
+                    "averagePricePaid": 100.0,
+                }
+            ],
+        )
 
     client = _client(handler)
     positions = client.get_positions()
 
     assert positions[0].instrument == "VUSA.L"  # translated back to Loom's own naming
     assert positions[0].quantity == 10
+    assert positions[0].average_price == 100.0
 
 
 def test_get_cash_parses_nested_account_summary_shape():

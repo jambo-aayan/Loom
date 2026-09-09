@@ -34,6 +34,12 @@ class Trading212ResponseError(RuntimeError):
     as having £0 available), since a wrong number here is a real-money mistake waiting to happen."""
 
 
+# Statuses that mean an order won't change state on its own anymore — safe to stop polling.
+# PARTIALLY_FILLED is deliberately included even though more could still happen: v1 doesn't model
+# partial fills (see submit_order), so there's nothing more useful to wait for regardless.
+_TERMINAL_ORDER_STATUSES = frozenset({"FILLED", "REJECTED", "CANCELLED", "PARTIALLY_FILLED"})
+
+
 class Trading212Client(BrokerClient):
     def __init__(self, base_url: str, api_key: str, api_secret: str, client: httpx.Client | None = None):
         self.base_url = base_url
@@ -108,12 +114,31 @@ class Trading212Client(BrokerClient):
         )
         response.raise_for_status()
         payload = response.json()
+        order_id = payload.get("id")
+        status = str(payload.get("status", "")).upper()
+
+        # A market order's synchronous POST response can come back "NEW" (filledQuantity=0) even
+        # though it actually fills moments later — confirmed live: both orders in a real test
+        # showed NEW here, then real positions/cash on T212 a few seconds afterward. Poll the
+        # order briefly for a terminal state rather than recording a live fill as a failure.
+        attempts = 0
+        while status not in _TERMINAL_ORDER_STATUSES and attempts < 8:
+            time.sleep(1.0)
+            poll = self._request("GET", f"/equity/orders/{order_id}")
+            if poll.status_code == 404:
+                # No longer listed (some brokers drop a fully-settled order from this lookup) —
+                # nothing more to learn by continuing to poll.
+                break
+            poll.raise_for_status()
+            payload = poll.json()
+            status = str(payload.get("status", "")).upper()
+            attempts += 1
+
         # T212's order status is an uppercase lifecycle state (FILLED, NEW, PARTIALLY_FILLED,
         # REJECTED, CANCELLED, ...), not the lowercase "filled"/"failed" OrderResult.status
         # contract (broker.py) — normalize here, at the client boundary, same as the ticker
-        # mapping. v1 doesn't model partial/pending fills, so anything short of a full FILLED
-        # is "failed" for now (a real distinction worth revisiting once that matters).
-        status = str(payload.get("status", "")).upper()
+        # mapping. v1 doesn't model partial fills, so anything short of a full FILLED is "failed"
+        # for now (a real distinction worth revisiting once that matters).
         # There's no top-level "fillPrice" in T212's real response — only filledQuantity and
         # filledValue (the executed monetary value); derive price from those instead of reading
         # a field that doesn't exist and would otherwise silently be None forever.
@@ -121,7 +146,7 @@ class Trading212Client(BrokerClient):
         filled_value = payload.get("filledValue")
         fill_price = filled_value / filled_qty if status == "FILLED" and filled_qty else None
         return OrderResult(
-            broker_order_id=str(payload.get("id")),
+            broker_order_id=str(order_id),
             status="filled" if status == "FILLED" else "failed",
             fill_price=fill_price,
         )
@@ -129,9 +154,15 @@ class Trading212Client(BrokerClient):
     def get_positions(self) -> list[BrokerPosition]:
         response = self._request("GET", "/equity/positions")
         response.raise_for_status()
+        # Confirmed live against a real, non-empty position (never exercised before — every
+        # earlier test/real call happened to see an empty account): the ticker is nested under
+        # "instrument", not top-level, and the price field is "averagePricePaid", not
+        # "averagePrice". An empty-list response never exposed either mismatch.
         return [
             BrokerPosition(
-                instrument=from_t212(row["ticker"]), quantity=row["quantity"], average_price=row["averagePrice"]
+                instrument=from_t212(row["instrument"]["ticker"]),
+                quantity=row["quantity"],
+                average_price=row["averagePricePaid"],
             )
             for row in response.json()
         ]
