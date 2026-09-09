@@ -156,7 +156,12 @@ class GeminiInsightGenerator(InsightGenerator):
     # requests/day vs. ~1,500/day on established models like this one) — headroom for an
     # unattended job that runs indefinitely matters more here than frontier capability this task
     # doesn't need. Re-check current quotas before bumping this rather than assuming newest=best.
-    def __init__(self, api_key: str, model: str = "gemini-3-flash"):
+    #
+    # "gemini-3-flash" (no minor version) was never a real model ID — confirmed live: every call
+    # through it failed, and the resulting unhandled exception surfaced client-side as an opaque
+    # "Failed to fetch" (see main.py's exception handler) rather than a clear model-not-found
+    # error. gemini-3.5-flash is the real, currently-established model this comment describes.
+    def __init__(self, api_key: str, model: str = "gemini-3.5-flash"):
         from google import genai
 
         self._client = genai.Client(api_key=api_key)
