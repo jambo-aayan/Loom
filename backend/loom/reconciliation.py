@@ -13,13 +13,25 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from loom.execution.broker import BrokerClient
+from loom.execution.broker import BrokerClient, BrokerPosition
 from loom.models import Book, Environment
 from loom.strategy import PositionSnapshot
 from loom.trading_pass import book_positions, get_or_create_book
 
 
-def manual_positions(session: Session, environment: Environment, broker: BrokerClient) -> tuple[PositionSnapshot, ...]:
+def manual_positions(
+    session: Session,
+    environment: Environment,
+    broker: BrokerClient,
+    positions: list[BrokerPosition] | None = None,
+) -> tuple[PositionSnapshot, ...]:
+    """`positions=None` (every existing caller) fetches live from the broker itself. A caller
+    that already fetched `broker.get_positions()` for its own purposes in the same request
+    (Overview, to build a live-price lookup — see portfolio.py) should pass that result through
+    instead: T212's demo API rate-limits this endpoint tightly (confirmed live: 1 request per 1
+    second), so two calls to it within the same request risk a 429."""
+    broker_positions = positions if positions is not None else broker.get_positions()
+
     strategy_books = session.execute(
         select(Book).where(Book.environment == environment, Book.strategy_id.isnot(None))
     ).scalars().all()
@@ -30,7 +42,7 @@ def manual_positions(session: Session, environment: Environment, broker: BrokerC
             attributed_quantity[snap.instrument] = attributed_quantity.get(snap.instrument, 0.0) + snap.quantity
 
     untracked = [
-        pos for pos in broker.get_positions() if pos.quantity - attributed_quantity.get(pos.instrument, 0.0) > 1e-9
+        pos for pos in broker_positions if pos.quantity - attributed_quantity.get(pos.instrument, 0.0) > 1e-9
     ]
     if not untracked:
         return ()

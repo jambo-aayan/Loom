@@ -212,6 +212,7 @@ def test_get_positions_hits_equity_positions():
                     "instrument": {"ticker": "VUSAl_EQ", "name": "Vanguard S&P 500 (Dist)"},
                     "quantity": 10,
                     "averagePricePaid": 100.0,
+                    "currentPrice": 107.08,
                 }
             ],
         )
@@ -222,6 +223,7 @@ def test_get_positions_hits_equity_positions():
     assert positions[0].instrument == "VUSA.L"  # translated back to Loom's own naming
     assert positions[0].quantity == 10
     assert positions[0].average_price == 100.0
+    assert positions[0].current_price == 107.08
 
 
 def test_get_cash_parses_nested_account_summary_shape():

@@ -87,6 +87,30 @@ def test_book_pnl_manual_book_has_no_strategy_key():
     assert pnl.book_name == "Manual"
 
 
+def test_book_pnl_prefers_the_brokers_live_price_over_market_data_history():
+    """Confirmed live: T212's real /equity/positions carries "currentPrice" alongside
+    averagePricePaid — its own app prices P&L off that, not off Twelve Data's latest close
+    (ADR-0008's daily/hourly-granularity indicator history). A stale close visibly diverged from
+    what T212 showed right after a real fill, so the live broker price must win when we have it."""
+    positions = (PositionSnapshot(instrument="VUSA.L", quantity=10, average_price=100.0, book_id="book-1"),)
+    source = _StubSource(latest_close=110.0)  # would give market_value=1100 if used
+
+    pnl = book_pnl(_book(), positions, source, current_prices={"VUSA.L": 100.5})
+
+    assert pnl.market_value == 1005.0
+
+
+def test_book_pnl_falls_back_to_market_data_for_an_instrument_missing_a_live_price():
+    """current_prices only covers instruments the broker currently reports a live quote for
+    (shouldn't normally miss an open position, but a momentary desync shouldn't crash Overview)."""
+    positions = (PositionSnapshot(instrument="VUSA.L", quantity=10, average_price=100.0, book_id="book-1"),)
+    source = _StubSource(latest_close=110.0)
+
+    pnl = book_pnl(_book(), positions, source, current_prices={"VWRL.L": 200.0})
+
+    assert pnl.market_value == 1100.0
+
+
 def test_book_pnl_zero_cost_basis_reports_zero_pct_not_a_crash():
     # A deliberate choice, not an oversight: a zero-average-price position (e.g. a free grant)
     # has no meaningful "% gain" — 0.0 avoids a ZeroDivisionError while staying a valid float the

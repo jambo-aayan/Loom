@@ -19,6 +19,12 @@ class BrokerPosition:
     instrument: str
     quantity: float
     average_price: float
+    # The broker's own live price for this instrument, when it has one (T212's real
+    # /equity/positions response carries this alongside averagePricePaid — the same figure its
+    # own app prices P&L off). Defaults to average_price for callers that don't have a live
+    # quote (FakeBrokerClient), so a position's "current" value is at least its cost basis rather
+    # than an arbitrary placeholder.
+    current_price: float | None = None
 
 
 class BrokerClient(ABC):

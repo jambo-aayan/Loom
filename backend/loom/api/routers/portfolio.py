@@ -24,6 +24,12 @@ def overview(
     broker = get_broker(env)
     books = session.execute(select(Book).where(Book.environment == env)).scalars().all()
 
+    # Fetched once for the whole request — every book's P&L below wants it (see book_pnl's
+    # current_prices), and manual_positions would otherwise make its own second call to the same
+    # tightly rate-limited T212 endpoint (confirmed live: 1 request per 1 second).
+    broker_positions = broker.get_positions()
+    current_prices = {p.instrument: p.current_price for p in broker_positions if p.current_price is not None}
+
     positions: list[PositionOut] = []
     book_pnls: list[BookPnlOut] = []
     for book in books:
@@ -39,11 +45,11 @@ def overview(
                     average_price=snap.average_price,
                 )
             )
-        pnl = book_pnl(book, book_positions_, source)
+        pnl = book_pnl(book, book_positions_, source, current_prices)
         if pnl is not None:
             book_pnls.append(BookPnlOut(**pnl.__dict__))
 
-    manual_snaps = manual_positions(session, env, broker)
+    manual_snaps = manual_positions(session, env, broker, positions=broker_positions)
     for snap in manual_snaps:
         positions.append(
             PositionOut(
@@ -58,7 +64,7 @@ def overview(
     if manual_snaps:
         manual_book = session.get(Book, manual_snaps[0].book_id)
         if manual_book is not None:
-            pnl = book_pnl(manual_book, manual_snaps, source)
+            pnl = book_pnl(manual_book, manual_snaps, source, current_prices)
             if pnl is not None:
                 book_pnls.append(BookPnlOut(**pnl.__dict__))
 

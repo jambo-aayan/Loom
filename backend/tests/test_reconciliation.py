@@ -110,6 +110,24 @@ def test_reconciliation_is_idempotent(session):
     assert len(manual_books) <= 1
 
 
+def test_manual_positions_uses_a_precomputed_positions_list_instead_of_calling_the_broker_again(session):
+    """Overview passes its own already-fetched broker.get_positions() result through so this
+    doesn't make a second call to T212's tightly rate-limited /equity/positions endpoint within
+    the same request (confirmed live: 1 request per 1 second)."""
+
+    class _ExplodingBroker(FakeBrokerClient):
+        def get_positions(self):
+            raise AssertionError("should use the precomputed positions list, not call the broker")
+
+    broker = _ExplodingBroker()
+    precomputed = [BrokerPosition(instrument="AAPL", quantity=10, average_price=150.0)]
+
+    manual = manual_positions(session, Environment.demo, broker, positions=precomputed)
+
+    assert len(manual) == 1
+    assert manual[0].instrument == "AAPL"
+
+
 def test_get_or_create_manual_book_returns_a_stable_book(session):
     book1 = get_or_create_book(session, None, Environment.demo, "Manual")
     book2 = get_or_create_book(session, None, Environment.demo, "Manual")

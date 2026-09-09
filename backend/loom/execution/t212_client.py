@@ -158,11 +158,17 @@ class Trading212Client(BrokerClient):
         # earlier test/real call happened to see an empty account): the ticker is nested under
         # "instrument", not top-level, and the price field is "averagePricePaid", not
         # "averagePrice". An empty-list response never exposed either mismatch.
+        # T212's real response also carries "currentPrice" alongside averagePricePaid — its own
+        # app prices P&L off this, not off any external market-data source. Loom's own P&L
+        # display (loom/pnl.py) uses it in preference to Twelve Data's latest close, which is
+        # daily/hourly-granularity history meant for strategy indicators (ADR-0008), not a live
+        # quote, and visibly diverges from what the T212 app shows.
         return [
             BrokerPosition(
                 instrument=from_t212(row["instrument"]["ticker"]),
                 quantity=row["quantity"],
                 average_price=row["averagePricePaid"],
+                current_price=row.get("currentPrice"),
             )
             for row in response.json()
         ]
