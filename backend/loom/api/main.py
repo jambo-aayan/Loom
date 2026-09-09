@@ -3,10 +3,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from loom import db, strategies  # noqa: F401  (strategies import registers the strategy registry)
+from loom import db, logging_config, strategies  # noqa: F401  (strategies import registers the strategy registry)
 from loom.api.routers import action_links, backtests, insights, performance, portfolio, push, settings, signals, trading
 from loom.api.routers import strategies as strategies_router
 from loom.seed import seed_all_strategies
+
+logging_config.configure()
 
 
 @asynccontextmanager

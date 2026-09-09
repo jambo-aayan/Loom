@@ -7,7 +7,7 @@ import json
 import click
 from sqlalchemy import select
 
-from loom import calibration, db, killswitch, strategies  # noqa: F401  (registers strategies)
+from loom import calibration, db, killswitch, logging_config, strategies  # noqa: F401  (registers strategies)
 from loom.api.deps import (
     get_broker,
     get_email_sender,
@@ -28,6 +28,8 @@ from loom.reconciliation import manual_positions
 from loom.seed import seed_all_strategies
 from loom.settings import get_settings
 from loom.trading_pass import STRATEGY_REGISTRY, run_trading_pass
+
+logging_config.configure()
 
 
 @click.group()
