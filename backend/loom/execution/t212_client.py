@@ -92,6 +92,12 @@ class Trading212Client(BrokerClient):
         # more digits than that. Round down, never up: overshooting what risk/sizing actually
         # approved by a rounding error is the wrong direction to err in for a real-money order.
         rounded_quantity = math.floor(quantity * 10_000) / 10_000
+        if rounded_quantity <= 0:
+            # A small enough raw quantity (a high-priced instrument sized to a tiny fraction of
+            # cash) rounds down to zero — sending that to T212 would just be a confusing 400
+            # instead of a clean local failure. Same outcome as any other rejected order, no
+            # network call needed to know it.
+            return OrderResult(broker_order_id="", status="failed")
         response = self._request(
             "POST",
             "/equity/orders/market",

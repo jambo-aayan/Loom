@@ -105,6 +105,20 @@ def test_submit_order_normalizes_t212s_uppercase_filled_status():
     assert result.fill_price == 100.0
 
 
+def test_submit_order_fails_locally_without_a_network_call_when_quantity_rounds_to_zero():
+    """A high-priced instrument sized to a tiny fraction of cash can round down to zero at the
+    4-decimal-place cap — that should be a clean local failure, not a wasted network call and a
+    confusing 400 from T212."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise AssertionError("should never reach the network when quantity rounds to zero")
+
+    client = _client(handler)
+    result = client.submit_order("VUSA.L", "buy", 0.00004, idempotency_key="signal-abc")
+
+    assert result.status == "failed"
+
+
 def test_submit_order_treats_anything_short_of_filled_as_failed():
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json={"id": 1, "status": "REJECTED"})
