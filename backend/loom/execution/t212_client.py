@@ -22,6 +22,7 @@ import time
 import httpx
 
 from loom.execution.broker import BrokerClient, BrokerPosition, OrderResult
+from loom.execution.t212_tickers import from_t212, to_t212
 
 logger = logging.getLogger("loom.t212")
 
@@ -88,7 +89,7 @@ class Trading212Client(BrokerClient):
             "POST",
             "/equity/orders/market",
             json={
-                "ticker": instrument,
+                "ticker": to_t212(instrument),
                 "quantity": quantity if side in ("buy", "add") else -quantity,
             },
         )
@@ -105,7 +106,7 @@ class Trading212Client(BrokerClient):
         response.raise_for_status()
         return [
             BrokerPosition(
-                instrument=row["ticker"], quantity=row["quantity"], average_price=row["averagePrice"]
+                instrument=from_t212(row["ticker"]), quantity=row["quantity"], average_price=row["averagePrice"]
             )
             for row in response.json()
         ]

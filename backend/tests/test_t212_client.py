@@ -9,6 +9,7 @@ import httpx
 import pytest
 
 from loom.execution.t212_client import Trading212Client, Trading212ResponseError
+from loom.execution.t212_tickers import UnmappedInstrumentError
 
 
 def _client(handler) -> Trading212Client:
@@ -72,15 +73,41 @@ def test_submit_order_negates_quantity_for_a_sell():
     assert captured["body"]["quantity"] == -5
 
 
+def test_submit_order_translates_to_t212s_own_ticker():
+    """T212 uses its own internal ticker codes, not the market-data-style ones the rest of Loom
+    uses — confirmed live: submitting "TSLA" as-is 404s, T212 only recognizes "TSLA_US_EQ"."""
+    captured = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        import json
+
+        captured["body"] = json.loads(request.content)
+        return httpx.Response(200, json={"id": 1, "status": "submitted"})
+
+    client = _client(handler)
+    client.submit_order("TSLA", "buy", 5, idempotency_key="signal-abc")
+
+    assert captured["body"]["ticker"] == "TSLA_US_EQ"
+
+
+def test_submit_order_fails_loudly_for_an_unmapped_instrument():
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise AssertionError("should never reach the network for an unmapped instrument")
+
+    client = _client(handler)
+    with pytest.raises(UnmappedInstrumentError):
+        client.submit_order("UNKNOWN.X", "buy", 5, idempotency_key="signal-abc")
+
+
 def test_get_positions_hits_equity_positions():
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.url.path == "/api/v0/equity/positions"
-        return httpx.Response(200, json=[{"ticker": "VUSA.L", "quantity": 10, "averagePrice": 100.0}])
+        return httpx.Response(200, json=[{"ticker": "VUSAl_EQ", "quantity": 10, "averagePrice": 100.0}])
 
     client = _client(handler)
     positions = client.get_positions()
 
-    assert positions[0].instrument == "VUSA.L"
+    assert positions[0].instrument == "VUSA.L"  # translated back to Loom's own naming
     assert positions[0].quantity == 10
 
 

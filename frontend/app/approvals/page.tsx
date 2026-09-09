@@ -129,6 +129,13 @@ function ApprovalsList() {
                 <p className="text-sm text-neutral-500 font-numeric">
                   @ £{signal.reference_price.toFixed(2)} · confidence {(signal.confidence * 100).toFixed(0)}%
                 </p>
+                {signal.signal_type === "entry" && (
+                  <p className="text-sm text-neutral-500 font-numeric">
+                    ~{signal.quantity.toFixed(4)} units · ~£{(signal.quantity * signal.reference_price).toFixed(2)}
+                    {" "}
+                    <span className="text-xs">(proposed — re-sized against risk limits at approval)</span>
+                  </p>
+                )}
               </div>
               <span className="text-xs rounded-full px-2 py-1 bg-amber/15 text-amber dark:text-amber-dark">
                 {signal.status.replace("_", " ")}

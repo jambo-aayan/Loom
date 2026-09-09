@@ -341,36 +341,51 @@ def execute_signal(
         session.commit()
         return order
 
-    account = account_state_for_book(session, signal.book_id, broker, cash=cash)
-    account_value = account.cash + sum(p.quantity * signal.reference_price for p in account.positions)
-    proposed = ProposedSignal(
-        instrument=signal.instrument,
-        signal_type=_enum_value(signal.signal_type),
-        action=signal.action,
-        confidence=signal.confidence,
-        exit_plan=ExitPlan(**signal.exit_plan),
-        reference_price=signal.reference_price,
-        quantity_hint=signal.quantity,
-    )
-    decision = size_and_check(proposed, account, account_value, limits)
+    # The caller (approve_signal / run_trading_pass's auto-approval branch) already committed
+    # signal.status to approved/auto_approved before calling this. If anything below throws
+    # unexpectedly (a broker network/API error — confirmed live: a T212 429, or an order 404 from
+    # a bad instrument mapping), that status must not be left stranded with no Order to show for
+    # it and no way to retry (every subsequent attempt would just 409 "already approved" forever).
+    # Revert it back to pending_approval and re-raise, so the caller still sees the failure but
+    # the signal stays actionable. This is deliberately distinct from a *considered* rejection
+    # (risk/sizing said no, kill switch engaged, live gate off) below, which legitimately is a
+    # permanent, non-retryable outcome and correctly leaves status as decided.
+    try:
+        account = account_state_for_book(session, signal.book_id, broker, cash=cash)
+        account_value = account.cash + sum(p.quantity * signal.reference_price for p in account.positions)
+        proposed = ProposedSignal(
+            instrument=signal.instrument,
+            signal_type=_enum_value(signal.signal_type),
+            action=signal.action,
+            confidence=signal.confidence,
+            exit_plan=ExitPlan(**signal.exit_plan),
+            reference_price=signal.reference_price,
+            quantity_hint=signal.quantity,
+        )
+        decision = size_and_check(proposed, account, account_value, limits)
 
-    if not decision.approved or decision.sized_order is None or decision.sized_order.quantity <= 0:
-        order = _failed_order(signal, idem_key)
-    else:
-        result = broker.submit_order(
-            signal.instrument, decision.sized_order.action, decision.sized_order.quantity, idem_key
-        )
-        order = Order(
-            signal_id=signal.id,
-            book_id=signal.book_id,
-            environment=signal.environment,
-            idempotency_key=idem_key,
-            broker_order_id=result.broker_order_id,
-            status=OrderStatus.filled if result.status == "filled" else OrderStatus.failed,
-            quantity=decision.sized_order.quantity,
-            fill_price=result.fill_price,
-            filled_at=datetime.utcnow() if result.status == "filled" else None,
-        )
+        if not decision.approved or decision.sized_order is None or decision.sized_order.quantity <= 0:
+            order = _failed_order(signal, idem_key)
+        else:
+            result = broker.submit_order(
+                signal.instrument, decision.sized_order.action, decision.sized_order.quantity, idem_key
+            )
+            order = Order(
+                signal_id=signal.id,
+                book_id=signal.book_id,
+                environment=signal.environment,
+                idempotency_key=idem_key,
+                broker_order_id=result.broker_order_id,
+                status=OrderStatus.filled if result.status == "filled" else OrderStatus.failed,
+                quantity=decision.sized_order.quantity,
+                fill_price=result.fill_price,
+                filled_at=datetime.utcnow() if result.status == "filled" else None,
+            )
+    except Exception:
+        session.rollback()
+        signal.status = SignalStatus.pending_approval
+        session.commit()
+        raise
 
     session.add(order)
     if order.status == OrderStatus.filled:
