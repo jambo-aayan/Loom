@@ -102,10 +102,22 @@ class Trading212Client(BrokerClient):
         )
         response.raise_for_status()
         payload = response.json()
+        # T212's order status is an uppercase lifecycle state (FILLED, NEW, PARTIALLY_FILLED,
+        # REJECTED, CANCELLED, ...), not the lowercase "filled"/"failed" OrderResult.status
+        # contract (broker.py) — normalize here, at the client boundary, same as the ticker
+        # mapping. v1 doesn't model partial/pending fills, so anything short of a full FILLED
+        # is "failed" for now (a real distinction worth revisiting once that matters).
+        status = str(payload.get("status", "")).upper()
+        # There's no top-level "fillPrice" in T212's real response — only filledQuantity and
+        # filledValue (the executed monetary value); derive price from those instead of reading
+        # a field that doesn't exist and would otherwise silently be None forever.
+        filled_qty = payload.get("filledQuantity")
+        filled_value = payload.get("filledValue")
+        fill_price = filled_value / filled_qty if status == "FILLED" and filled_qty else None
         return OrderResult(
             broker_order_id=str(payload.get("id")),
-            status=payload.get("status", "submitted"),
-            fill_price=payload.get("fillPrice"),
+            status="filled" if status == "FILLED" else "failed",
+            fill_price=fill_price,
         )
 
     def get_positions(self) -> list[BrokerPosition]:

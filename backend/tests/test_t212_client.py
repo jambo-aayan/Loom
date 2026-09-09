@@ -91,6 +91,31 @@ def test_submit_order_rounds_quantity_down_to_four_decimal_places():
     assert captured["body"]["quantity"] == 3.5824
 
 
+def test_submit_order_normalizes_t212s_uppercase_filled_status():
+    """T212's real status values are uppercase lifecycle states (FILLED, NEW, REJECTED, ...),
+    not the lowercase "filled"/"failed" OrderResult.status contract (broker.py)."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"id": 1, "status": "FILLED", "filledQuantity": 5, "filledValue": 500.0})
+
+    client = _client(handler)
+    result = client.submit_order("VUSA.L", "buy", 5, idempotency_key="signal-abc")
+
+    assert result.status == "filled"
+    assert result.fill_price == 100.0
+
+
+def test_submit_order_treats_anything_short_of_filled_as_failed():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"id": 1, "status": "REJECTED"})
+
+    client = _client(handler)
+    result = client.submit_order("VUSA.L", "buy", 5, idempotency_key="signal-abc")
+
+    assert result.status == "failed"
+    assert result.fill_price is None
+
+
 def test_submit_order_translates_to_t212s_own_ticker():
     """T212 uses its own internal ticker codes, not the market-data-style ones the rest of Loom
     uses — confirmed live: submitting "TSLA" as-is 404s, T212 only recognizes "TSLA_US_EQ"."""
