@@ -62,11 +62,20 @@ def get_market_data_source() -> MarketDataSource:
 
 
 def get_insight_generator() -> InsightGenerator:
+    """The screening tier (#30), position commentary (#44), and on-demand "ask" (#45) — prefers
+    Anthropic when configured, falls back to Gemini (ADR-0016: amends ADR-0013's original
+    Anthropic-only design for this path, since a real Anthropic key was never actually
+    provisioned in practice while a Google one already was), and only reaches the fake generator
+    when neither is configured."""
     settings = get_settings()
     if settings.anthropic_api_key:
         from loom.insight.generator import AnthropicInsightGenerator
 
         return AnthropicInsightGenerator(api_key=settings.anthropic_api_key)
+    if settings.google_api_key:
+        from loom.insight.generator import GeminiInsightGenerator
+
+        return GeminiInsightGenerator(api_key=settings.google_api_key)
     return FakeInsightGenerator()
 
 
