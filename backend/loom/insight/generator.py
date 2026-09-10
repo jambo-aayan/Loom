@@ -145,6 +145,22 @@ class AnthropicInsightGenerator(InsightGenerator):
         return "".join(block.text for block in response.content if hasattr(block, "text"))
 
 
+def _extract_text(response) -> str:
+    """`response.text` (the SDK's own quick accessor) raises `ValueError` whenever a response has
+    more than one part — confirmed live: this is exactly what a search-grounded response usually
+    looks like (the text comes back alongside citation/executable-code parts), so the quick
+    accessor broke every search-enabled call (generate_research, answer_question) while
+    non-search calls (generate_screening, generate_position_commentary) worked fine. Walk the
+    parts directly instead and join whichever ones carry text, skipping the rest. A response with
+    no text part at all (blocked by safety filtering, or cut off before producing one) falls back
+    to an empty string rather than raising — same "no crash on a wrong-shaped response" posture as
+    every other real external boundary in this codebase (Trading212ResponseError's sibling case)."""
+    candidates = response.candidates or []
+    if not candidates or not candidates[0].content or not candidates[0].content.parts:
+        return ""
+    return "".join(part.text for part in candidates[0].content.parts if part.text)
+
+
 class GeminiInsightGenerator(InsightGenerator):
     """The free-tier provider behind the automatic research pass (ADR-0013) — Gemini Flash's
     free tier is cheap enough to run unattended on every eligible signal. Implements the full
@@ -176,7 +192,7 @@ class GeminiInsightGenerator(InsightGenerator):
             else None
         )
         response = self._client.models.generate_content(model=self._model, contents=prompt, config=config)
-        return response.text or ""
+        return _extract_text(response)
 
     def generate_screening(self, signal: Signal) -> str:
         prompt = (
