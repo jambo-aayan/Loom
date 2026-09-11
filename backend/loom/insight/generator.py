@@ -167,17 +167,21 @@ class GeminiInsightGenerator(InsightGenerator):
     `InsightGenerator` interface like any other provider, even though `loom.api.deps` only ever
     wires this one in for the research tier today."""
 
-    # Deliberately not the newest Flash release: Google tightens free-tier daily quotas hard on
-    # brand-new models (as of Sep 2026, the newest one's free tier was reported at ~20
-    # requests/day vs. ~1,500/day on established models like this one) — headroom for an
-    # unattended job that runs indefinitely matters more here than frontier capability this task
-    # doesn't need. Re-check current quotas before bumping this rather than assuming newest=best.
-    #
     # "gemini-3-flash" (no minor version) was never a real model ID — confirmed live: every call
     # through it failed, and the resulting unhandled exception surfaced client-side as an opaque
     # "Failed to fetch" (see main.py's exception handler) rather than a clear model-not-found
-    # error. gemini-3.5-flash is the real, currently-established model this comment describes.
-    def __init__(self, api_key: str, model: str = "gemini-3.5-flash"):
+    # error.
+    #
+    # The plain "gemini-3.5-flash" turned out to be the wrong real model too, for this job:
+    # confirmed live against this project's actual Free-tier rate-limit page, the plain model is
+    # capped at a mere 20 requests/day — trivially exhausted by the screening tier firing on every
+    # signal across a handful of trading passes, well before any generic "established model" quota
+    # figure would suggest. "-lite" variants on the same free tier showed a 500/day cap instead
+    # (25x higher) with no apparent loss of tool support (search grounding still worked) — a much
+    # better fit for an unattended job that runs indefinitely. Re-check the live rate-limit page
+    # for the account actually in use before changing this again; published/generic quota numbers
+    # for "the free tier" are not reliable enough on their own, confirmed the hard way twice now.
+    def __init__(self, api_key: str, model: str = "gemini-3.5-flash-lite"):
         from google import genai
 
         self._client = genai.Client(api_key=api_key)
