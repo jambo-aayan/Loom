@@ -145,6 +145,15 @@ class AnthropicInsightGenerator(InsightGenerator):
         return "".join(block.text for block in response.content if hasattr(block, "text"))
 
 
+def _is_quota_exhausted(exc: Exception) -> bool:
+    """Confirmed live: a genuinely exhausted daily quota raises `google.genai.errors.ClientError`
+    with `code=429` and `status="RESOURCE_EXHAUSTED"` — the only case where falling back to a
+    different, still-available model is the right move. Anything else (a bad prompt, a genuinely
+    invalid model id, an auth failure) should keep failing loudly rather than silently trying a
+    second model that's no more likely to succeed."""
+    return getattr(exc, "code", None) == 429 and getattr(exc, "status", None) == "RESOURCE_EXHAUSTED"
+
+
 def _extract_text(response) -> str:
     """`response.text` (the SDK's own quick accessor) raises `ValueError` whenever a response has
     more than one part — confirmed live: this is exactly what a search-grounded response usually
@@ -181,11 +190,18 @@ class GeminiInsightGenerator(InsightGenerator):
     # better fit for an unattended job that runs indefinitely. Re-check the live rate-limit page
     # for the account actually in use before changing this again; published/generic quota numbers
     # for "the free tier" are not reliable enough on their own, confirmed the hard way twice now.
-    def __init__(self, api_key: str, model: str = "gemini-3.5-flash-lite"):
+    def __init__(self, api_key: str, model: str = "gemini-3.5-flash-lite", fallback_model: str | None = None):
         from google import genai
 
         self._client = genai.Client(api_key=api_key)
         self._model = model
+        # A higher-quality primary model buys that quality with a much lower daily quota
+        # (confirmed live: 20 requests/day for the plain model vs. 500/day for the "-lite"
+        # variant) — deps.py pairs get_insight_generator's/get_research_generator's
+        # gemini-3.5-flash with gemini-3.5-flash-lite as the fallback here, so a real 429 mid-day
+        # degrades to a lower-quality-but-available answer instead of failing outright. None
+        # (screening's default) means no fallback — screening is already on the high-quota model.
+        self._fallback_model = fallback_model
 
     def _complete(self, prompt: str, use_search: bool = False) -> str:
         from google.genai import types
@@ -195,7 +211,14 @@ class GeminiInsightGenerator(InsightGenerator):
             if use_search
             else None
         )
-        response = self._client.models.generate_content(model=self._model, contents=prompt, config=config)
+        try:
+            response = self._client.models.generate_content(model=self._model, contents=prompt, config=config)
+        except Exception as exc:
+            if self._fallback_model is None or not _is_quota_exhausted(exc):
+                raise
+            response = self._client.models.generate_content(
+                model=self._fallback_model, contents=prompt, config=config
+            )
         return _extract_text(response)
 
     def generate_screening(self, signal: Signal) -> str:
