@@ -7,9 +7,9 @@ from loom.api.deps import (
     get_broker,
     get_db,
     get_email_sender,
-    get_insight_generator,
     get_market_data_source,
     get_paid_research_generator,
+    get_screening_generator,
 )
 from loom.api.schemas import InsightOut, SignalDecisionIn, SignalOut
 from loom.insight.generator import InsightGenerator
@@ -55,7 +55,7 @@ def list_signal_insights(signal_id: str, session: Session = Depends(get_db)):
 def screen_signal(
     signal_id: str,
     session: Session = Depends(get_db),
-    generator: InsightGenerator = Depends(get_insight_generator),
+    generator: InsightGenerator = Depends(get_screening_generator),
 ):
     """Generates the cheap screening-tier Insight for a pending signal (story 30, 54)."""
     signal = session.get(Signal, signal_id)
@@ -87,7 +87,7 @@ def research_signal(
 def screen_pending(
     environment: str = "demo",
     session: Session = Depends(get_db),
-    generator: InsightGenerator = Depends(get_insight_generator),
+    generator: InsightGenerator = Depends(get_screening_generator),
 ):
     """The screening-tier Insight job (story 30, 52, 54): runs on every signal candidate that
     doesn't have one yet, as its own job — deliberately separate from /trading-pass/run, so it

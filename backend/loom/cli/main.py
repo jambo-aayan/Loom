@@ -11,10 +11,10 @@ from loom import calibration, db, killswitch, logging_config, strategies  # noqa
 from loom.api.deps import (
     get_broker,
     get_email_sender,
-    get_insight_generator,
     get_market_data_source,
     get_push_sender,
     get_research_generator,
+    get_screening_generator,
 )
 from loom.backtest.engine import run_backtest
 from loom.config_versions import current_promoted
@@ -141,7 +141,7 @@ def screen_insights(environment: str):
     db.init_db()
     session = next(db.get_session())
 
-    generator = get_insight_generator()
+    generator = get_screening_generator()
     created = run_screening_job(session, generator, environment=Environment(environment))
     click.echo(f"Generated {len(created)} screening Insight(s) for {environment}.")
 

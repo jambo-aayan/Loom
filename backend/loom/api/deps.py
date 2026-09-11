@@ -61,12 +61,14 @@ def get_market_data_source() -> MarketDataSource:
     return FixtureMarketDataSource()
 
 
-def get_insight_generator() -> InsightGenerator:
-    """The screening tier (#30), position commentary (#44), and on-demand "ask" (#45) — prefers
-    Anthropic when configured, falls back to Gemini (ADR-0016: amends ADR-0013's original
-    Anthropic-only design for this path, since a real Anthropic key was never actually
-    provisioned in practice while a Google one already was), and only reaches the fake generator
-    when neither is configured."""
+def get_screening_generator() -> InsightGenerator:
+    """The screening tier only (#30) — split out from `get_insight_generator` (ADR-0016 update):
+    screening fires on essentially every signal a strategy produces, by far the highest-volume
+    Gemini caller in the app, so it gets its own model and therefore its own daily quota bucket
+    (Google's free-tier RPD limits are tracked per model, not pooled across models within a
+    project) rather than competing with position commentary/"ask"/research for one shared 20-500
+    request/day allowance. Prefers Anthropic when configured, same fallback order as
+    `get_insight_generator`."""
     settings = get_settings()
     if settings.anthropic_api_key:
         from loom.insight.generator import AnthropicInsightGenerator
@@ -75,18 +77,40 @@ def get_insight_generator() -> InsightGenerator:
     if settings.google_api_key:
         from loom.insight.generator import GeminiInsightGenerator
 
-        return GeminiInsightGenerator(api_key=settings.google_api_key)
+        return GeminiInsightGenerator(api_key=settings.google_api_key, model="gemini-3.5-flash-lite")
+    return FakeInsightGenerator()
+
+
+def get_insight_generator() -> InsightGenerator:
+    """Position commentary (#44) and on-demand "ask" (#45) — low-volume, user-triggered calls,
+    deliberately on a *different* Gemini model than the screening tier (see
+    `get_screening_generator`) so the two don't share a daily quota bucket. Prefers Anthropic when
+    configured, falls back to Gemini (ADR-0016: amends ADR-0013's original Anthropic-only design
+    for this path, since a real Anthropic key was never actually provisioned in practice while a
+    Google one already was), and only reaches the fake generator when neither is configured."""
+    settings = get_settings()
+    if settings.anthropic_api_key:
+        from loom.insight.generator import AnthropicInsightGenerator
+
+        return AnthropicInsightGenerator(api_key=settings.anthropic_api_key)
+    if settings.google_api_key:
+        from loom.insight.generator import GeminiInsightGenerator
+
+        return GeminiInsightGenerator(api_key=settings.google_api_key, model="gemini-3.1-flash-lite")
     return FakeInsightGenerator()
 
 
 def get_research_generator() -> InsightGenerator:
     """The research tier's automatic, free path (ADR-0013) — Gemini Flash when configured, else
-    the fake generator. Never falls back to a paid provider automatically."""
+    the fake generator. Never falls back to a paid provider automatically. Shares its model (and
+    therefore its daily quota bucket) with `get_insight_generator` rather than screening: both are
+    comparatively low-volume (research is gated to investment-style strategies only; ask is
+    user-triggered), while screening alone can burn through a bucket fast on its own."""
     settings = get_settings()
     if settings.google_api_key:
         from loom.insight.generator import GeminiInsightGenerator
 
-        return GeminiInsightGenerator(api_key=settings.google_api_key)
+        return GeminiInsightGenerator(api_key=settings.google_api_key, model="gemini-3.1-flash-lite")
     return FakeInsightGenerator()
 
 
