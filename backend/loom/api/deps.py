@@ -83,8 +83,10 @@ def get_screening_generator() -> InsightGenerator:
 
 def get_insight_generator() -> InsightGenerator:
     """Position commentary (#44) and on-demand "ask" (#45) — low-volume, user-triggered calls,
-    deliberately on a *different* Gemini model than the screening tier (see
-    `get_screening_generator`) so the two don't share a daily quota bucket. Prefers Anthropic when
+    deliberately on a *different, higher-quality* Gemini model than the screening tier (see
+    `get_screening_generator`): the plain (non-"-lite") Flash model gives up quota headroom
+    (confirmed live: 20 requests/day vs. the Lite variant's 500) in exchange for better output —
+    a fine trade here since this path is rarely called, unlike screening. Prefers Anthropic when
     configured, falls back to Gemini (ADR-0016: amends ADR-0013's original Anthropic-only design
     for this path, since a real Anthropic key was never actually provisioned in practice while a
     Google one already was), and only reaches the fake generator when neither is configured."""
@@ -96,7 +98,7 @@ def get_insight_generator() -> InsightGenerator:
     if settings.google_api_key:
         from loom.insight.generator import GeminiInsightGenerator
 
-        return GeminiInsightGenerator(api_key=settings.google_api_key, model="gemini-3.1-flash-lite")
+        return GeminiInsightGenerator(api_key=settings.google_api_key, model="gemini-3.5-flash")
     return FakeInsightGenerator()
 
 
@@ -105,12 +107,13 @@ def get_research_generator() -> InsightGenerator:
     the fake generator. Never falls back to a paid provider automatically. Shares its model (and
     therefore its daily quota bucket) with `get_insight_generator` rather than screening: both are
     comparatively low-volume (research is gated to investment-style strategies only; ask is
-    user-triggered), while screening alone can burn through a bucket fast on its own."""
+    user-triggered), while screening alone can burn through a bucket fast on its own — and
+    research's output quality benefits from the same better-model trade-off as ask."""
     settings = get_settings()
     if settings.google_api_key:
         from loom.insight.generator import GeminiInsightGenerator
 
-        return GeminiInsightGenerator(api_key=settings.google_api_key, model="gemini-3.1-flash-lite")
+        return GeminiInsightGenerator(api_key=settings.google_api_key, model="gemini-3.5-flash")
     return FakeInsightGenerator()
 
 
