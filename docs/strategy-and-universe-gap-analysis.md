@@ -239,6 +239,18 @@ that is not a safety net.
   over 6 years, 238 trades. High hit rate, negative expectancy — the classic shape.
 - **GAP — no mean-reversion test.** The strategy assumes its instruments mean-revert. Nothing
   checks that, and trending instruments (NVDA, TSLA) are in the universe.
+- **BLOCKING (surfaced during the exit-design grill) — centralised exit enforcement makes
+  add-on-weakness unreachable.** The stop is `stop_loss_pct=0.05` from entry; the add triggers at
+  `add_on_weakness_z_score=-2.5`, which is typically a deeper drawdown than 5%. Once the shared
+  exit layer actually enforces the plan (per the exit-design decisions), the position closes
+  before the add can ever fire — so story 22's always-manual add-on-weakness action, and the
+  `max_add_ons` cap built for it, become dead code.
+
+  Today this is masked because nothing enforces the stop at all. It is not an argument against
+  enforcement; it means Harvester's stop and add threshold have to be designed against each other
+  rather than chosen independently. Options are a wider stop, a shallower add trigger, or an
+  explicit rule that the stop is suspended while an add is still permitted. **To be resolved in
+  the Volatility Harvester deep dive**, not before.
 
 ### D3. Trend Follower
 
