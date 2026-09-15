@@ -1,7 +1,13 @@
 """Counterfactual outcome tracking (story 67, CONTEXT.md "Counterfactual outcome"): a rejected
 or expired Signal keeps being simulated forward as a shadow position, reusing the backtest
-engine's own fill/exit logic and the originating strategy's exit rules, until it resolves or
-hits a max horizon."""
+engine's own fill/exit logic, until it resolves or hits a max horizon.
+
+Simulates the Signal's own `ExitPlan` (via the shared `check_exit`) and nothing else — the
+originating Strategy is never re-run, so a discretionary exit it would have taken (a death cross,
+a volatility normalisation) is not reflected here. For the three strategies whose exits are purely
+plan-based this is exact; for Trend Follower and Volatility Breakout it is an approximation.
+Deliberate, per ADR-0018: full fidelity would mean re-running a strategy forward per rejected
+signal on every refresh, to improve two strategies out of five."""
 
 from __future__ import annotations
 

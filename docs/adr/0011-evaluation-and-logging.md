@@ -28,8 +28,11 @@ user acted on it.
 
 A rejected or expired `Signal` keeps being tracked as a shadow position: Loom simulates it
 forward using the same simulated-fill mechanics the backtest engine already has, applying the
-originating `Strategy`'s own exit logic against real subsequent market data, until it would have
-exited or a max horizon is reached. The resulting hypothetical outcome is attached to the
+that `Signal`'s own `Exit plan` against real subsequent market data, until it would have
+exited or a max horizon is reached. (Amended by ADR-0018: the plan is simulated, not the
+`Strategy`'s discretionary exit logic, which is never re-run — exact for the strategies whose
+exits are purely plan-based, an approximation for the two that exit discretionarily. The horizon
+is derived from the plan rather than fixed.) The resulting hypothetical outcome is attached to the
 `Signal` record. This is deliberately a learning tool aimed at the user's own decision quality,
 not just the strategy's — "I rejected this and it would have gained X%" is exactly as visible in
 `History` as "I approved this and it gained Y%." No new simulation engine is needed; this reuses
