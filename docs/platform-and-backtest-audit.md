@@ -11,7 +11,7 @@ Companions:
 
 ## 1. Security
 
-### 1.1 CRITICAL — The deployed API is public and unauthenticated
+### 1.1 RESOLVED (ADR-0017) — The deployed API was public and unauthenticated
 
 There is no authentication anywhere in the backend. No auth dependency, no API key check, no
 session, no middleware. Every router takes `Depends(get_db)` and nothing else.
@@ -48,7 +48,13 @@ Mitigating factors, such as they are: the live T212 credentials must be configur
 reach a real broker, and the live trading gate is off by default. Neither is a defence — steps 1
 to 3 exist precisely to flip those.
 
-### 1.2 ADR-0004 does not actually cover this
+**Fixed.** Every endpoint now requires an `X-Loom-Api-Key` header checked by middleware in front
+of routing, failing closed when unset; the frontend proxies through its own origin so the key
+never reaches a browser; CORS is narrowed to the frontend origin. `/health` and the signed
+`/action-links/*` path are the two documented exemptions. See ADR-0017 and
+`backend/tests/test_api_auth.py`.
+
+### 1.2 RESOLVED (ADR-0017) — ADR-0004 did not actually cover this
 
 ADR-0004 says:
 
@@ -60,10 +66,10 @@ billing. "No user accounts because there is one user" is a sound conclusion. "Th
 money-moving API needs no access control on a public URL" does not follow from it, and the ADR
 never considers the question.
 
-This is worth resolving as a decision, not just a patch: single-user does not mean
-single-visitor. The cheapest adequate answer is probably removing `--allow-unauthenticated` and
-putting the frontend's calls behind a shared secret or Google IAP, but it is a real decision with
-a real ADR attached, and it should be made before the live trading gate is ever switched on.
+This was resolved as a decision rather than a patch: ADR-0017 records the four options weighed
+(Cloud Run IAM/IAP, a key in the browser, a session cookie, a server-side shared secret) and why
+the shared secret with a same-origin proxy won. ADR-0004 stands unchanged — this is access
+control, not multi-tenancy.
 
 ### 1.3 Signed action links are the one path that got this right
 
@@ -211,10 +217,7 @@ Recorded so the three documents aren't read as uniformly negative. Checked and f
 
 Only one item here outranks everything in the other two documents:
 
-1. **1.1 — public unauthenticated API.** This should be closed before the live trading gate is
-   ever switched on, and arguably before the next deploy regardless. Everything else in all three
-   documents concerns a system that loses money slowly through bad logic; this one concerns a
-   system that can be driven by someone else.
+1. ~~**1.1 — public unauthenticated API.**~~ **Done** — ADR-0017.
 2. **3.1 and 3.2** — calibration overwrite and the missing sample-size floor. Both are small
    fixes, and both sit on the path to an unsupervised real order.
 3. **2.1 and 2.2** — cost model and fill timing. These don't break anything, but until they're in

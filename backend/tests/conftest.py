@@ -30,3 +30,27 @@ def _gates_open_by_default(session):
     since most client-based tests use `approval_mode: manual` and never need it at all."""
     auto_trading_gate.enable(session, actor="test-default")
     live_trading_gate.enable(session, actor="test-default")
+
+
+TEST_API_KEY = "test-loom-api-key"
+
+
+@pytest.fixture(autouse=True)
+def _api_key(monkeypatch):
+    """Every API test builds its own `TestClient` locally (14 files do), so rather than editing
+    each one to pass the ADR-0017 auth header, set the key in the environment and give TestClient
+    a default header. A test that specifically exercises *missing* or *wrong* credentials
+    overrides the header on the individual request, which takes precedence over this default.
+    """
+    from fastapi.testclient import TestClient
+
+    monkeypatch.setenv("LOOM_API_KEY", TEST_API_KEY)
+
+    original_init = TestClient.__init__
+
+    def _with_api_key(self, *args, **kwargs):
+        headers = dict(kwargs.pop("headers", None) or {})
+        headers.setdefault("X-Loom-Api-Key", TEST_API_KEY)
+        original_init(self, *args, headers=headers, **kwargs)
+
+    monkeypatch.setattr(TestClient, "__init__", _with_api_key)

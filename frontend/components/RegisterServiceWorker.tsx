@@ -40,7 +40,9 @@ async function subscribeToPush(registration: ServiceWorkerRegistration) {
 export function RegisterServiceWorker() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+    // The service worker's approve/reject fetches go through the same-origin proxy as every
+    // other call (ADR-0017) — a service worker cannot hold the API key either.
+    const apiBase = "/api/loom";
     navigator.serviceWorker
       .register(`/sw.js?apiBase=${encodeURIComponent(apiBase)}`)
       .then((registration) => {

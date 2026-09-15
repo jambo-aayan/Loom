@@ -1,4 +1,7 @@
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+// Same-origin path, not the backend's address: requests go through app/api/loom/[...path],
+// which attaches the API key server-side (ADR-0017). The backend URL and key are both server-only
+// env vars now, so neither appears in the browser bundle.
+export const API_BASE = "/api/loom";
 
 export type Environment = "demo" | "live";
 

@@ -79,6 +79,7 @@ declare -A SECRET_ENV_MAP=(
   [loom-anthropic-api-key]=ANTHROPIC_API_KEY
   [loom-google-api-key]=GOOGLE_API_KEY
   [loom-twelve-data-api-key]=TWELVE_DATA_API_KEY
+  [loom-api-key]=LOOM_API_KEY
 )
 for SECRET in "${!SECRET_ENV_MAP[@]}"; do
   gcloud secrets describe "$SECRET" --project "$PROJECT_ID" >/dev/null 2>&1 || \
@@ -94,6 +95,14 @@ cat <<'NOTE'
     will not authenticate against the other's base URL. Leave a secret's value blank (empty string
     version) for anything you're not using yet (e.g. GOOGLE_API_KEY or the live pair in early dev)
     — Loom's settings all default to "" meaning "use the fake/no-op implementation" (ADR-0004).
+
+    loom-api-key is the exception: it is REQUIRED, and the API refuses to serve any protected
+    request while it is blank (ADR-0017), so generate one now and set the same value in Vercel:
+      python3 -c 'import secrets; print(secrets.token_urlsafe(32))' \
+        | tr -d '\n' | gcloud secrets versions add loom-api-key --data-file=-
+    Then in the Vercel project set LOOM_API_KEY to that same value and LOOM_API_BASE_URL to the
+    Cloud Run service URL. Both are server-side only — do NOT prefix either with NEXT_PUBLIC_,
+    which would publish them in the browser bundle and undo the whole point.
 NOTE
 
 echo "==> Granting Cloud Build's runtime identity what it needs"
@@ -145,7 +154,7 @@ gcloud run deploy "$SERVICE" \
 
 SERVICE_URL=$(gcloud run services describe "$SERVICE" --region "$REGION" --project "$PROJECT_ID" --format='value(status.url)')
 echo "==> Service deployed at: ${SERVICE_URL}"
-echo "    Set this as NEXT_PUBLIC_API_BASE_URL in your Vercel project's env vars."
+echo "    Set this as LOOM_API_BASE_URL in your Vercel project's env vars (server-side, not NEXT_PUBLIC_)."
 
 echo "==> Creating Cloud Run Jobs (same image, command overridden per job — ADR-0002)"
 declare -A JOB_COMMANDS=(
@@ -210,4 +219,4 @@ for JOB in "${!SCHEDULES[@]}"; do
   fi
 done
 
-echo "==> Done. Next: run alembic migrations against the Neon DB (see docs/deployment.md), then set NEXT_PUBLIC_API_BASE_URL=${SERVICE_URL} in Vercel."
+echo "==> Done. Next: run alembic migrations against the Neon DB (see docs/deployment.md), then in Vercel set LOOM_API_BASE_URL=${SERVICE_URL} and LOOM_API_KEY to the same value as the loom-api-key secret."
