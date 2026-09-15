@@ -343,11 +343,28 @@ limit — there is no "don't hold five correlated positions" check.
 
 ## F. Process and observability
 
-### F1. GAP — Nothing schedules the trading pass
+### F1. CORRECTED — The trading pass *is* scheduled (earlier finding in this document was wrong)
 
-ADR-0002 describes a "scheduled single-pass runtime." The only workflow in `.github/workflows`
-is `deploy-backend.yml`; there is no cron, no scheduler, no APScheduler. The pass runs when
-someone clicks "run now" or invokes the CLI, and never otherwise.
+An earlier revision of this document claimed nothing schedules the trading pass. That was wrong:
+`infra/gcp/setup.sh` provisions Cloud Scheduler jobs triggering Cloud Run Jobs, per ADR-0002.
+
+```
+loom-trade-pass        0 8 * * 1-5    weekdays 08:00 UTC
+loom-screen-insights   15 8 * * 1-5
+loom-research-insights 30 8 * * 1-5
+loom-reconcile         0 18 * * 1-5
+```
+
+All four are pinned to `--environment demo`; there is no scheduled `live` pass, which is
+appropriate while the live trading gate is off.
+
+This makes B1 (the lookback bug) **worse, not better**: the pass has been running every weekday
+and producing nothing, rather than simply not running. It also means F2 below is the load-bearing
+gap — a scheduled job that silently produces nothing is exactly the failure mode observability
+would have caught.
+
+One thing to confirm operationally: whether `setup.sh` was actually run against the live GCP
+project, or whether these jobs exist only in the script. `gcloud scheduler jobs list` settles it.
 
 ### F2. GAP — A pass that does nothing reports nothing
 

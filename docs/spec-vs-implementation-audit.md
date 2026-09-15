@@ -107,18 +107,24 @@ the research tier ADR-0009 assigns it. (Also noted in the companion document.)
 
 ## 2. Specced, never built
 
-### 2.1 Story 13 — the trading pass never runs on a schedule
+### 2.1 Story 13 — CORRECTED: the scheduled pass exists
 
-> As the user, I want the trading pass to also run on a schedule (e.g. via cron), so that it
-> operates without me having to remember to run it.
+An earlier revision of this document claimed story 13 was never built. That was wrong.
+`infra/gcp/setup.sh` provisions four Cloud Scheduler jobs triggering Cloud Run Jobs (ADR-0002's
+"scheduled single-pass, not a daemon"):
 
-ADR-0002 names the runtime "scheduled single-pass." There is no cron, no scheduler, no
-APScheduler; the only workflow in `.github/workflows` is `deploy-backend.yml`. The pass runs on
-a manual CLI call or a dashboard "run now" click, and never otherwise.
+| Job | Schedule |
+|---|---|
+| `loom-trade-pass` | `0 8 * * 1-5` — weekdays 08:00 UTC |
+| `loom-screen-insights` | `15 8 * * 1-5` |
+| `loom-research-insights` | `30 8 * * 1-5` |
+| `loom-reconcile` | `0 18 * * 1-5` |
 
-This is the single largest gap between the described product and the running one: everything
-downstream (notifications, approvals expiring after 24h, counterfactual refresh) assumes passes
-happen on their own.
+Story 13 is implemented and conformant. All jobs are pinned to `--environment demo`; there is no
+scheduled live pass, which is correct while the live trading gate is off.
+
+Worth verifying operationally that `setup.sh` was actually applied to the project rather than
+existing only as a script — `gcloud scheduler jobs list` answers it.
 
 ### 2.2 Story 3 — there is no Demo/Live switch in the dashboard
 
@@ -260,5 +266,5 @@ remaining 13 tables (1.1) — one migration, and cheaper now than after more row
 - Unmapped-ticker handling (1.3) — degrade to an untracked Manual holding, or resolve tickers
   dynamically against T212's instrument metadata.
 
-**Straightforward but not small**: the scheduler (2.1) and the Demo/Live switch (2.2). Neither
-is hard; both are load-bearing for the product as described.
+**Straightforward but not small**: the Demo/Live switch (2.2) — not hard, but load-bearing for
+the product as described.
