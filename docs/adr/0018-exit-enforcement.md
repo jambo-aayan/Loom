@@ -124,7 +124,11 @@ land before it goes live.
 - Enforcing plans reveals parameter choices that were previously inert. Harvester's add-on-weakness
   becomes unreachable, because its stop (5%) fires before its add threshold (z ≤ −2.5) is reached —
   so story 22's always-manual add and its `max_add_ons` cap become dead code until the deep dive
-  resolves it. Expect more of this: every strategy's stop was chosen while nothing enforced it.
+  resolves it. Expect more of this: every strategy's stop was chosen while nothing enforced it, so
+  none of them ever had feedback. The dry run is the first such feedback these parameters have
+  had, and should be treated as a parameter audit as much as a correctness check — see
+  `docs/strategy-and-universe-gap-analysis.md` D0, which lists what to record and which
+  parameters are already suspect.
 - A new scheduled job and a configurable interval mean Settings needs an editable numeric control,
   which it currently has none of — thresholds render as read-only text. This rides with the
   Settings write path rather than being separate work.

@@ -216,6 +216,55 @@ that is not a safety net.
 
 ## D. Per-strategy logic
 
+### D0. Read this before any strategy deep dive — every stop was chosen while nothing enforced it
+
+This is the cross-cutting finding behind most of D1-D5, and it is easy to miss because it looks
+like five unrelated parameter problems.
+
+`ExitPlan` was never enforced in live or demo (C1). So every `stop_loss_pct`, `profit_target_pct`
+and `time_exit_days` in the roster was picked against a **backtest**, and in live trading those
+numbers did nothing at all for two strategies and were re-derived independently by the other
+three. **There was no feedback loop.** A stop that was badly wrong produced no evidence that it
+was wrong, because it never fired.
+
+Two confirmed instances, found for unrelated reasons rather than by looking:
+
+- **Compounder's 2% stop** is ~1.3 daily sigma against its own 1.5% volatility threshold — the
+  *low-volatility* strategy, whose most common backtest outcome was being stopped out by noise
+  (73 stop exits vs 53 target exits).
+- **Harvester's 5% stop** fires before its add-on-weakness threshold (z ≤ −2.5) can be reached,
+  so enforcing the plan makes story 22's always-manual add unreachable (D2).
+
+Neither was found by auditing stops. Both surfaced sideways. That is the signal that the rest of
+the roster deserves the same check rather than being assumed fine:
+
+| Strategy | Worth checking | Why it's suspect |
+|---|---|---|
+| Volatility Breakout | 6% stop, 45-day time exit | measured average hold is **6.6 days** — the stop and time exit are sized for a hold that doesn't happen |
+| Trend Follower | 8% stop, 180-day time exit | neither was ever live-enforced; both need re-deciding against the new trailing stop rather than kept by default |
+| Value/Quality Dip-Buyer | 6% stop, 60-day time exit | the time exit was the **only** exit that ever fired (5 of 5 trades); target and stop never triggered once |
+| Low-Vol Compounder | 4% target / 2% stop | see above — also the 2:1 ratio was chosen without reference to the instrument's volatility |
+| Volatility Harvester | 6% target / 5% stop, z-exit at −0.2 | 59% win rate and ~zero return: the z-exit clips winners early while the stop takes full losses |
+
+**Use the dry run as the instrument.** ADR-0018 ships exit enforcement in dry-run mode first,
+logging what *would* have fired without selling. Its obvious purpose is to prove the layer works
+— but its more valuable purpose is that it is the first feedback these parameters have ever had.
+Run it for a few days as a deliberate parameter audit, recording per strategy:
+
+- which exit reason would have fired, and how often
+- how long each position would have been held before it fired
+- how many stops would have fired within a few days of entry (noise stops) versus later ones
+- any position where the target and stop are both implausible given how the instrument actually
+  moves
+
+Then take that into each deep dive, rather than re-deriving parameters from backtests that were
+measuring a system which didn't exist (B3).
+
+One caution: the dry run observes demo positions in the current 4-instrument universe, so it will
+say nothing about strategies that can't fire there at all — Dip-Buyer most of all (D5). Those
+still need the universe work before their parameters can be judged.
+
+
 ### D1. Low-Vol Compounder
 
 - **WRONG — `style` contradicts ADR-0009.** The ADR assigns Compounder to `investment`. Both
