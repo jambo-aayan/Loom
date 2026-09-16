@@ -72,11 +72,18 @@ export default function StrategyDetailPage() {
   }
 
   async function saveAsDraftAndPromote() {
-    const parsed = JSON.parse(draftParams);
-    const created = await api.createDraft(id, parsed, "Edited via Strategy detail page");
-    await api.promoteVersion(id, created.id);
-    await load();
-    setDraftResult(null);
+    // Promoting changes the config that generates real Signals, so a failure here must be
+    // visible rather than an unhandled rejection — the same handling the backtest action has.
+    try {
+      const parsed = JSON.parse(draftParams);
+      const created = await api.createDraft(id, parsed, "Edited via Strategy detail page");
+      await api.promoteVersion(id, created.id);
+      await load();
+      setDraftResult(null);
+      setError(null);
+    } catch (e) {
+      setError((e as Error).message);
+    }
   }
 
   if (!strategy) return <p className="text-sm text-neutral-500">{error ?? "Loading…"}</p>;

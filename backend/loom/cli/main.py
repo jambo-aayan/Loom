@@ -24,6 +24,7 @@ from loom.insight.screening import run_screening_job
 from loom.models import BacktestRun, Environment
 from loom.models import Strategy as StrategyModel
 from loom.notifications.dispatch import notify_daily_loss_limit, notify_failed_auto_approvals, notify_new_signals
+from loom.config_versions import duplicate_version_numbers
 from loom.reconciliation import manual_positions
 from loom.seed import seed_all_strategies
 from loom.settings import get_settings
@@ -179,6 +180,29 @@ def reconcile(environment: str):
     click.echo(f"{len(manual)} untracked position(s) for {environment}, attributed to Manual:")
     for snap in manual:
         click.echo(f"  {snap.instrument}: {snap.quantity:g} @ {snap.average_price:.2f}")
+
+
+@cli.command("check-config-versions")
+def check_config_versions():
+    """Reports strategies carrying more than one promoted config version under the same number
+    (#61). Reports only — it never renumbers, since the changelog exists to be traceable and
+    rewriting it is a human's decision."""
+    db.init_db()
+    session = next(db.get_session())
+
+    duplicates = duplicate_version_numbers(session)
+    if not duplicates:
+        click.echo("No duplicate promoted version numbers — config version history is clean.")
+        return
+
+    click.echo(f"{len(duplicates)} duplicated promoted version number(s):")
+    for row in duplicates:
+        click.echo(f"  {row['strategy_key']}: version {row['version_number']} promoted {row['count']} times")
+    click.echo(
+        "\nNothing was changed. Each Signal references its config version by id, so attribution is "
+        "intact; what a duplicate breaks is reading the changelog. Decide per strategy whether to "
+        "renumber or leave the history as it happened."
+    )
 
 
 if __name__ == "__main__":
