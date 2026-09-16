@@ -43,10 +43,16 @@ v1 ships five strategies, not one:
 
 ### Strategy style
 
-Each `Strategy` is tagged `trading` (Harvester, Trend Follower, Breakout — shorter hold,
-technical, frequent exits) or `investment` (Compounder, Value/Quality Dip-Buyer — longer hold,
+Each `Strategy` is tagged `trading` (Low-Vol Compounder, Harvester, Trend Follower, Breakout —
+shorter hold, technical, frequent exits) or `investment` (Value/Quality Dip-Buyer — longer hold,
 conviction-based). This is descriptive metadata read by the research tier and by how a `Book`'s
 performance gets interpreted, not a behavioral gate enforced elsewhere in the system.
+
+> **Corrected by ADR 0020.** This ADR originally tagged the Low-Vol Compounder `investment`.
+> That was wrong: it is the roster's highest-frequency strategy, taking small wins off
+> short-term fluctuation rather than holding on conviction, and `style` gates the research tier —
+> so the tag was pointing the expensive tier at the busiest strategy. The code always had it as
+> `trading`; the text above now matches.
 
 ### Confidence, by signal type
 
