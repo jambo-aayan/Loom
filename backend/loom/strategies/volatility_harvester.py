@@ -53,6 +53,9 @@ class VolatilityHarvester(Strategy):
     def __init__(self, config: StrategyConfig | None = None):
         super().__init__(config or StrategyConfig(params=dict(DEFAULT_PARAMS)))
 
+    def min_bars(self) -> int:
+        return int({**DEFAULT_PARAMS, **self.config.params}["window"])
+
     def generate_signals(
         self, market_data: MarketData, positions: AccountState, account: AccountState
     ) -> list[ProposedSignal]:

@@ -40,6 +40,11 @@ class LowVolCompounder(Strategy):
     def __init__(self, config: StrategyConfig | None = None):
         super().__init__(config or StrategyConfig(params=dict(DEFAULT_PARAMS)))
 
+    def min_bars(self) -> int:
+        p = {**DEFAULT_PARAMS, **self.config.params}
+        # One extra bar because volatility is measured over returns, which need a prior close.
+        return max(int(p["volatility_window"]), int(p["trend_window"])) + 1
+
     def generate_signals(
         self, market_data: MarketData, positions: AccountState, account: AccountState
     ) -> list[ProposedSignal]:

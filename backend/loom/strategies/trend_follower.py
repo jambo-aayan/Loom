@@ -75,6 +75,13 @@ class TrendFollower(Strategy):
     def __init__(self, config: StrategyConfig | None = None):
         super().__init__(config or StrategyConfig(params=dict(DEFAULT_PARAMS)))
 
+    def min_bars(self) -> int:
+        # The crossovers compare today's moving averages against yesterday's, so the long window
+        # needs one bar of run-up. This is the roster's hungriest requirement, and the one the
+        # old calendar-day window could never satisfy — leaving the death cross, this strategy's
+        # only exit, permanently unreachable.
+        return int({**DEFAULT_PARAMS, **self.config.params}["long_window"]) + 1
+
     def generate_signals(
         self, market_data: MarketData, positions: AccountState, account: AccountState
     ) -> list[ProposedSignal]:

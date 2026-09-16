@@ -124,6 +124,19 @@ class Strategy(ABC):
         return cls(StrategyConfig(params=params))
 
     @abstractmethod
+    def min_bars(self) -> int:
+        """How many daily bars this strategy needs before it can evaluate anything, derived from
+        its own parameters rather than hardcoded (#50).
+
+        The trading pass fetches enough history for the hungriest strategy in the roster. Declared
+        here rather than left implicit in each `generate_signals` guard because those guards fail
+        by silently skipping: a strategy given too little history produces nothing and looks
+        exactly like a strategy that had nothing to say. Value/Quality Dip-Buyer emitted nothing
+        for weeks that way, and Trend Follower opened positions whose only exit could never fire.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def generate_signals(
         self, market_data: MarketData, positions: AccountState, account: AccountState
     ) -> list[ProposedSignal]:

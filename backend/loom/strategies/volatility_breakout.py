@@ -59,6 +59,13 @@ class VolatilityBreakout(Strategy):
     def __init__(self, config: StrategyConfig | None = None):
         super().__init__(config or StrategyConfig(params=dict(DEFAULT_PARAMS)))
 
+    def min_bars(self) -> int:
+        p = {**DEFAULT_PARAMS, **self.config.params}
+        # A squeeze is judged against a full lookback of band widths, and each width itself needs
+        # a band window behind it — so the two add rather than overlap. Evaluating with less
+        # would "work" while comparing today against a truncated history.
+        return int(p["band_window"]) + int(p["squeeze_lookback"])
+
     def generate_signals(
         self, market_data: MarketData, positions: AccountState, account: AccountState
     ) -> list[ProposedSignal]:

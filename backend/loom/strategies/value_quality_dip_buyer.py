@@ -73,6 +73,9 @@ class ValueQualityDipBuyer(Strategy):
 
         return cls(StrategyConfig(params=params), fundamentals_provider=YFinanceSource())
 
+    def min_bars(self) -> int:
+        return int({**DEFAULT_PARAMS, **self.config.params}["price_avg_window"])
+
     def generate_signals(
         self, market_data: MarketData, positions: AccountState, account: AccountState
     ) -> list[ProposedSignal]:

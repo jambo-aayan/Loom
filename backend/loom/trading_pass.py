@@ -6,6 +6,8 @@ paths go through the exact same risk/sizing re-check and kill-switch gate (story
 
 from __future__ import annotations
 
+import logging
+import math
 from datetime import datetime, timedelta
 
 from sqlalchemy import select
@@ -37,6 +39,8 @@ from loom.strategy import (
     ProposedSignal,
     Strategy,
 )
+
+logger = logging.getLogger("loom.trading_pass")
 
 STRATEGY_REGISTRY: dict[str, type[Strategy]] = {}
 
@@ -230,6 +234,26 @@ def refresh_counterfactuals(session: Session, environment: Environment, market_d
     return updated
 
 
+# Trading days are roughly 5 in every 7 calendar days before public holidays take their cut —
+# 252 trading days to a 365-day year, a ratio of about 1.45. The conversion deliberately
+# over-fetches: being short is the failure this exists to prevent, and an extra few bars of
+# history costs nothing while a missing one silently disables a strategy (#50).
+_CALENDAR_DAYS_PER_BAR = 1.45
+_HOLIDAY_BUFFER_DAYS = 10
+
+
+def calendar_days_for_bars(bars: int) -> int:
+    """The calendar window to request in order to come back with at least `bars` trading days."""
+    return math.ceil(bars * _CALENDAR_DAYS_PER_BAR) + _HOLIDAY_BUFFER_DAYS
+
+
+def roster_min_bars() -> int:
+    """The history the hungriest registered strategy needs. One window is fetched per pass and
+    shared across strategies, so it is sized for the most demanding one rather than per-strategy.
+    """
+    return max((cls().min_bars() for cls in STRATEGY_REGISTRY.values()), default=1)
+
+
 def run_trading_pass(
     environment: Environment,
     session: Session,
@@ -237,7 +261,7 @@ def run_trading_pass(
     market_data_source: MarketDataSource,
     universe: list[str],
     auto_approve_all: bool = False,
-    lookback_days: int = 200,
+    lookback_days: int | None = None,
     as_of: str | None = None,
 ) -> list[Signal]:
     if environment == Environment.live and not live_trading_gate.is_enabled(session):
@@ -254,11 +278,29 @@ def run_trading_pass(
     cash = broker.get_cash()
 
     as_of_date = datetime.utcnow().date() if as_of is None else datetime.fromisoformat(as_of).date()
-    start = (as_of_date - timedelta(days=lookback_days)).isoformat()
+    required_bars = roster_min_bars()
+    # Sized from what the strategies actually need, not a fixed number: `lookback_days` used to
+    # default to 200 *calendar* days, which is about 145 trading bars — less than the 200-201 two
+    # strategies require, so they silently evaluated nothing (#50).
+    window_days = lookback_days if lookback_days is not None else calendar_days_for_bars(required_bars)
+    start = (as_of_date - timedelta(days=window_days)).isoformat()
     end = as_of_date.isoformat()
     market_data = MarketData(
         histories={i: market_data_source.get_history(i, start, end) for i in universe}
     )
+
+    # A strategy skips instruments it lacks history for by simply producing nothing, which is
+    # indistinguishable from having nothing to say. Say it out loud instead.
+    for instrument, history in market_data.histories.items():
+        if len(history.bars) < required_bars:
+            logger.warning(
+                "short history for %s: %d bars over %d days, roster needs %d — strategies "
+                "requiring more than this will evaluate nothing for it",
+                instrument,
+                len(history.bars),
+                window_days,
+                required_bars,
+            )
 
     created: list[Signal] = []
     strategy_rows = session.execute(select(StrategyModel)).scalars().all()
