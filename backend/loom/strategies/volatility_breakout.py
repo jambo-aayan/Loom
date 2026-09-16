@@ -23,6 +23,9 @@ DEFAULT_PARAMS = {
     "band_k": 2.0,
     "squeeze_lookback": 60,  # "multi-month" low in band width, in trading days
     "normalization_multiple": 1.6,  # exit once band width expands back to this multiple of the squeeze low
+    # None until a deep dive sets it (gap analysis D0). The mechanism exists now so that
+    # decision is a parameter change rather than a code change.
+    "trailing_stop_pct": None,
     "stop_loss_pct": 0.06,
     "time_exit_days": 45,
     "position_cash_fraction": 0.08,
@@ -130,7 +133,11 @@ class VolatilityBreakout(Strategy):
                     signal_type="entry",
                     action="buy",
                     confidence=confidence,
-                    exit_plan=ExitPlan(stop_loss_pct=p["stop_loss_pct"], time_exit_days=p["time_exit_days"]),
+                    exit_plan=ExitPlan(
+                        stop_loss_pct=p["stop_loss_pct"],
+                        trailing_stop_pct=p.get("trailing_stop_pct"),
+                        time_exit_days=p["time_exit_days"],
+                    ),
                     reference_price=latest_price,
                     quantity_hint=(account.cash * p["position_cash_fraction"]) / latest_price,
                     strength=(latest_price - prev_upper) / prev_upper,

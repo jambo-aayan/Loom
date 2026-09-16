@@ -74,12 +74,18 @@ class ExitPlan:
     profit_target_pct: float | None = None
     stop_loss_pct: float | None = None
     time_exit_days: int | None = None
+    # Measured from the highest price reached since entry rather than from the entry price, so it
+    # ratchets up behind a winner (#57). Coexists with `stop_loss_pct`: a tight fixed stop cuts a
+    # bad entry fast while a wider trailing stop lets a good one run — different numbers doing
+    # different jobs, either able to fire.
+    trailing_stop_pct: float | None = None
 
     def as_dict(self) -> dict:
         return {
             "profit_target_pct": self.profit_target_pct,
             "stop_loss_pct": self.stop_loss_pct,
             "time_exit_days": self.time_exit_days,
+            "trailing_stop_pct": self.trailing_stop_pct,
         }
 
 

@@ -37,6 +37,10 @@ class TradeRecord:
     exit_reason: str | None = None
     entry_strength: float | None = None  # the ProposedSignal.strength that opened this trade —
     # confidence calibration (loom.calibration) buckets historical trades by this.
+    # Highest price seen since entry, advanced as the simulated clock steps forward. The live
+    # path derives the same number from market data instead of carrying it (#57) — neither
+    # stores it, so a restart or a missed run cannot corrupt a trailing stop.
+    peak_price: float | None = None
 
     @property
     def is_open(self) -> bool:
@@ -131,14 +135,24 @@ def check_exit(
     ask it. This is what makes "live and backtest agree by construction" mechanical rather than
     a convention someone has to maintain.
 
-    `peak_price` is the highest price reached since entry. Accepted now and consumed by the
-    trailing stop (#57); until then it is unused.
+    `peak_price` is the highest price reached since entry, used by the trailing stop. Unknown
+    (None) is treated as "never rose above entry", which makes a trailing stop behave as a stop
+    from entry — conservative, never looser than intended.
+
+    Order is fixed so the reported reason is deterministic when more than one level is breached:
+    profit target, fixed stop, trailing stop, time exit.
     """
     change_pct = (current_price - entry_price) / entry_price
     if exit_plan.profit_target_pct is not None and change_pct >= exit_plan.profit_target_pct:
         return True, "profit target"
     if exit_plan.stop_loss_pct is not None and change_pct <= -exit_plan.stop_loss_pct:
         return True, "stop loss"
+    if exit_plan.trailing_stop_pct is not None:
+        # The high-water mark starts at entry, so a position that only ever fell trails from its
+        # entry price rather than from its best bad day.
+        peak = max(peak_price or entry_price, entry_price)
+        if peak > 0 and (current_price - peak) / peak <= -exit_plan.trailing_stop_pct:
+            return True, "trailing stop"
     if exit_plan.time_exit_days is not None:
         held = (current_date - date.fromisoformat(entry_date)).days
         if held >= exit_plan.time_exit_days:
@@ -154,6 +168,7 @@ def check_trade_exit(trade: TradeRecord, current_price: float, current_date: dat
         exit_plan=trade.exit_plan,
         current_price=current_price,
         current_date=current_date,
+        peak_price=trade.peak_price,
     )
 
 
@@ -205,6 +220,9 @@ def run_backtest(
             if bar is None:
                 continue
             trade = open_trades[instrument]
+            # Advance the high-water mark before deciding, using the bar's high rather than its
+            # close: a trailing stop that ignores intraday highs is not measuring the peak.
+            trade.peak_price = max(trade.peak_price or trade.entry_price, bar.high)
             should_exit, reason = check_trade_exit(trade, bar.close, d)
             if should_exit:
                 cash += trade.quantity * bar.close

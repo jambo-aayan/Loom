@@ -26,6 +26,9 @@ DEFAULT_PARAMS = {
     "short_window": 50,
     "long_window": 200,
     "breakout_window": 20,
+    # None until a deep dive sets it (gap analysis D0). The mechanism exists now so that
+    # decision is a parameter change rather than a code change.
+    "trailing_stop_pct": None,
     "stop_loss_pct": 0.08,
     "time_exit_days": 180,
     "position_cash_fraction": 0.1,
@@ -129,7 +132,11 @@ class TrendFollower(Strategy):
                     signal_type="entry",
                     action="buy",
                     confidence=confidence,
-                    exit_plan=ExitPlan(stop_loss_pct=p["stop_loss_pct"], time_exit_days=p["time_exit_days"]),
+                    exit_plan=ExitPlan(
+                        stop_loss_pct=p["stop_loss_pct"],
+                        trailing_stop_pct=p.get("trailing_stop_pct"),
+                        time_exit_days=p["time_exit_days"],
+                    ),
                     reference_price=latest_price,
                     quantity_hint=(account.cash * p["position_cash_fraction"]) / latest_price,
                     strength=gap_pct,

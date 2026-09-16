@@ -82,12 +82,30 @@ def _price_for(
     return None
 
 
+def _peak_since_entry(
+    instrument: str, entry_date: str | None, as_of: date, market_data_source: MarketDataSource
+) -> float | None:
+    """The highest price reached since the position opened, derived on each evaluation rather
+    than stored (#57).
+
+    Deriving beats a stored watermark on two counts: there is no mutable state to keep in sync,
+    and a missed job run or a restart cannot corrupt a live stop — the answer is recomputed from
+    the bars every time. Uses the bar high, not the close, because a trailing stop that ignores
+    intraday highs is not measuring the peak.
+    """
+    if entry_date is None:
+        return None
+    history = market_data_source.get_history(instrument, entry_date, as_of.isoformat())
+    return max((bar.high for bar in history.bars), default=None)
+
+
 def _decide(
     position: PositionSnapshot,
     exit_plan: ExitPlan,
     price: float,
     as_of: date,
     strategy_id: str | None,
+    peak_price: float | None = None,
 ) -> ExitDecision | None:
     should_exit, reason = check_exit(
         entry_price=position.average_price,
@@ -95,6 +113,7 @@ def _decide(
         exit_plan=exit_plan,
         current_price=price,
         current_date=as_of,
+        peak_price=peak_price,
     )
     if not should_exit or reason is None:
         return None
@@ -148,12 +167,21 @@ def run_exit_pass(
                 # common case and must be left alone.
                 continue
             plan = ExitPlan(**opening.exit_plan)
-            if plan.profit_target_pct is None and plan.stop_loss_pct is None and plan.time_exit_days is None:
+            if not any(
+                (plan.profit_target_pct, plan.stop_loss_pct, plan.time_exit_days, plan.trailing_stop_pct)
+            ):
                 continue
             price = _price_for(position.instrument, broker_prices, market_data_source, as_of_date)
             if price is None:
                 continue
-            decision = _decide(position, plan, price, as_of_date, book.strategy_id)
+            # Only fetched when a trailing stop is actually configured — no plan in the current
+            # roster sets one, so this costs nothing until one does.
+            peak = (
+                _peak_since_entry(position.instrument, position.entry_date, as_of_date, market_data_source)
+                if plan.trailing_stop_pct is not None
+                else None
+            )
+            decision = _decide(position, plan, price, as_of_date, book.strategy_id, peak_price=peak)
             if decision is not None:
                 decisions.append(decision)
 
