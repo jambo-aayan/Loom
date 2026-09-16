@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import JSON, DateTime, Enum, Float, ForeignKey, String, UniqueConstraint
+from sqlalchemy import JSON, DateTime, Enum, Float, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, object_session, relationship
 
 if TYPE_CHECKING:
@@ -317,6 +317,38 @@ class SignedActionLink(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime)
     used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+
+class ExitObservation(Base):
+    """A decision the exit enforcement layer made while in dry run (#53, ADR-0018).
+
+    Deliberately its own table rather than a flag on `Signal`. A dry run must be inert *by
+    construction*: a flagged Signal only stays inert if every query that counts signals is found
+    and updated — Approvals, notifications, calibration buckets, counterfactual attachment — and
+    missing one puts a phantom exit in the approvals queue or a strategy's win rate.
+
+    These rows are also the first feedback any exit parameter in the roster has ever had, since
+    nothing enforced a plan before. They carry hold duration and the evaluated plan so they can be
+    read as a parameter audit, not only as a correctness check — see
+    docs/strategy-and-universe-gap-analysis.md D0.
+    """
+
+    __tablename__ = "exit_observations"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    environment: Mapped[Environment] = mapped_column(Enum(Environment))
+    book_id: Mapped[str] = mapped_column(ForeignKey("books.id"))
+    strategy_id: Mapped[str | None] = mapped_column(ForeignKey("strategies.id"), nullable=True)
+    instrument: Mapped[str] = mapped_column(String)
+
+    exit_reason: Mapped[str] = mapped_column(String)
+    decision_price: Mapped[float] = mapped_column(Float)
+    quantity: Mapped[float] = mapped_column(Float)
+    entry_date: Mapped[str | None] = mapped_column(String, nullable=True)
+    hold_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    exit_plan: Mapped[dict] = mapped_column(JSON)
+
+    observed_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
 
 
 class DailyAccountSnapshot(Base):

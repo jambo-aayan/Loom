@@ -62,10 +62,9 @@ def get_or_create_book(session: Session, strategy_id: str | None, environment: E
     return book
 
 
-def book_positions(session: Session, book_id: str) -> tuple[PositionSnapshot, ...]:
-    """Derives current position lots for a book from its filled Orders — Loom's own audit trail
-    is the source of truth for book attribution (ADR-0010); the live broker remains the source
-    of truth for actual fills/positions overall (ADR-0003)."""
+def _open_lots(session: Session, book_id: str) -> dict[str, dict]:
+    """The lot walk behind both `book_positions` and `open_lot_opening_signal` — one traversal of
+    a book's filled orders, so the two cannot disagree about where the current lot began."""
     # Ordered by fill time, not left to row order: average price is commutative so it never
     # mattered, but add_count and entry_date both depend on which fill came first (#51).
     orders = (
@@ -84,7 +83,10 @@ def book_positions(session: Session, book_id: str) -> tuple[PositionSnapshot, ..
         instrument = signal.instrument if signal else None
         if instrument is None:
             continue
-        lot = lots.setdefault(instrument, {"quantity": 0.0, "average_price": 0.0, "add_count": 0, "entry_date": None})
+        lot = lots.setdefault(
+            instrument,
+            {"quantity": 0.0, "average_price": 0.0, "add_count": 0, "entry_date": None, "entry_signal_id": None},
+        )
         qty = lot["quantity"]
         if side == "buy":
             new_qty = qty + order.quantity
@@ -96,13 +98,21 @@ def book_positions(session: Session, book_id: str) -> tuple[PositionSnapshot, ..
             opening = qty <= 1e-9
             lot["add_count"] = 1 if opening else lot["add_count"] + 1
             if opening:
-                # Adds extend the open lot rather than restarting it, so the entry date is set
-                # once when the position is opened and again only after it has been fully closed.
+                # Adds extend the open lot rather than restarting it, so these are set once when
+                # the position is opened and again only after it has been fully closed.
                 lot["entry_date"] = order.filled_at.date().isoformat() if order.filled_at else None
+                lot["entry_signal_id"] = signal.id
             lot["quantity"] = new_qty
         else:
             lot["quantity"] = max(0.0, qty - order.quantity)
 
+    return {instrument: lot for instrument, lot in lots.items() if lot["quantity"] > 1e-9}
+
+
+def book_positions(session: Session, book_id: str) -> tuple[PositionSnapshot, ...]:
+    """Derives current position lots for a book from its filled Orders — Loom's own audit trail
+    is the source of truth for book attribution (ADR-0010); the live broker remains the source
+    of truth for actual fills/positions overall (ADR-0003)."""
     return tuple(
         PositionSnapshot(
             instrument=instrument,
@@ -112,9 +122,20 @@ def book_positions(session: Session, book_id: str) -> tuple[PositionSnapshot, ..
             add_count=lot["add_count"],
             entry_date=lot["entry_date"],
         )
-        for instrument, lot in lots.items()
-        if lot["quantity"] > 1e-9
+        for instrument, lot in _open_lots(session, book_id).items()
     )
+
+
+def open_lot_opening_signal(session: Session, book_id: str, instrument: str) -> Signal | None:
+    """The `Signal` that opened the currently-open lot, and therefore the `Exit plan` governing
+    it (ADR-0018): a position built from several entries is governed by the plan of the signal
+    that opened it, which later adds inherit rather than replace. Letting an add move the stop is
+    the doubling-down failure ADR-0009 singles out as the roster's most dangerous action.
+    """
+    lot = _open_lots(session, book_id).get(instrument)
+    if lot is None or lot["entry_signal_id"] is None:
+        return None
+    return session.get(Signal, lot["entry_signal_id"])
 
 
 def account_state_for_book(
