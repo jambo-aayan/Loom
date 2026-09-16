@@ -65,6 +65,10 @@ class SignalStatus(str, enum.Enum):
     rejected = "rejected"
     expired = "expired"
     executed = "executed"
+    # An exit whose Position closed by another route before it was actioned (#52). Distinct from
+    # `rejected` and `expired`, both of which imply a decision or a lapsed opportunity — a
+    # withdrawal is neither: the reason for the exit simply stopped existing.
+    withdrawn = "withdrawn"
 
 
 class OrderStatus(str, enum.Enum):

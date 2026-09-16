@@ -76,6 +76,10 @@ _DECIDED_STATUSES = (
     SignalStatus.rejected,
     SignalStatus.expired,
     SignalStatus.executed,
+    # A withdrawn exit (#52) is a decided outcome even though the user decided nothing — History
+    # is a record of every recommendation the system made, not only the ones acted on (story 66),
+    # and an exit that stopped being relevant is exactly the kind of thing worth being able to see.
+    SignalStatus.withdrawn,
 )
 
 

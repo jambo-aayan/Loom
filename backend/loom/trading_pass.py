@@ -155,9 +155,19 @@ def expire_stale_signals(
     max_age_hours: float = DEFAULT_SIGNAL_EXPIRY_HOURS,
     now: datetime | None = None,
 ) -> list[Signal]:
-    """A Signal left un-actioned past `max_age_hours` becomes `expired` (CONTEXT.md "Signal"
-    lifecycle) — attaches a counterfactual outcome the same way rejection does (story 66/67),
-    since History treats rejected and expired signals identically."""
+    """An entry `Signal` left un-actioned past `max_age_hours` becomes `expired` (CONTEXT.md
+    "Signal" lifecycle), and attaches a counterfactual outcome the same way rejection does
+    (story 66/67).
+
+    An **exit** is treated differently (#52, ADR-0018). An entry expires because the opportunity
+    genuinely passes — the price moved on. An exit's reason does not: the trend ended and the
+    position is still held. Expiring it would discard the strategy's judgment and silently
+    default to "hold", which is the one outcome nobody chose. So an exit survives as long as its
+    `Position` does, and is `withdrawn` once that position has closed by any other route —
+    otherwise the user is left able to approve the sale of something they no longer own.
+
+    Returns the expired signals only; withdrawals are not expiries and carry no counterfactual.
+    """
     now = now or datetime.utcnow()
     cutoff = now - timedelta(hours=max_age_hours)
     stale = list(
@@ -172,13 +182,28 @@ def expire_stale_signals(
         .all()
     )
 
+    expired: list[Signal] = []
+    open_instruments: dict[str, set[str]] = {}
     for signal in stale:
+        if _enum_value(signal.signal_type) == "exit":
+            held = open_instruments.get(signal.book_id)
+            if held is None:
+                held = {p.instrument for p in book_positions(session, signal.book_id)}
+                open_instruments[signal.book_id] = held
+            if signal.instrument in held:
+                continue  # position still open — the exit is still wanted
+            signal.status = SignalStatus.withdrawn
+            signal.decided_at = now
+            continue
+
         signal.status = SignalStatus.expired
         signal.decided_at = now
         _attach_counterfactual(signal, market_data_source)
-    if stale:
+        expired.append(signal)
+
+    if any(s.decided_at == now for s in stale):
         session.commit()
-    return stale
+    return expired
 
 
 def refresh_counterfactuals(session: Session, environment: Environment, market_data_source: MarketDataSource) -> int:

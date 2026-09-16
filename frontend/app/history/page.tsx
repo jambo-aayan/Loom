@@ -54,7 +54,14 @@ export default function HistoryPage() {
               </p>
               <span
                 className={`text-xs rounded-full px-2 py-1 ${
-                  s.status === "rejected" ? "bg-pink/20" : "bg-mint/20"
+                  s.status === "rejected"
+                    ? "bg-pink/20"
+                    : // Neither a win nor a loss: nobody decided these. An expiry lapsed and a
+                      // withdrawal's reason stopped existing, so they read neutral rather than
+                      // borrowing the positive colour of an executed trade.
+                      s.status === "expired" || s.status === "withdrawn"
+                      ? "bg-black/10 dark:bg-white/10"
+                      : "bg-mint/20"
                 }`}
               >
                 {s.status}
