@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 
-from loom.backtest.engine import ExitPlan, TradeRecord, check_exit
+from loom.backtest.engine import ExitPlan, TradeRecord, check_trade_exit
 from loom.market_data.base import MarketDataSource
 
 DEFAULT_MAX_HORIZON_DAYS = 90
@@ -48,7 +48,7 @@ def simulate_counterfactual(
             continue
         last_close = bar.close
         bar_date = date.fromisoformat(bar.date)
-        should_exit, reason = check_exit(trade, bar.close, bar_date)
+        should_exit, reason = check_trade_exit(trade, bar.close, bar_date)
         if should_exit:
             return {
                 "status": "hit-target" if reason == "profit target" else (

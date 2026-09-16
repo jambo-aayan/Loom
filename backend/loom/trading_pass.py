@@ -62,36 +62,54 @@ def book_positions(session: Session, book_id: str) -> tuple[PositionSnapshot, ..
     """Derives current position lots for a book from its filled Orders — Loom's own audit trail
     is the source of truth for book attribution (ADR-0010); the live broker remains the source
     of truth for actual fills/positions overall (ADR-0003)."""
+    # Ordered by fill time, not left to row order: average price is commutative so it never
+    # mattered, but add_count and entry_date both depend on which fill came first (#51).
     orders = (
         session.execute(
-            select(Order).where(Order.book_id == book_id, Order.status == OrderStatus.filled)
+            select(Order)
+            .where(Order.book_id == book_id, Order.status == OrderStatus.filled)
+            .order_by(Order.filled_at)
         )
         .scalars()
         .all()
     )
-    lots: dict[str, list[float]] = {}  # instrument -> [quantity, avg_price, add_count]
+    lots: dict[str, dict] = {}
     for order in orders:
         signal = session.get(Signal, order.signal_id)
         side = "sell" if signal and signal.action == "sell" else "buy"
         instrument = signal.instrument if signal else None
         if instrument is None:
             continue
-        qty, price, add_count = lots.get(instrument, [0.0, 0.0, 0.0])
+        lot = lots.setdefault(instrument, {"quantity": 0.0, "average_price": 0.0, "add_count": 0, "entry_date": None})
+        qty = lot["quantity"]
         if side == "buy":
             new_qty = qty + order.quantity
-            price = (price * qty + (order.fill_price or 0.0) * order.quantity) / new_qty if new_qty else 0.0
+            lot["average_price"] = (
+                (lot["average_price"] * qty + (order.fill_price or 0.0) * order.quantity) / new_qty if new_qty else 0.0
+            )
             # A fresh position (qty was 0) starts its first lot; an "add" onto an existing
             # position is a further fill (story 22's fill-count cap for Volatility Harvester).
-            add_count = 1.0 if qty <= 1e-9 else add_count + 1.0
-            qty = new_qty
+            opening = qty <= 1e-9
+            lot["add_count"] = 1 if opening else lot["add_count"] + 1
+            if opening:
+                # Adds extend the open lot rather than restarting it, so the entry date is set
+                # once when the position is opened and again only after it has been fully closed.
+                lot["entry_date"] = order.filled_at.date().isoformat() if order.filled_at else None
+            lot["quantity"] = new_qty
         else:
-            qty = max(0.0, qty - order.quantity)
-        lots[instrument] = [qty, price, add_count]
+            lot["quantity"] = max(0.0, qty - order.quantity)
 
     return tuple(
-        PositionSnapshot(instrument=i, quantity=q, average_price=p, book_id=book_id, add_count=int(c))
-        for i, (q, p, c) in lots.items()
-        if q > 1e-9
+        PositionSnapshot(
+            instrument=instrument,
+            quantity=lot["quantity"],
+            average_price=lot["average_price"],
+            book_id=book_id,
+            add_count=lot["add_count"],
+            entry_date=lot["entry_date"],
+        )
+        for instrument, lot in lots.items()
+        if lot["quantity"] > 1e-9
     )
 
 

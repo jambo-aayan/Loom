@@ -114,20 +114,47 @@ def _bar_on(history: InstrumentHistory, d: date) -> Bar | None:
     return None
 
 
-def check_exit(trade: TradeRecord, current_price: float, current_date: date) -> tuple[bool, str | None]:
-    """Shared exit-check logic: profit target, stop loss, or time-based exit. Reused by the
-    portfolio-wide backtest loop and by single-signal counterfactual simulation."""
-    change_pct = (current_price - trade.entry_price) / trade.entry_price
-    plan = trade.exit_plan
-    if plan.profit_target_pct is not None and change_pct >= plan.profit_target_pct:
+def check_exit(
+    *,
+    entry_price: float,
+    entry_date: str,
+    exit_plan: ExitPlan,
+    current_price: float,
+    current_date: date,
+    peak_price: float | None = None,
+) -> tuple[bool, str | None]:
+    """The single place exit semantics live (ADR-0018): profit target, stop loss, or time exit.
+
+    Deliberately takes plain values rather than a `TradeRecord`. The backtest loop, single-signal
+    counterfactual simulation and the live exit pass all ask the same question of different
+    shapes, and the live path holding a position should not have to fabricate a backtest type to
+    ask it. This is what makes "live and backtest agree by construction" mechanical rather than
+    a convention someone has to maintain.
+
+    `peak_price` is the highest price reached since entry. Accepted now and consumed by the
+    trailing stop (#57); until then it is unused.
+    """
+    change_pct = (current_price - entry_price) / entry_price
+    if exit_plan.profit_target_pct is not None and change_pct >= exit_plan.profit_target_pct:
         return True, "profit target"
-    if plan.stop_loss_pct is not None and change_pct <= -plan.stop_loss_pct:
+    if exit_plan.stop_loss_pct is not None and change_pct <= -exit_plan.stop_loss_pct:
         return True, "stop loss"
-    if plan.time_exit_days is not None:
-        held = (current_date - date.fromisoformat(trade.entry_date)).days
-        if held >= plan.time_exit_days:
+    if exit_plan.time_exit_days is not None:
+        held = (current_date - date.fromisoformat(entry_date)).days
+        if held >= exit_plan.time_exit_days:
             return True, "time exit"
     return False, None
+
+
+def check_trade_exit(trade: TradeRecord, current_price: float, current_date: date) -> tuple[bool, str | None]:
+    """`check_exit` for a backtest `TradeRecord` — the shape the backtest loop already holds."""
+    return check_exit(
+        entry_price=trade.entry_price,
+        entry_date=trade.entry_date,
+        exit_plan=trade.exit_plan,
+        current_price=current_price,
+        current_date=current_date,
+    )
 
 
 def run_backtest(
@@ -178,7 +205,7 @@ def run_backtest(
             if bar is None:
                 continue
             trade = open_trades[instrument]
-            should_exit, reason = check_exit(trade, bar.close, d)
+            should_exit, reason = check_trade_exit(trade, bar.close, d)
             if should_exit:
                 cash += trade.quantity * bar.close
                 trade.exit_date, trade.exit_price, trade.exit_reason = iso, bar.close, reason

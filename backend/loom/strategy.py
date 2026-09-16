@@ -53,6 +53,11 @@ class PositionSnapshot:
     # Volatility Harvester cap how many times it adds to a losing position (story 22's
     # "bounded by a max position size" reads as a fill-count cap here, not just a £ cap).
     add_count: int = 1
+    # ISO date the currently-open lot was opened, from its earliest filled buy. The exit layer
+    # measures time exits and the trailing stop's high-water mark from it (ADR-0018), and the
+    # dry-run audit reports hold duration from it. None only for a snapshot built without order
+    # history behind it.
+    entry_date: str | None = None
 
 
 @dataclass(frozen=True)
