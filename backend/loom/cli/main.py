@@ -23,7 +23,12 @@ from loom.insight.research import run_research_job
 from loom.insight.screening import run_screening_job
 from loom.models import BacktestRun, Environment
 from loom.models import Strategy as StrategyModel
-from loom.notifications.dispatch import notify_daily_loss_limit, notify_failed_auto_approvals, notify_new_signals
+from loom.notifications.dispatch import (
+    notify_daily_loss_limit,
+    notify_exit_executed,
+    notify_failed_auto_approvals,
+    notify_new_signals,
+)
 from loom.config_versions import duplicate_version_numbers
 from loom.exit_pass import run_exit_pass
 from loom.reconciliation import manual_positions
@@ -199,11 +204,20 @@ def exit_pass(environment: str):
     env = Environment(environment)
     decisions = run_exit_pass(env, session, get_broker(env), get_market_data_source())
 
+    # Outside the pass, matching how the trading pass notifies: delivery is a side effect the
+    # call site opts into, not something baked into the state machine.
+    executed_ids = [d.executed_signal_id for d in decisions if d.executed_signal_id]
+    if executed_ids:
+        notify_exit_executed(
+            session, executed_ids, env, get_push_sender(), get_email_sender(), get_settings().notify_email
+        )
+
     if not decisions:
         click.echo(f"No positions would have exited for {environment}.")
         return
 
-    click.echo(f"{len(decisions)} position(s) would have exited for {environment} (dry run — nothing sold):")
+    verb = "exited" if executed_ids else "would have exited (dry run — nothing sold)"
+    click.echo(f"{len(decisions)} position(s) {verb} for {environment}:")
     for d in decisions:
         held = f", held {d.hold_days}d" if d.hold_days is not None else ""
         click.echo(f"  {d.instrument}: {d.exit_reason} @ {d.decision_price:.2f}{held}")

@@ -16,10 +16,16 @@ from loom.notifications.email import (
     EmailSender,
     send_daily_loss_limit_email,
     send_kill_switch_email,
+    send_exit_executed_email,
     send_order_failed_email,
     send_pending_approval_email,
 )
-from loom.notifications.push import PushSender, PushTarget, build_signal_push_payload
+from loom.notifications.push import (
+    PushSender,
+    PushTarget,
+    build_exit_executed_push_payload,
+    build_signal_push_payload,
+)
 
 
 def notify_new_signals(
@@ -88,3 +94,52 @@ def notify_daily_loss_limit(
     email_sender: EmailSender, to_email: str, environment: Environment, loss_pct: float
 ) -> None:
     send_daily_loss_limit_email(email_sender, to_email, environment, loss_pct)
+
+
+def notify_exit_executed(
+    session: Session,
+    executed_signal_ids: list[str],
+    environment: Environment,
+    push_sender: PushSender,
+    email_sender: EmailSender,
+    to_email: str,
+) -> None:
+    """A position closing on its own should never be silent (#59).
+
+    Deliberately **not** routed through the `Strategy`'s `Notify threshold`. That threshold filters
+    *proposals* competing for attention; a completed exit is not a request for attention, there is
+    at most one per position rather than a stream, and a low-confidence position closing is exactly
+    the case worth knowing about.
+
+    Only fires for exits the layer executed itself. A human-approved exit was already an explicit
+    action and is not notified again.
+    """
+    subscriptions = (
+        session.execute(select(PushSubscription).where(PushSubscription.environment == environment))
+        .scalars()
+        .all()
+    )
+
+    for signal_id in executed_signal_ids:
+        signal = session.get(Signal, signal_id)
+        if signal is None:
+            continue
+        order = session.execute(
+            select(Order).where(Order.signal_id == signal.id, Order.status == OrderStatus.filled)
+        ).scalar_one_or_none()
+        if order is None:
+            # The order failed or never filled. That already has its own notification; reporting
+            # a sale that did not happen would be worse than saying nothing.
+            continue
+
+        send_exit_executed_email(email_sender, to_email, signal)
+        booked = signal.booked_trade
+        payload = build_exit_executed_push_payload(
+            signal.id,
+            signal.instrument,
+            order.quantity,
+            order.fill_price or signal.reference_price,
+            booked.realized_pnl if booked is not None else None,
+        )
+        for sub in subscriptions:
+            push_sender.send(PushTarget(sub.endpoint, sub.p256dh, sub.auth), payload)

@@ -127,6 +127,19 @@ def send_order_failed_email(sender: EmailSender, to: str, signal: Signal, reason
     sender.send(to, f"Loom: order failed for {signal.instrument}", body)
 
 
+def send_exit_executed_email(sender: EmailSender, to: str, signal: Signal) -> None:
+    booked = signal.booked_trade
+    detail = ""
+    if booked is not None:
+        detail = f" Booked {booked.realized_pnl:+,.2f} ({booked.realized_pnl_pct:+.2%})."
+    body = (
+        f"<p>Sold {signal.quantity:g} {signal.instrument} at {signal.reference_price:,.2f}.{detail}</p>"
+        "<p>This closed automatically on its exit plan — no approval was required, because the "
+        "level was calculated when the position was opened.</p>"
+    )
+    sender.send(to, f"Loom: sold {signal.instrument}", body)
+
+
 def send_daily_loss_limit_email(sender: EmailSender, to: str, environment: Environment, loss_pct: float) -> None:
     body = (
         f"<p>The daily loss limit for {environment.value} was breached (down {loss_pct:.1%} today) "

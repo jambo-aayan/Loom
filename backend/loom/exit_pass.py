@@ -12,7 +12,7 @@ is a dry run that records what it would have done and sells nothing.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime
 
 from sqlalchemy import select
@@ -65,6 +65,9 @@ class ExitDecision:
     hold_days: int | None
     exit_plan: ExitPlan
     opening_signal_id: str | None = None
+    # Set once the layer has executed this decision, so the caller can notify on it — the
+    # notification step stays outside the pass, matching how the trading pass works.
+    executed_signal_id: str | None = None
 
 
 def _price_for(
@@ -203,8 +206,7 @@ def run_exit_pass(
                 decisions.append(decision)
 
     if exit_enforcement.is_enforcing(session, environment):
-        _execute(session, environment, broker, decisions)
-        return decisions
+        return _execute(session, environment, broker, decisions)
 
     for decision in decisions:
         session.add(
@@ -233,7 +235,7 @@ def run_exit_pass(
 
 def _execute(
     session: Session, environment: Environment, broker: BrokerClient, decisions: list[ExitDecision]
-) -> None:
+) -> list[ExitDecision]:
     """Turn each decision into a `Signal` and submit it.
 
     Auto-approved rather than queued: an exit realising a level calculated at entry is arithmetic
@@ -248,6 +250,7 @@ def _execute(
     Inheriting also means no schema change — a nullable strategy link on `Order` would break
     booked-trade attribution, History and per-Book P&L, which all traverse order to signal.
     """
+    executed: list[ExitDecision] = []
     for decision in decisions:
         opening = session.get(Signal, decision.opening_signal_id) if decision.opening_signal_id else None
         if opening is None:
@@ -278,6 +281,8 @@ def _execute(
         # Through the same chokepoint as every other order: kill switch, live gate, and the full
         # risk/sizing re-check. The speed of an automatic exit never bypasses the safety layer.
         execute_signal(session, signal, broker)
+        executed.append(replace(decision, executed_signal_id=signal.id))
 
     session.commit()
-    logger.info("exit pass (%s, enforcing): executed %d exit(s)", environment.value, len(decisions))
+    logger.info("exit pass (%s, enforcing): executed %d exit(s)", environment.value, len(executed))
+    return executed

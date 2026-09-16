@@ -72,3 +72,16 @@ def build_signal_push_payload(signal_id: str, instrument: str, action: str, conf
             {"action": "reject", "title": "Reject"},
         ],
     }
+
+
+def build_exit_executed_push_payload(
+    signal_id: str, instrument: str, quantity: float, exit_price: float, realized_pnl: float | None
+) -> dict:
+    """A position closed on its own. Deliberately carries no action buttons: unlike a pending
+    approval there is nothing to decide, it already happened (#59)."""
+    booked = f" — booked {realized_pnl:+,.2f}" if realized_pnl is not None else ""
+    return {
+        "title": f"Sold {instrument}",
+        "body": f"{quantity:g} @ {exit_price:,.2f}{booked}",
+        "signal_id": signal_id,
+    }
