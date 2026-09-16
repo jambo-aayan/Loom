@@ -18,13 +18,13 @@ from datetime import date, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from loom import killswitch
+from loom import exit_enforcement, killswitch
 from loom.backtest.engine import check_exit
 from loom.execution.broker import BrokerClient
 from loom.market_data.base import MarketDataSource
-from loom.models import Book, Environment, ExitObservation, Signal
+from loom.models import Book, Environment, ExitObservation, Signal, SignalStatus, SignalType
 from loom.strategy import ExitPlan, PositionSnapshot
-from loom.trading_pass import book_positions, open_lot_opening_signal
+from loom.trading_pass import book_positions, execute_signal, open_lot_opening_signal
 
 logger = logging.getLogger("loom.exit_pass")
 
@@ -44,6 +44,12 @@ def is_within_exit_window(now: datetime) -> bool:
     return EXIT_WINDOW_OPEN_HOUR_UTC <= now.hour < EXIT_WINDOW_CLOSE_HOUR_UTC
 
 
+# An exit realising a pre-calculated level is arithmetic, not a forecast (ADR-0009) — there is
+# nothing for a human to judge, so it reads as high-confidence by construction, the same value the
+# strategies already use for their own plan-based exits.
+PLAN_EXIT_CONFIDENCE = 0.95
+
+
 @dataclass(frozen=True)
 class ExitDecision:
     """One position the layer decided should close. Returned from the pass and, in dry run,
@@ -58,6 +64,7 @@ class ExitDecision:
     entry_date: str | None
     hold_days: int | None
     exit_plan: ExitPlan
+    opening_signal_id: str | None = None
 
 
 def _price_for(
@@ -106,6 +113,7 @@ def _decide(
     as_of: date,
     strategy_id: str | None,
     peak_price: float | None = None,
+    opening_signal_id: str | None = None,
 ) -> ExitDecision | None:
     should_exit, reason = check_exit(
         entry_price=position.average_price,
@@ -128,6 +136,7 @@ def _decide(
         entry_date=position.entry_date,
         hold_days=held,
         exit_plan=exit_plan,
+        opening_signal_id=opening_signal_id,
     )
 
 
@@ -181,9 +190,21 @@ def run_exit_pass(
                 if plan.trailing_stop_pct is not None
                 else None
             )
-            decision = _decide(position, plan, price, as_of_date, book.strategy_id, peak_price=peak)
+            decision = _decide(
+                position,
+                plan,
+                price,
+                as_of_date,
+                book.strategy_id,
+                peak_price=peak,
+                opening_signal_id=opening.id,
+            )
             if decision is not None:
                 decisions.append(decision)
+
+    if exit_enforcement.is_enforcing(session, environment):
+        _execute(session, environment, broker, decisions)
+        return decisions
 
     for decision in decisions:
         session.add(
@@ -205,6 +226,58 @@ def run_exit_pass(
         session.commit()
 
     logger.info(
-        "exit pass (%s): %d position(s) would have exited", environment.value, len(decisions)
+        "exit pass (%s, dry run): %d position(s) would have exited", environment.value, len(decisions)
     )
     return decisions
+
+
+def _execute(
+    session: Session, environment: Environment, broker: BrokerClient, decisions: list[ExitDecision]
+) -> None:
+    """Turn each decision into a `Signal` and submit it.
+
+    Auto-approved rather than queued: an exit realising a level calculated at entry is arithmetic
+    (ADR-0009), so there is nothing for a human to judge, and a stop that waits for a click is not
+    a stop. The `Auto-trading gate` is deliberately not consulted — it governs entries and
+    discretionary exits, because a circuit breaker that stopped you closing a losing position
+    would be the wrong shape. The `Kill switch` still outranks everything and was already checked
+    before any of this ran.
+
+    Attribution is inherited from the `Signal` that opened the position: that signal's `Strategy`
+    owns the `Book`, and its plan is the one being realised, so the exit genuinely belongs to it.
+    Inheriting also means no schema change — a nullable strategy link on `Order` would break
+    booked-trade attribution, History and per-Book P&L, which all traverse order to signal.
+    """
+    for decision in decisions:
+        opening = session.get(Signal, decision.opening_signal_id) if decision.opening_signal_id else None
+        if opening is None:
+            logger.warning(
+                "no opening signal for %s in book %s — cannot attribute an exit, skipping",
+                decision.instrument,
+                decision.book_id,
+            )
+            continue
+
+        signal = Signal(
+            strategy_id=opening.strategy_id,
+            config_version_id=opening.config_version_id,
+            book_id=decision.book_id,
+            environment=environment,
+            instrument=decision.instrument,
+            signal_type=SignalType.exit,
+            action="sell",
+            confidence=PLAN_EXIT_CONFIDENCE,
+            exit_plan={},  # an exit closes a position; it does not open one needing a plan
+            quantity=decision.quantity,
+            reference_price=decision.decision_price,
+            status=SignalStatus.auto_approved,
+            requires_manual_approval=False,
+        )
+        session.add(signal)
+        session.flush()
+        # Through the same chokepoint as every other order: kill switch, live gate, and the full
+        # risk/sizing re-check. The speed of an automatic exit never bypasses the safety layer.
+        execute_signal(session, signal, broker)
+
+    session.commit()
+    logger.info("exit pass (%s, enforcing): executed %d exit(s)", environment.value, len(decisions))

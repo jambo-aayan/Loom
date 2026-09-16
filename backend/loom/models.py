@@ -319,6 +319,27 @@ class SignedActionLink(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
 
 
+class ExitEnforcementEvent(Base):
+    """Audit trail for whether an Environment's exit layer actually acts (#58, ADR-0018).
+
+    Scoped per `Environment`, and **off by default** — enforcement ships dry-run first because
+    every exit parameter in the roster was chosen while nothing enforced it, so none has ever had
+    feedback (gap analysis D0). Turning it on is a deliberate act after reviewing what the dry run
+    would have done, never a side effect of a deploy.
+
+    Same append-only shape as the kill switch and the two global gates: current state is the most
+    recent row, which is the one thing Cloud Run's stateless instances all share.
+    """
+
+    __tablename__ = "exit_enforcement_events"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    environment: Mapped[Environment] = mapped_column(Enum(Environment))
+    enforcing: Mapped[bool] = mapped_column()
+    actor: Mapped[str] = mapped_column(String, default="user")
+    at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+
 class ExitObservation(Base):
     """A decision the exit enforcement layer made while in dry run (#53, ADR-0018).
 

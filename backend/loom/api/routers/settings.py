@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from loom import auto_trading_gate, killswitch, live_trading_gate
+from loom import auto_trading_gate, exit_enforcement, killswitch, live_trading_gate
 from loom.api.deps import get_db, get_email_sender
-from loom.api.schemas import AutoTradingGateOut, KillSwitchOut, LiveTradingGateOut
+from loom.api.schemas import AutoTradingGateOut, ExitEnforcementOut, KillSwitchOut, LiveTradingGateOut
 from loom.models import Environment
 from loom.notifications.dispatch import notify_kill_switch_engaged
 from loom.notifications.email import EmailSender
@@ -53,6 +53,27 @@ def enable_live_trading_gate(session: Session = Depends(get_db)):
 def disable_live_trading_gate(session: Session = Depends(get_db)):
     live_trading_gate.disable(session)
     return LiveTradingGateOut(enabled=False)
+
+
+@router.get("/exit-enforcement", response_model=ExitEnforcementOut)
+def get_exit_enforcement(environment: str = "demo", session: Session = Depends(get_db)):
+    env = Environment(environment)
+    return ExitEnforcementOut(environment=environment, enforcing=exit_enforcement.is_enforcing(session, env))
+
+
+@router.post("/exit-enforcement/enable", response_model=ExitEnforcementOut)
+def enable_exit_enforcement(environment: str = "demo", session: Session = Depends(get_db)):
+    """Stop observing and start acting (#58). Deliberately explicit: enforcement ships dry-run
+    first because no exit parameter in the roster has ever had feedback, so turning it on could
+    close existing positions — not because enforcement is wrong but because a parameter is."""
+    exit_enforcement.enable(session, Environment(environment))
+    return ExitEnforcementOut(environment=environment, enforcing=True)
+
+
+@router.post("/exit-enforcement/disable", response_model=ExitEnforcementOut)
+def disable_exit_enforcement(environment: str = "demo", session: Session = Depends(get_db)):
+    exit_enforcement.disable(session, Environment(environment))
+    return ExitEnforcementOut(environment=environment, enforcing=False)
 
 
 @router.get("/auto-trading-gate", response_model=AutoTradingGateOut)

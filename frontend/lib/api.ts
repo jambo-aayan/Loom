@@ -210,6 +210,13 @@ export const api = {
     request<{ enabled: boolean }>(`/settings/live-trading-gate/disable`, { method: "POST" }),
 
   autoTradingGate: () => request<{ enabled: boolean }>(`/settings/auto-trading-gate`),
+  exitEnforcement: (environment: Environment = "demo") =>
+    request<{ environment: string; enforcing: boolean }>(`/settings/exit-enforcement?environment=${environment}`),
+  setExitEnforcement: (enforcing: boolean, environment: Environment = "demo") =>
+    request<{ environment: string; enforcing: boolean }>(
+      `/settings/exit-enforcement/${enforcing ? "enable" : "disable"}?environment=${environment}`,
+      { method: "POST" },
+    ),
   enableAutoTradingGate: () =>
     request<{ enabled: boolean }>(`/settings/auto-trading-gate/enable`, { method: "POST" }),
   disableAutoTradingGate: () =>

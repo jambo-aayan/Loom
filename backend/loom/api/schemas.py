@@ -162,3 +162,8 @@ class LiveTradingGateOut(BaseModel):
 
 class AutoTradingGateOut(BaseModel):
     enabled: bool
+
+
+class ExitEnforcementOut(BaseModel):
+    environment: str
+    enforcing: bool

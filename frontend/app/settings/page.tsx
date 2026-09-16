@@ -8,20 +8,23 @@ export default function SettingsPage() {
   const [killEngaged, setKillEngaged] = useState(false);
   const [liveTradingEnabled, setLiveTradingEnabled] = useState(false);
   const [autoTradingEnabled, setAutoTradingEnabled] = useState(false);
+  const [exitEnforcing, setExitEnforcing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
     try {
-      const [s, k, live, auto] = await Promise.all([
+      const [s, k, live, auto, exits] = await Promise.all([
         api.strategies(),
         api.killSwitch("demo"),
         api.liveTradingGate(),
         api.autoTradingGate(),
+        api.exitEnforcement("demo"),
       ]);
       setStrategies(s);
       setKillEngaged(k.engaged);
       setLiveTradingEnabled(live.enabled);
       setAutoTradingEnabled(auto.enabled);
+      setExitEnforcing(exits.enforcing);
       setError(null);
     } catch (e) {
       setError((e as Error).message);
@@ -39,6 +42,16 @@ export default function SettingsPage() {
       await api.engageKillSwitch("demo");
     }
     await load();
+  }
+
+  async function toggleExitEnforcement() {
+    try {
+      const next = await api.setExitEnforcement(!exitEnforcing);
+      setExitEnforcing(next.enforcing);
+      setError(null);
+    } catch (e) {
+      setError((e as Error).message);
+    }
   }
 
   async function toggleLiveTradingGate() {
@@ -106,6 +119,27 @@ export default function SettingsPage() {
             }`}
           >
             {autoTradingEnabled ? "Enabled — disable" : "Disabled — enable"}
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-black/10 dark:border-white/10 p-5 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p className="font-medium">Exit enforcement (demo)</p>
+            <p className="text-xs text-neutral-500">
+              While observing, the exit pass records what it <em>would</em> have closed every 30 minutes and sells
+              nothing. Those records are the first feedback these exit parameters have ever had — review them before
+              enforcing, because a stop that has never fired has never been tested.
+            </p>
+          </div>
+          <button
+            onClick={toggleExitEnforcement}
+            className={`shrink-0 self-start sm:self-auto px-4 py-1.5 rounded-full text-sm font-medium ${
+              exitEnforcing ? "bg-mint/30" : "bg-black/10 dark:bg-white/10"
+            }`}
+          >
+            {exitEnforcing ? "Enforcing — observe only" : "Observing — enforce"}
           </button>
         </div>
       </div>
