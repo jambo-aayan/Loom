@@ -156,9 +156,13 @@ SERVICE_URL=$(gcloud run services describe "$SERVICE" --region "$REGION" --proje
 echo "==> Service deployed at: ${SERVICE_URL}"
 echo "    Set this as LOOM_API_BASE_URL in your Vercel project's env vars (server-side, not NEXT_PUBLIC_)."
 
+# Every job here is pinned to --environment demo. There is deliberately no scheduled job for
+# live: the live trading gate governs whether live runs at all, and exit enforcement ships in
+# dry run first (ADR-0018).
 echo "==> Creating Cloud Run Jobs (same image, command overridden per job — ADR-0002)"
 declare -A JOB_COMMANDS=(
   [loom-trade-pass]="loom,trade-pass,--environment,demo"
+  [loom-exit-pass]="loom,exit-pass,--environment,demo"
   [loom-screen-insights]="loom,screen-insights,--environment,demo"
   [loom-research-insights]="loom,research-insights,--environment,demo"
   [loom-reconcile]="loom,reconcile,--environment,demo"
@@ -193,6 +197,16 @@ echo "==> Creating Cloud Scheduler jobs to trigger each Cloud Run Job"
 # not intraday. Adjust with: gcloud scheduler jobs update http <name> --schedule="..."
 declare -A SCHEDULES=(
   [loom-trade-pass]="0 8 * * 1-5"          # weekdays, 08:00 UTC (after markets open)
+  # Exits run far more often than entries. Entries are patient by design (ADR-0002); exits are
+  # not, and a 2% stop checked once a day is not a 2% stop. Every 30 minutes across a window
+  # spanning both sessions Loom trades — the LSE runs roughly 08:00-16:30 UTC and the US
+  # 14:30-21:00 — which is ~26 runs a day.
+  #
+  # THIS is where the interval lives, and changing this line is how you change it. It is
+  # deliberately not a Settings value: a row in the database cannot make a scheduled job fire
+  # more often, and Settings has no editable numeric control yet (ADR-0018). The job itself
+  # re-checks the window and is a cheap no-op outside it, so widening the cron is safe.
+  [loom-exit-pass]="*/30 8-20 * * 1-5"
   [loom-screen-insights]="15 8 * * 1-5"    # 15 min after trade-pass, so new signals exist
   [loom-research-insights]="30 8 * * 1-5"  # 15 min after screening
   [loom-reconcile]="0 18 * * 1-5"          # end of day

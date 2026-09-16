@@ -1,7 +1,7 @@
 # Deployment: Vercel + Neon + Cloud Run + Cloud Scheduler
 
 Frontend on Vercel, database on Neon, backend API on Cloud Run, scheduled jobs (trade pass,
-screening, research, reconciliation) as Cloud Run Jobs triggered by Cloud Scheduler — chosen over
+exit pass, screening, research, reconciliation) as Cloud Run Jobs triggered by Cloud Scheduler — chosen over
 Render for being the platform to keep using long-term, not just the fastest to stand up (see the
 hosting discussion this repo's history records). This doc is the manual/one-time steps; day-to-day
 deploys after this are just `git push` (backend: GitHub Actions; frontend: Vercel's own git
@@ -44,12 +44,14 @@ PROJECT_ID=<your-project-id> REGION=europe-west2 ./infra/gcp/setup.sh
 ```
 
 This creates: an Artifact Registry repo, two service accounts (`loom-runtime` for the app,
-`loom-scheduler` scoped to only trigger Cloud Run Jobs), seven Secret Manager secrets (empty —
-fill them next), the Cloud Run Service (the always-on API), four Cloud Run Jobs mirroring the
+`loom-scheduler` scoped to only trigger Cloud Run Jobs), eight Secret Manager secrets (empty —
+fill them next), the Cloud Run Service (the always-on API), five Cloud Run Jobs mirroring the
 existing `loom trade-pass` / `screen-insights` / `research-insights` / `reconcile` CLI commands
 (ADR-0002: this was already designed as "invoked either manually (CLI) or by a scheduler" — Cloud
 Run Jobs run the exact same image and command, nothing new to build), and Cloud Scheduler entries
-that trigger each Job on a starting cadence (weekdays; adjust with `gcloud scheduler jobs update`
+that trigger each Job on a starting cadence (weekdays; the exit pass runs every 30 minutes
+across the trading window rather than once a day, since exits are not patient the way entries
+are — see ADR-0018; adjust any of them with `gcloud scheduler jobs update`
 — v1's strategies are patient/low-frequency by design, not intraday, so don't default to
 anything aggressive).
 
@@ -105,7 +107,7 @@ the migration history as up to date without re-running any DDL — not `alembic 
 ## 5. GitHub Actions (backend CI/CD)
 
 `.github/workflows/deploy-backend.yml` runs the backend test suite, then builds/pushes the image,
-runs migrations, and redeploys the Cloud Run Service + all four Jobs — on every push to `main`
+runs migrations, and redeploys the Cloud Run Service + all five Jobs — on every push to `main`
 that touches `backend/**`. Add these repository secrets (Settings → Secrets and variables →
 Actions):
 
