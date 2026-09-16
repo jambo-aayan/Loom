@@ -7,7 +7,18 @@ from fastapi.responses import JSONResponse
 
 from loom import db, logging_config, strategies  # noqa: F401  (strategies import registers the strategy registry)
 from loom.api.auth import require_api_key
-from loom.api.routers import action_links, backtests, insights, performance, portfolio, push, settings, signals, trading
+from loom.api.routers import (
+    action_links,
+    backtests,
+    exit_observations,
+    insights,
+    performance,
+    portfolio,
+    push,
+    settings,
+    signals,
+    trading,
+)
 from loom.api.routers import strategies as strategies_router
 from loom.seed import seed_all_strategies
 from loom.settings import get_settings
@@ -83,3 +94,4 @@ app.include_router(performance.router)
 app.include_router(push.router)
 app.include_router(action_links.router)
 app.include_router(insights.router)
+app.include_router(exit_observations.router)

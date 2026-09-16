@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api, Strategy } from "@/lib/api";
 
@@ -129,8 +130,11 @@ export default function SettingsPage() {
             <p className="font-medium">Exit enforcement (demo)</p>
             <p className="text-xs text-neutral-500">
               While observing, the exit pass records what it <em>would</em> have closed every 30 minutes and sells
-              nothing. Those records are the first feedback these exit parameters have ever had — review them before
-              enforcing, because a stop that has never fired has never been tested.
+              nothing. Those records are the first feedback these exit parameters have ever had — review them on{" "}
+              <Link href="/strategies" className="underline">
+                Strategies
+              </Link>{" "}
+              before enforcing, because a stop that has never fired has never been tested.
             </p>
           </div>
           <button

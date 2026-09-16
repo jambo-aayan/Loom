@@ -145,6 +145,25 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export interface ExitDecisionRow {
+  id: string;
+  instrument: string;
+  exit_reason: string;
+  decision_price: number;
+  quantity: number;
+  entry_date: string | null;
+  hold_days: number | null;
+  fast_stop: boolean;
+  observed_at: string;
+}
+
+export interface ExitObservations {
+  environment: string;
+  total: number;
+  fast_stop_days: number;
+  by_strategy: { strategy: string; count: number; fast_stops: number; decisions: ExitDecisionRow[] }[];
+}
+
 export const api = {
   strategies: () => request<Strategy[]>("/strategies"),
   strategy: (id: string) => request<Strategy>(`/strategies/${id}`),
@@ -210,6 +229,8 @@ export const api = {
     request<{ enabled: boolean }>(`/settings/live-trading-gate/disable`, { method: "POST" }),
 
   autoTradingGate: () => request<{ enabled: boolean }>(`/settings/auto-trading-gate`),
+  exitObservations: (environment: Environment = "demo") =>
+    request<ExitObservations>(`/exit-observations?environment=${environment}`),
   exitEnforcement: (environment: Environment = "demo") =>
     request<{ environment: string; enforcing: boolean }>(`/settings/exit-enforcement?environment=${environment}`),
   setExitEnforcement: (enforcing: boolean, environment: Environment = "demo") =>
