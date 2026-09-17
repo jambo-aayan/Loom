@@ -5,7 +5,7 @@ Domain glossary for the Trading 212 trading bot. This file defines project vocab
 ## Terms
 
 **Signal**
-A proposed trade, before risk/sizing rules are applied — the one unit that enters the risk → approval → execution pipeline, whatever proposed it. Most `Signal`s come from the strategy/idea-generation layer; a `Signal` realising an `Exit plan` is proposed by Loom's exit enforcement instead, and is attributed to the `Strategy` whose `Book` holds the position, since it realises that `Strategy`'s own plan. Canonical term — do not use "suggestion" or "trade idea" interchangeably with this; those were used loosely in early discussion but `signal` is the one name for this concept going forward.
+A proposed trade, before risk/sizing rules are applied — the one unit that enters the risk → approval → execution pipeline, whatever proposed it. Most `Signal`s come from the strategy/idea-generation layer; a `Signal` realising an `Exit plan` is proposed by Loom's exit enforcement instead, and is attributed to the `Strategy` whose `Book` holds the position, since it realises that `Strategy`'s own plan. A `Signal` may also be proposed by the user directly — a trade of their own choosing rather than any `Strategy`'s — in which case it belongs to no `Strategy` at all. A user-originated `Signal` is still a `Signal`: it is sized, checked, executed, recorded and evaluated by the same machinery, because the point of `History` is to compare the user's judgment against the `Strategy`s' on equal terms, and a trade recorded differently cannot be compared. Canonical term — do not use "suggestion" or "trade idea" interchangeably with this; those were used loosely in early discussion but `signal` is the one name for this concept going forward.
 
 A `Signal` becomes a sized `Order` after the risk/sizing layer approves and scales it. An `Order` becomes a `Position` once filled.
 
@@ -17,6 +17,8 @@ Every `Signal` is retained permanently, regardless of outcome — approved, reje
 The conditions under which a `Position` will be closed, declared on the `Signal` that opened it and fixed at that moment: a profit target, a stop loss, a trailing stop, and/or a time limit. Every `Signal` carries one — a `Strategy` may not propose an entry without declaring how it intends to leave.
 
 Its levels are expressed as multiples of the instrument's own volatility, not as fixed percentages. A level is a claim about how much movement is *meaningful* for that instrument, and what counts as meaningful is a property of the instrument rather than a constant — the same 2% is a noisy afternoon in one name and a month in another. Levels are **gross**: they describe price movement, not a return net of `Round-trip cost`. A time limit is counted in trading days, like every other window a `Strategy` uses.
+
+The volatility the levels are multiples of is measured once, at entry, and fixed there with the rest of the plan — never re-measured while the `Position` runs. A re-measured level widens exactly when volatility spikes, which is when a stop is most needed, and leaves a plan that cannot be reconstructed afterwards from what was known at the time.
 
 An `Exit plan` is enforced by Loom, never left with the broker (Trading 212 offers market orders only). Enforcement belongs to Loom rather than to the `Strategy` that wrote the plan: any `Position` carrying a plan is honoured, in any `Book`. A `Position` built from several entries — a `Volatility Harvester` add, say — is governed by the plan of the `Signal` that opened it, which later adds inherit rather than replace; its levels are measured against the position's blended average cost, since the position is one economic unit.
 
@@ -34,6 +36,13 @@ For a `Signal` that was rejected or expired (never became a real `Order`), Loom 
 
 **Confidence**
 A 0–1 score a `Strategy` attaches to each `Signal` it proposes, expressing how strongly it believes in that trade (continuous, not a binary confident/not-confident flag — e.g. 0.2, 0.4, 0.6...). Drives `Approval mode` when a strategy is set to `auto-above-threshold`.
+
+**Expected value**
+What one `Signal` is worth in expectation, per unit of capital: its `Confidence` weighed against the gain and loss its own `Exit plan` describes, less the instrument's `Round-trip cost`. Derived by Loom from things the `Signal` already carries — never supplied by a `Strategy`, which would let one strategy claim its way to the front of the queue.
+
+Distinct from `Confidence`, and the distinction decides who gets funded. `Confidence` is a belief about whether a trade will work; `Expected value` is what acting on that belief is worth. A strategy that is right 70% of the time for a small gain has high `Confidence` and modest `Expected value`; one that is right 35% of the time for a large gain has the reverse. Ranking scarce capital by `Confidence` alone would fund the first and starve the second, however much better the second is.
+
+So the two are used in different places: `Approval mode` compares `Confidence` against a threshold, because a human deciding whether to approve is asking "will this work?"; the capital budget ranks by `Expected value`, because capital is asking "what is this worth?"
 
 **Approval mode**
 A per-`Strategy` setting controlling whether its `Signal`s need a human's explicit approval before becoming an `Order`. Three values: `manual` (always needs a human click — the default for every strategy until proven), `auto-above-threshold` (auto-approves only when `Confidence` clears a configured bar, else queued for manual approval), `auto` (always auto-approves). Distinct from sizing: approval decides *whether* a trade proceeds; the risk/sizing layer still decides *how much*.

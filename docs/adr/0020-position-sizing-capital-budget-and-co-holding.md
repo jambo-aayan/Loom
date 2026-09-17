@@ -59,6 +59,34 @@ Rejected: rate-limiting signals per strategy per day. It caps the wrong thing �
 having a good day is not a reason to ignore its signals — and it makes the limit
 strategy-local when the scarce resource is account-wide.
 
+> **Amended while designing the Low-Vol Compounder (ADR 0021).** This originally said signals are
+> admitted best-first by `Confidence`. That was wrong on two counts.
+>
+> The immediate problem is that confidence is not comparable across strategies. Every entry
+> confidence in the roster is an ad-hoc placeholder on its own scale — `0.5 + (threshold − vol)/
+> threshold` for the Compounder, a flat `0.75`/`0.65` for the Trend Follower, `0.6 + squeeze
+> ratio` for the Breakout — standing in for the per-bucket calibration ADR 0009 specifies and the
+> code's own comments acknowledge as pending. That was harmless while confidence only met a
+> per-strategy approval threshold; comparing the numbers to each other is new, and they do not
+> survive it. The Compounder scores a clean 1.0 on any tracker at half its volatility gate and
+> proposes ~8.6 entries a day, so it would out-rank a Trend Follower golden cross — 13 of those in
+> six years — every pass, and take the budget every pass.
+>
+> The deeper problem survives calibration. Confidence is a probability, and ranking scarce capital
+> by probability funds whatever is right most often rather than whatever is worth most. A
+> reversion design that is right 70% of the time for a small gain would beat a trend design right
+> 35% of the time for a large one, permanently, and the roster's best trades would never get
+> funded.
+>
+> The budget therefore ranks by `Expected value` (see `CONTEXT.md`) — confidence weighed against
+> the gain and loss the signal's own `Exit plan` describes, less the instrument's `Round-trip
+> cost`. Loom derives it from what the signal already carries, so no strategy supplies it and no
+> strategy can inflate it. `Confidence` keeps its existing job of meeting an `Approval mode`
+> threshold, unchanged.
+>
+> An earlier proposal to interleave strategies round-robin was rejected: it treats the symptom
+> and leaves capital allocated by arrival order within each strategy.
+
 ### No separate cash reserve
 
 The account-wide exposure cap (currently 90%) already implies one: 10% of account value stays
