@@ -89,7 +89,9 @@ Reversion designs are right often and small, which is what "small consistent gai
 looks like when it is true:
 
 - **Target**: the short-term average the entry measured against — the thesis realised, rather
-  than a percentage picked by hand.
+  than a percentage picked by hand. **Amended by ADR 0024:** a moving average is not something
+  an `ExitPlan` can express, so the distance to it is measured once at entry and stored as an
+  ordinary percentage target. The thesis is unchanged; the level stops moving.
 - **Time exit**: 10 trading days. If it has not reverted by then the dislocation was a move, not
   a dislocation, and holding on is being long by accident.
 - **Stop**: wide, around three times a typical day's move, frozen at entry.
