@@ -22,6 +22,12 @@ reasons, and the second one is the dangerous one.
 Treat the list below as "these funds are worth having", not "these tickers are correct". The
 ticker column is a starting point for the lookup, not an answer.
 
+This warning is the weak form of the protection: it only works on someone who reads it. The
+strong form is a promotion check that refuses a `Strategy config version` whose universe holds
+an instrument priced in anything but the account's currency, plus currency shown in the UI
+wherever instruments are listed or searched. Both are in `BACKLOG.md`, and both depend on the
+instrument sync from ADR 0022. Delete this section once the check exists.
+
 ## Candidates
 
 Roughly 20, weighted toward broad, liquid, boring exposure. Spread matters more than fund choice
