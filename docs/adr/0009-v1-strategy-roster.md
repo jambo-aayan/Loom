@@ -21,6 +21,12 @@ same conversation and inform the same roster.
 
 ### Roster
 
+> **Superseded by ADR 0023.** The five strategies below turned out to be three ideas, two
+> written twice: two dip-buyers, two breakout strategies, and one value strategy. ADR 0023
+> regroups them into three segments, each one implementation with several registered
+> configurations, renames them, and drops the moving-average crossover entry. The reasoning
+> for shipping more than one strategy, below, is unchanged and still holds.
+
 v1 ships five strategies, not one:
 
 1. **Low-Vol Compounder** *(originally specced)* — buy low-volatility, large-cap/index
