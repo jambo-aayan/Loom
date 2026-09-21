@@ -50,6 +50,10 @@ to tell which half worked is the thing the whole attribution layer exists to pro
 | Buy cheap | `value` | Quality Value | `investment` | months |
 | Buy events | — | *reserved, not built* | — | days |
 
+![Dip entries versus breakout entries on the same price series](../images/dips-vs-surges.png)
+
+*The two `trading` segments on one simulated price series: the dip entries fall on local weakness, the breakout entries on local strength, and the hold periods differ by an order of magnitude. Illustrative — generated data, not a backtest.*
+
 A segment is a grouping for humans, not a domain concept — nothing in the system needs to know
 one exists. What the system sees is what it saw before: `Strategy` rows, each with a `Book`.
 
