@@ -20,7 +20,12 @@ def client(tmp_path, monkeypatch):
 
 
 def test_health(client):
-    assert client.get("/health").json() == {"status": "ok"}
+    assert client.get("/health").json() == {"status": "ok", "build_sha": "unknown"}
+
+
+def test_health_reports_build_sha(client, monkeypatch):
+    monkeypatch.setenv("BUILD_SHA", "abc1234")
+    assert client.get("/health").json()["build_sha"] == "abc1234"
 
 
 def test_strategies_seeded_on_startup(client):

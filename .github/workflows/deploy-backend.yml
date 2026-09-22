@@ -53,7 +53,7 @@ jobs:
         working-directory: backend
         run: |
           IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/api:${{ github.sha }}"
-          docker build -t "$IMAGE" -t "${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/api:latest" .
+          docker build --build-arg BUILD_SHA="${{ github.sha }}" -t "$IMAGE" -t "${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/api:latest" .
           docker push "$IMAGE"
           docker push "${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/api:latest"
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"

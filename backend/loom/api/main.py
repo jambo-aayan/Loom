@@ -9,6 +9,7 @@ from loom import db, logging_config, strategies  # noqa: F401  (strategies impor
 from loom.api.routers import action_links, backtests, insights, performance, portfolio, push, settings, signals, trading
 from loom.api.routers import strategies as strategies_router
 from loom.seed import seed_all_strategies
+from loom.settings import get_settings
 
 logging_config.configure()
 logger = logging.getLogger("loom.api")
@@ -59,7 +60,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "build_sha": get_settings().build_sha}
 
 
 app.include_router(strategies_router.router)

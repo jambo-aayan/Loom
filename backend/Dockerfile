@@ -28,4 +28,8 @@ USER loom
 ENV PORT=8080
 EXPOSE 8080
 
+# The commit this image was built from, surfaced by /health (T0.1). Set by deploy-backend.yml.
+ARG BUILD_SHA=unknown
+ENV BUILD_SHA=${BUILD_SHA}
+
 CMD ["sh", "-c", "uvicorn loom.api.main:app --host 0.0.0.0 --port ${PORT}"]

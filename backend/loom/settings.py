@@ -8,6 +8,9 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite:///./loom_dev.db"
 
+    # Commit this image was built from, baked in by deploy-backend.yml (T0.1). "unknown" locally.
+    build_sha: str = "unknown"
+
     # T212's API uses HTTP Basic Auth: the API key as username, the API secret as password. T212's
     # Practice (demo) mode runs a genuinely separate API/account system from live — a key
     # generated while switched to Practice mode only ever authenticates against

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { BuildInfo } from "@/components/BuildInfo";
 
 const PRIMARY_NAV = [
   { href: "/", label: "Overview", icon: "◧" },
@@ -71,7 +72,9 @@ export function NavShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1 px-4 py-4 pb-20 md:pb-4 max-w-5xl w-full mx-auto">{children}</main>
+      <main className="flex-1 px-4 py-4 max-w-5xl w-full mx-auto">{children}</main>
+
+      <BuildInfo />
 
       <nav className="md:hidden fixed bottom-0 inset-x-0 grid grid-cols-5 border-t border-black/10 dark:border-white/10 bg-ground-light/95 dark:bg-ground-dark/95 backdrop-blur">
         {PRIMARY_NAV.map((item) => (

@@ -129,6 +129,11 @@ export interface ConfigVersion {
   promoted_at: string | null;
 }
 
+export interface Health {
+  status: string;
+  build_sha: string;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
@@ -143,6 +148,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  health: () => request<Health>("/health"),
   strategies: () => request<Strategy[]>("/strategies"),
   strategy: (id: string) => request<Strategy>(`/strategies/${id}`),
   updateStrategy: (id: string, body: Partial<Strategy>) =>
