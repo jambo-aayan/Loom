@@ -1,0 +1,6 @@
+
+============================================================================================
+SHORT-HORIZON REVERSION TEST — source=real  2018-01-01..2026-09-22  horizon=10d  lag=0
+============================================================================================
+
+NO INSTRUMENTS RESOLVED — nothing to measure. See stderr for per-ticker reasons.

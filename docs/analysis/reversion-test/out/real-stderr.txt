@@ -1,0 +1,90 @@
+Resolving universe:
+Cookie fetch from fc.yahoo.com failed (ConnectionError), continuing without it
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'VUSA.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+  VUSA.L   FETCH FAILED: ConnectionError: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'VUAG.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+  VUAG.L   FETCH FAILED: ConnectionError: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'CSP1.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+$CSP1.L: possibly delisted; no timezone found
+  CSP1.L   resolved to zero bars
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'VWRL.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+$VWRL.L: possibly delisted; no timezone found
+  VWRL.L   resolved to zero bars
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'VWRP.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+$VWRP.L: possibly delisted; no timezone found
+  VWRP.L   resolved to zero bars
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'VEVE.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+$VEVE.L: possibly delisted; no timezone found
+  VEVE.L   resolved to zero bars
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'SWLD.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+$SWLD.L: possibly delisted; no timezone found
+  SWLD.L   resolved to zero bars
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'HMWO.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+$HMWO.L: possibly delisted; no timezone found
+  HMWO.L   resolved to zero bars
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'ISF.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+$ISF.L: possibly delisted; no timezone found
+  ISF.L    resolved to zero bars
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'VUKE.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+$VUKE.L: possibly delisted; no timezone found
+  VUKE.L   resolved to zero bars
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'VMID.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+$VMID.L: possibly delisted; no timezone found
+  VMID.L   resolved to zero bars
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'MIDD.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+$MIDD.L: possibly delisted; no timezone found
+  MIDD.L   resolved to zero bars
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'VERX.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+$VERX.L: possibly delisted; no timezone found
+  VERX.L   resolved to zero bars
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'VJPN.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+$VJPN.L: possibly delisted; no timezone found
+  VJPN.L   resolved to zero bars
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'VFEM.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+$VFEM.L: possibly delisted; no timezone found
+  VFEM.L   resolved to zero bars
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'EMIM.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+$EMIM.L: possibly delisted; no timezone found
+  EMIM.L   resolved to zero bars
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'VHYL.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+$VHYL.L: possibly delisted; no timezone found
+  VHYL.L   resolved to zero bars
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'IUKD.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+$IUKD.L: possibly delisted; no timezone found
+  IUKD.L   resolved to zero bars
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'IGLT.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+$IGLT.L: possibly delisted; no timezone found
+  IGLT.L   resolved to zero bars
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'VGOV.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+$VGOV.L: possibly delisted; no timezone found
+  VGOV.L   resolved to zero bars
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'VAGP.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+$VAGP.L: possibly delisted; no timezone found
+  VAGP.L   resolved to zero bars
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'AGBP.L' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+$AGBP.L: possibly delisted; no timezone found
+  AGBP.L   resolved to zero bars
