@@ -2,7 +2,13 @@
 
 ## Status
 
-Accepted
+**Superseded by ADR 0025.** The reversion assumption this ADR rests on has been measured on
+real prices (2018-2026, including 2020 and 2022). Reversion exists in this universe, but the
+shallow-dip entry designed here cannot detect it: its edge over random entry is +0.05%
+[-0.04%, +0.15%], which is what a process with *no* reversion scores. Its frozen target averages
+0.61%, so it cannot clear ADR 0019's 0.80% floor even if every trade won. Steady Dip is retired
+on the terms this ADR set out below. The universe and exit-geometry reasoning is superseded with
+it; see ADR 0025 for what survives.
 
 ## Context
 

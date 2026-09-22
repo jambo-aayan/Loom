@@ -2,7 +2,14 @@
 
 ## Status
 
-Accepted. Amends ADR 0021.
+**Superseded by ADR 0025.** Two claims here are refuted on real prices. The overlap between the
+two dip strategies is **100%**, not 3.2% — all 533 real Deep Dip days are also Steady Dip days —
+so "the two dip strategies both stay, as configurations of one implementation" does not hold; the
+3.2% was measured before the trend filter was added to Deep Dip. The finding this ADR flagged as
+least trustworthy — that the deeper entry is the stronger signal — is upheld in direction
+(+0.33%, CI [+0.11%, +0.55%]) but not in magnitude; +0.95% against +0.33% was the simulator. The
+structural decisions (frozen targets, the trend filter on Deep Dip, the gated add, partial exits)
+stand. See ADR 0025.
 
 ## Context
 

@@ -1,14 +1,34 @@
 # Reversion test harness
 
-Throwaway analysis for ADR 0021 / ADR 0024, kept in the repo only because it has not been able to
-run against real prices yet and will need to when it can. Not production code, not on any
-strategy's import path. Findings: `docs/reversion-test-findings.md`.
+Throwaway analysis for ADR 0021 / ADR 0024, kept in the repo because the measurement it produced
+is what ADR 0025 rests on. Not production code, not on any strategy's import path.
+Findings: `docs/reversion-test-findings.md`.
 
-## Unblocking the data
+## It has run
 
-The session this was built in could not reach any price provider — `api.twelvedata.com` and
-`query1/2.finance.yahoo.com` are both refused at the egress proxy. Three ways round it, cheapest
-first.
+Prices are committed at `prices/daily_2018-01-01_2026-09-22.json` — all 22 candidates, Yahoo,
+2018-01-02..2026-09-18, ~2,200 bars each, every one a sterling (`GBp`/`GBP`) line. `run.py
+--source real` prefers that file over a live fetch, so the measurement reproduces in any session,
+including one with no network:
+
+```bash
+cd docs/analysis/reversion-test
+python run.py --source real --check-currency --lag 0
+python run.py --source real --check-currency --lag 1
+```
+
+`--check-currency` is the only part that needs egress (it re-reads each line's currency from
+Yahoo); without it the committed file's recorded currency is used and still flagged.
+
+Two supplementary scripts back up numbers in the findings that `run.py` does not print:
+`extra.py` (trade economics, per-year edge with 2020/2022 removed, the bootstrapped
+Deep − Steady difference) and `blocks.py` (the edge interval under three blocking schemes, since
+the 22 tickers are not 22 independent series). Their output is in `out/`.
+
+## Re-fetching the prices
+
+The session this harness was *built* in could not reach any price provider. If a future session
+hits the same wall, three ways round it, cheapest first.
 
 ### 1. Fetch the prices anywhere else and commit them (no settings change)
 
@@ -61,8 +81,10 @@ python run.py --source reverting               # positive control: reversion swi
 python run.py --source real --lag 1            # fill at the next close, not the signal close
 ```
 
-`out/` holds the runs from 2026-09-22, including `real.txt` / `real-stderr.txt` — the record of
-the egress block that stopped the real-data run.
+`out/` holds the runs from 2026-09-22: `real-lag0.txt` / `real-lag1.txt` are the real-data
+measurement, the three `null-*` / `reverting` files are the controls they are read against, and
+`real.txt` / `real-stderr.txt` are kept as the record of the egress block that stopped the first
+attempt.
 
 ## A gotcha in the primary provider
 
