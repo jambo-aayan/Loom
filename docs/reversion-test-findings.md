@@ -23,9 +23,16 @@ No ticker resolution, no currency check, no GBP-vs-USD line verification — the
 "verify which tickers actually resolve" step is untouched.
 
 This is the same wall ADR 0021 hit ("the network policy in the session where this was designed
-could not reach a price source"). It needs an environment with egress to a price provider, or a
-cached price dump committed from somewhere that has one. The harness reads a cache, so producing
-one anywhere unblocks everything here.
+could not reach a price source"). `docs/analysis/reversion-test/README.md` has the three ways
+round it; the cheapest needs no settings change at all — run the standalone `fetch_prices.py`
+anywhere with egress and commit the result, which `run.py --source real` then prefers over a live
+fetch.
+
+One thing to know before pointing this at the primary provider: `TwelveDataSource` does not pass
+`outputsize` to `/time_series`, and Twelve Data defaults it to 30 rows even when `start_date` and
+`end_date` are set. A 2018-2026 request comes back as about a month of bars, silently. That is a
+live issue for any backtest on the primary provider, not just for this analysis, and wants its
+own spec and ticket.
 
 ## What the harness does differently
 

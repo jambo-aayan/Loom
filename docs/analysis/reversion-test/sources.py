@@ -24,6 +24,7 @@ from loom.strategy import Bar, InstrumentHistory  # noqa: E402
 from universe import BUCKET, NULL_PROFILE, NULL_START_PRICE  # noqa: E402
 
 CACHE = Path(__file__).parent / "cache"
+PRICES = Path(__file__).parent / "prices"
 
 
 def real_source():
@@ -52,6 +53,23 @@ def load(source_name: str, tickers: list[str], start: str, end: str) -> dict[str
     are reported by the caller rather than silently dropped — an unresolvable ticker is a finding.
     """
     if source_name == "real":
+        # A committed price file wins over a live fetch: it is the whole point of fetch_prices.py
+        # that a machine with egress can produce one and any session can then run the
+        # measurement, this one included.
+        committed = sorted(PRICES.glob("daily_*.json")) if PRICES.exists() else []
+        if committed:
+            raw = json.loads(committed[-1].read_text())
+            meta = raw.get("meta", {})
+            print(f"  using committed prices: {committed[-1].name} "
+                  f"(provider={meta.get('provider')}, fetched={meta.get('fetched')})", file=sys.stderr)
+            out = {}
+            for t, rec in raw["instruments"].items():
+                cur = rec.get("currency")
+                if cur not in ("GBp", "GBP", None):
+                    print(f"  {t:8s} WARNING: currency is {cur}, not a GBP line", file=sys.stderr)
+                out[t] = InstrumentHistory(instrument=t, bars=tuple(Bar(**b) for b in rec["bars"]))
+            return out
+
         CACHE.mkdir(exist_ok=True)
         cache_file = CACHE / f"real_{start}_{end}.json"
         if cache_file.exists():
