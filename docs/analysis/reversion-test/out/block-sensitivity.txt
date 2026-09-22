@@ -1,0 +1,20 @@
+
+--- real lag=0 ---
+ steady  edge +0.05%
+          blocks=(instrument,year) nblocks=194  95% CI [-0.04%, +0.15%]  includes zero
+          blocks=(group,year)      nblocks= 99  95% CI [-0.10%, +0.20%]  includes zero
+          blocks=year only         nblocks=  9  95% CI [-0.28%, +0.37%]  includes zero
+ deep    edge +0.38%
+          blocks=(instrument,year) nblocks=194  95% CI [+0.16%, +0.59%]  EXCLUDES zero
+          blocks=(group,year)      nblocks= 99  95% CI [+0.05%, +0.68%]  EXCLUDES zero
+          blocks=year only         nblocks=  9  95% CI [+0.07%, +0.69%]  EXCLUDES zero
+
+--- real lag=1 ---
+ steady  edge +0.08%
+          blocks=(instrument,year) nblocks=194  95% CI [-0.02%, +0.19%]  includes zero
+          blocks=(group,year)      nblocks= 99  95% CI [-0.08%, +0.25%]  includes zero
+          blocks=year only         nblocks=  9  95% CI [-0.25%, +0.44%]  includes zero
+ deep    edge +0.15%
+          blocks=(instrument,year) nblocks=194  95% CI [-0.08%, +0.37%]  includes zero
+          blocks=(group,year)      nblocks= 99  95% CI [-0.18%, +0.46%]  includes zero
+          blocks=year only         nblocks=  9  95% CI [-0.15%, +0.46%]  includes zero

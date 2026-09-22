@@ -1,0 +1,2 @@
+Resolving universe:
+  using committed prices: daily_2018-01-01_2026-09-22.json (provider=yahoo, fetched=2026-09-22)

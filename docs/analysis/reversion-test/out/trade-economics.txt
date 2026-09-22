@@ -1,0 +1,75 @@
+
+===== real  lag=0 =====
+ steady  n= 8069  target mean +0.61% median +0.45%  -> CEILING   7.6x
+         mean gross -0.03% (-0.4x) CI [-0.10%, +0.03%] = [-1.3x, 0.4x]
+         typical WIN (median of winners) +0.39% = 4.8x | typical LOSS -1.50% | win rate 76.4%
+         edge ex-2020     -0.08%  (n=7005)
+         edge ex-2022     +0.14%  (n=7380)
+         edge ex-2020&22  +0.01%  (n=6316)
+ deep    n=  530  target mean +1.41% median +1.32%  -> CEILING  17.6x
+         mean gross +0.52% (+6.5x) CI [+0.34%, +0.70%] = [4.2x, 8.7x]
+         typical WIN (median of winners) +1.19% = 14.9x | typical LOSS -0.99% | win rate 74.7%
+         edge ex-2020     +0.34%  (n=501)
+         edge ex-2022     +0.46%  (n=438)
+         edge ex-2020&22  +0.41%  (n=409)
+ DEEP - STEADY  +0.33%   95% CI [+0.11%, +0.55%]   EXCLUDES zero
+
+===== real  lag=1 =====
+ steady  n= 6020  target mean +0.86% median +0.66%  -> CEILING  10.8x
+         mean gross +0.08% (+1.0x) CI [-0.00%, +0.16%] = [-0.0x, 2.0x]
+         typical WIN (median of winners) +0.56% = 7.0x | typical LOSS -1.52% | win rate 75.1%
+         edge ex-2020     -0.06%  (n=5286)
+         edge ex-2022     +0.19%  (n=5433)
+         edge ex-2020&22  +0.05%  (n=4699)
+ deep    n=  508  target mean +1.18% median +1.03%  -> CEILING  14.8x
+         mean gross +0.33% (+4.1x) CI [+0.15%, +0.50%] = [1.9x, 6.2x]
+         typical WIN (median of winners) +0.83% = 10.4x | typical LOSS -1.53% | win rate 75.8%
+         edge ex-2020     +0.09%  (n=482)
+         edge ex-2022     +0.22%  (n=422)
+         edge ex-2020&22  +0.14%  (n=396)
+ DEEP - STEADY  +0.07%   95% CI [-0.14%, +0.28%]   includes zero
+
+===== null-drift  lag=0 =====
+ steady  n= 7560  target mean +0.80% median +0.61%  -> CEILING  10.0x
+         mean gross -0.24% (-2.9x) CI [-0.32%, -0.15%] = [-4.0x, -1.9x]
+         typical WIN (median of winners) +0.50% = 6.3x | typical LOSS -2.01% | win rate 70.1%
+         edge ex-2020     +0.03%  (n=6658)
+         edge ex-2022     +0.01%  (n=6650)
+         edge ex-2020&22  +0.00%  (n=5748)
+ deep    n=  523  target mean +1.70% median +1.65%  -> CEILING  21.3x
+         mean gross -0.07% (-0.8x) CI [-0.34%, +0.18%] = [-4.2x, 2.2x]
+         typical WIN (median of winners) +1.41% = 17.6x | typical LOSS -1.66% | win rate 57.0%
+         edge ex-2020     -0.26%  (n=456)
+         edge ex-2022     -0.19%  (n=462)
+         edge ex-2020&22  -0.31%  (n=395)
+ DEEP - STEADY  -0.20%   95% CI [-0.47%, +0.09%]   includes zero
+
+===== null-zero  lag=0 =====
+ steady  n= 6856  target mean +0.80% median +0.60%  -> CEILING  10.0x
+         mean gross -0.34% (-4.2x) CI [-0.43%, -0.24%] = [-5.4x, -3.0x]
+         typical WIN (median of winners) +0.49% = 6.1x | typical LOSS -2.12% | win rate 68.1%
+         edge ex-2020     +0.03%  (n=6033)
+         edge ex-2022     +0.02%  (n=6026)
+         edge ex-2020&22  +0.01%  (n=5203)
+ deep    n=  467  target mean +1.66% median +1.59%  -> CEILING  20.8x
+         mean gross -0.19% (-2.3x) CI [-0.48%, +0.09%] = [-5.9x, 1.1x]
+         typical WIN (median of winners) +1.38% = 17.3x | typical LOSS -1.81% | win rate 54.4%
+         edge ex-2020     -0.19%  (n=409)
+         edge ex-2022     -0.10%  (n=415)
+         edge ex-2020&22  -0.20%  (n=357)
+ DEEP - STEADY  -0.13%   95% CI [-0.42%, +0.19%]   includes zero
+
+===== reverting  lag=0 =====
+ steady  n= 8628  target mean +0.56% median +0.42%  -> CEILING   7.0x
+         mean gross -0.06% (-0.8x) CI [-0.11%, -0.01%] = [-1.4x, -0.2x]
+         typical WIN (median of winners) +0.36% = 4.5x | typical LOSS -1.42% | win rate 75.3%
+         edge ex-2020     +0.06%  (n=7568)
+         edge ex-2022     +0.04%  (n=7676)
+         edge ex-2020&22  +0.06%  (n=6616)
+ deep    n=  540  target mean +1.26% median +1.21%  -> CEILING  15.7x
+         mean gross +0.17% (+2.1x) CI [-0.03%, +0.37%] = [-0.4x, 4.6x]
+         typical WIN (median of winners) +1.03% = 12.9x | typical LOSS -1.32% | win rate 67.0%
+         edge ex-2020     +0.25%  (n=463)
+         edge ex-2022     +0.18%  (n=483)
+         edge ex-2020&22  +0.19%  (n=406)
+ DEEP - STEADY  +0.19%   95% CI [-0.08%, +0.45%]   includes zero

@@ -1,0 +1,100 @@
+
+============================================================================================
+SHORT-HORIZON REVERSION TEST — source=real  2018-01-01..2026-09-22  horizon=10d  lag=1
+============================================================================================
+
+ticker    fund                                   bars  from       to          currency
+--------------------------------------------------------------------------------------------
+VUSA.L    Vanguard S&P 500 (dist)                2200  2018-01-02 2026-09-18  GBP     
+VUAG.L    Vanguard S&P 500 (acc)                 1856  2019-05-14 2026-09-18  GBP     
+CSP1.L    iShares Core S&P 500                   2200  2018-01-02 2026-09-18  GBp     
+VWRL.L    Vanguard FTSE All-World (dist)         2200  2018-01-02 2026-09-18  GBP     
+VWRP.L    Vanguard FTSE All-World (acc)          1805  2019-07-25 2026-09-18  GBP     
+VEVE.L    Vanguard FTSE Developed World          2200  2018-01-02 2026-09-18  GBP     
+SWLD.L    iShares Core MSCI World                1908  2019-02-26 2026-09-18  GBP     
+HMWO.L    HSBC MSCI World                        2201  2018-01-02 2026-09-18  GBp     
+ISF.L     iShares Core FTSE 100                  2201  2018-01-02 2026-09-18  GBp     
+VUKE.L    Vanguard FTSE 100                      2201  2018-01-02 2026-09-18  GBP     
+VMID.L    Vanguard FTSE 250                      2201  2018-01-02 2026-09-18  GBP     
+MIDD.L    iShares FTSE 250                       2201  2018-01-02 2026-09-18  GBp     
+VERX.L    Vanguard FTSE Dev Europe ex-UK         2200  2018-01-02 2026-09-18  GBP     
+VJPN.L    Vanguard FTSE Japan                    2200  2018-01-02 2026-09-18  GBP     
+VFEM.L    Vanguard FTSE Emerging Markets         2200  2018-01-02 2026-09-18  GBP     
+EMIM.L    iShares Core MSCI EM IMI               2200  2018-01-02 2026-09-18  GBp     
+VHYL.L    Vanguard FTSE All-World High Div       2200  2018-01-02 2026-09-18  GBP     
+IUKD.L    iShares UK Dividend                    2201  2018-01-02 2026-09-18  GBp     
+IGLT.L    iShares Core UK Gilts                  2201  2018-01-02 2026-09-18  GBP     
+VGOV.L    Vanguard UK Gilt                       2201  2018-01-02 2026-09-18  GBP     
+VAGP.L    Vanguard Global Agg Bond GBP-h         1833  2019-06-18 2026-09-18  GBP     
+AGBP.L    iShares Core Global Agg Bond GBP-h     2202  2018-01-02 2026-09-18  GBP     
+
+RANDOM-ENTRY BASELINE (every eligible day, same bars, same 10d horizon)
+  n = 45,692   mean +0.33%   median +0.40%   win rate 58.4%
+  Any entry rule has to beat this. A positive average move after a dip is not an edge;
+  it is what a rising asset does after every kind of day.
+
+Steady Dip (close < 10d avg, close > 50d avg)
+  entry days                 6,020  = 13.2% of all eligible days
+  frozen target distance     +0.66% (median)
+  --- raw 10-day move after entry ---
+  mean                       +0.41%      baseline +0.33%
+  median                     +0.45%
+  EDGE over random entry     +0.08%   95% CI [-0.01%, +0.18%]
+  --- the bounce itself ---
+  recovered to 10d avg       66.8% on a close, 82.3% intraday
+  median days to recover     3
+  --- as a trade (frozen target, 10d time exit, no stop) ---
+  mean gross                 +0.08%   = 1.0x the 0.08% round trip (ADR 0019 bar: 10x)
+  median gross               +0.34%
+  mean net of cost           +0.00%
+  win rate gross / net       75.1% / 69.2%      (baseline 58.4%)
+
+  year        n      mean    median  baseline      edge   recov     win       net
+  ------------------------------------------------------------------------------
+  2018      300    +0.34%    +0.38%    -0.05%    +0.39%   66.0%   74.3%    +0.04%
+  2019      609    +0.64%    +0.60%    +0.60%    +0.04%   76.7%   85.6%    +0.33%
+  2020      734    +1.45%    +1.37%    +0.33%    +1.12%   83.7%   90.3%    +0.50%
+  2021      766    +0.43%    +0.54%    +0.40%    +0.03%   62.1%   74.7%    +0.01%
+  2022      587    -1.29%    -1.32%    -0.23%    -1.06%   37.3%   44.6%    -1.07%
+  2023      720    -0.12%    -0.05%    +0.27%    -0.38%   59.3%   69.3%    -0.11%
+  2024      892    +0.42%    +0.35%    +0.50%    -0.07%   63.7%   71.0%    -0.05%
+  2025      849    +0.83%    +0.78%    +0.60%    +0.24%   79.2%   87.0%    +0.17%
+  2026      563    +0.63%    +0.70%    +0.48%    +0.14%   67.9%   72.3%    +0.05%
+
+Deep Dip (20d z <= -1.5, close > 50d avg)
+  entry days                 508  = 1.1% of all eligible days
+  frozen target distance     +1.03% (median)
+  --- raw 10-day move after entry ---
+  mean                       +0.48%      baseline +0.33%
+  median                     +0.66%
+  EDGE over random entry     +0.15%   95% CI [-0.07%, +0.38%]
+  --- the bounce itself ---
+  recovered to 10d avg       61.6% on a close, 81.7% intraday
+  median days to recover     3
+  --- as a trade (frozen target, 10d time exit, no stop) ---
+  mean gross                 +0.33%   = 4.1x the 0.08% round trip (ADR 0019 bar: 10x)
+  median gross               +0.55%
+  mean net of cost           +0.25%
+  win rate gross / net       75.8% / 74.2%      (baseline 58.4%)
+
+  year        n      mean    median  baseline      edge   recov     win       net
+  ------------------------------------------------------------------------------
+  2018       38    +0.63%    +1.03%    -0.05%    +0.68%   71.1%   78.9%    +0.34%
+  2019       43    +1.09%    +0.97%    +0.60%    +0.48%   58.1%   88.4%    +0.95%
+  2020       26    +1.57%    +1.18%    +0.33%    +1.24%   50.0%   73.1%    +0.61%
+  2021       86    +0.76%    +0.88%    +0.40%    +0.36%   55.8%   79.1%    +0.42%
+  2022       86    -0.21%    -0.66%    -0.23%    +0.02%   50.0%   60.5%    -0.19%
+  2023       39    -0.72%    -1.39%    +0.27%    -0.99%   79.5%   84.6%    +0.52%
+  2024      116    +0.54%    +0.73%    +0.50%    +0.05%   63.8%   74.1%    -0.06%
+  2025       48    +1.16%    +1.26%    +0.60%    +0.56%   83.3%   97.9%    +0.76%
+  2026       26    -0.20%    -0.51%    +0.48%    -0.68%   46.2%   46.2%    -0.48%
+
+OVERLAP (ADR 0024 measured 3.2% of Deep Dip days as shared)
+  steady days 8,128   deep days 533   both 533  = 100.0% of deep days
+  Deep Dip is 15.2x rarer than Steady Dip
+
+DEEP vs STEADY — ADR 0024's least-trusted finding
+  Steady mean 10d move  +0.41%   (6,020 entries)
+  Deep   mean 10d move  +0.48%   (508 entries)
+  difference               +0.07%
+  Deep recovery rate       61.6%   vs Steady 66.8%
