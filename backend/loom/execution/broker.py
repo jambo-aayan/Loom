@@ -27,25 +27,6 @@ class BrokerPosition:
     current_price: float | None = None
 
 
-@dataclass(frozen=True)
-class BrokerInstrument:
-    """One instrument as the broker describes it (ADR-0022).
-
-    This dataclass is the seam. Everything downstream — the `instruments` table, ticker
-    resolution, the cost model's currency and asset-type lookups — works against these fields,
-    so only `Trading212Client.get_instruments` knows T212's actual JSON. If their response shape
-    turns out to differ from what we expect, exactly one function changes."""
-
-    loom_ticker: str
-    t212_ticker: str
-    name: str
-    currency: str
-    asset_type: str  # "share" | "etf" | "other" — matches models.AssetType values
-    exchange: str | None = None
-    isin: str | None = None
-    min_trade_quantity: float | None = None
-
-
 class BrokerClient(ABC):
     @abstractmethod
     def submit_order(
@@ -61,12 +42,6 @@ class BrokerClient(ABC):
     def get_cash(self) -> float:
         raise NotImplementedError
 
-    @abstractmethod
-    def get_instruments(self) -> list[BrokerInstrument]:
-        """Every instrument the broker will trade. Expected to be a large response (thousands of
-        rows), which is why it is synced on a schedule rather than called per order."""
-        raise NotImplementedError
-
 
 class FakeBrokerClient(BrokerClient):
     """In-memory broker double: fills market orders instantly at a caller-supplied price,
@@ -75,20 +50,12 @@ class FakeBrokerClient(BrokerClient):
     real client: Trading212Client submits unconditionally (ADR-0014) — the actual retry-safety
     guard is the DB-level Order.idempotency_key unique constraint, upstream of either broker."""
 
-    def __init__(
-        self,
-        starting_cash: float = 100_000.0,
-        fill_price: float = 100.0,
-        instruments: list[BrokerInstrument] | None = None,
-    ):
+    def __init__(self, starting_cash: float = 100_000.0, fill_price: float = 100.0):
         self.cash = starting_cash
         self.fill_price = fill_price
         self.positions: dict[str, BrokerPosition] = {}
         self._submitted_keys: dict[str, OrderResult] = {}
         self.calls: list[dict] = []
-        # Defaults to the four instruments Loom's universe used before the metadata sync
-        # existed, so tests that don't care about instruments still get a coherent answer.
-        self.instruments = instruments if instruments is not None else list(_DEFAULT_FAKE_INSTRUMENTS)
 
     def submit_order(self, instrument: str, side: str, quantity: float, idempotency_key: str) -> OrderResult:
         self.calls.append(
@@ -131,15 +98,3 @@ class FakeBrokerClient(BrokerClient):
 
     def get_cash(self) -> float:
         return self.cash
-
-    def get_instruments(self) -> list[BrokerInstrument]:
-        self.calls.append({"method": "get_instruments"})
-        return list(self.instruments)
-
-
-_DEFAULT_FAKE_INSTRUMENTS = (
-    BrokerInstrument("VUSA.L", "VUSAl_EQ", "Vanguard S&P 500 UCITS ETF", "GBP", "etf", "LSE", None, 0.1),
-    BrokerInstrument("VWRL.L", "VWRLl_EQ", "Vanguard FTSE All-World UCITS ETF", "GBP", "etf", "LSE", None, 0.1),
-    BrokerInstrument("TSLA", "TSLA_US_EQ", "Tesla", "USD", "share", "NASDAQ", None, 0.1),
-    BrokerInstrument("NVDA", "NVDA_US_EQ", "NVIDIA", "USD", "share", "NASDAQ", None, 0.1),
-)

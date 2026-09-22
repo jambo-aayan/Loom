@@ -27,30 +27,19 @@ def get_db() -> Generator[Session, None, None]:
     yield from db.get_session()
 
 
-def get_broker(environment: Environment = Environment.demo, session: Session | None = None) -> BrokerClient:
+def get_broker(environment: Environment = Environment.demo) -> BrokerClient:
     """T212's Practice (demo) mode and live mode are separate API systems with separate
     credentials (settings.py) — a key generated in one mode does not authenticate against the
-    other's base URL, so both key+secret AND base_url vary together here, per environment.
-
-    `session`, when given, lets the client resolve tickers against the synced `instruments` table
-    (ADR-0022) rather than the four-entry static map. Optional rather than required so the many
-    call sites that don't have a session keep working — they simply get the static fallback,
-    which is what they had before the sync existed."""
+    other's base URL, so both key+secret AND base_url vary together here, per environment."""
     settings = get_settings()
     is_demo = environment == Environment.demo
     api_key = settings.t212_demo_api_key if is_demo else settings.t212_live_api_key
     api_secret = settings.t212_demo_api_secret if is_demo else settings.t212_live_api_secret
     if api_key and api_secret:
         from loom.execution.t212_client import Trading212Client
-        from loom.execution.t212_tickers import DbTickerMap
 
         base_url = settings.t212_demo_base_url if is_demo else settings.t212_live_base_url
-        return Trading212Client(
-            base_url=base_url,
-            api_key=api_key,
-            api_secret=api_secret,
-            tickers=DbTickerMap(session) if session is not None else None,
-        )
+        return Trading212Client(base_url=base_url, api_key=api_key, api_secret=api_secret)
 
     if environment not in _fake_brokers:
         _fake_brokers[environment] = FakeBrokerClient(starting_cash=10_000, fill_price=100.0)
