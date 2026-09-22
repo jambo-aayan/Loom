@@ -384,3 +384,47 @@ class DailyAccountSnapshot(Base):
     date: Mapped[str] = mapped_column(String)  # ISO date, "YYYY-MM-DD"
     starting_value: Mapped[float] = mapped_column(Float)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+
+class AssetType(str, enum.Enum):
+    """Whether an instrument is a share or a fund, because Trading 212 charges UK stamp duty on
+    the purchase of one and not the other (ADR-0019's cost model). `other` is deliberate: T212's
+    metadata covers more instrument kinds than Loom trades, and a kind we don't recognise must
+    round-trip rather than be guessed into a cost bracket."""
+
+    share = "share"
+    etf = "etf"
+    other = "other"
+
+
+class Instrument(Base):
+    """One tradeable instrument, synced from Trading 212's own instrument metadata (ADR-0022).
+
+    Replaces the hand-written four-entry `LOOM_TO_T212` map. It is the home of three things
+    nothing else in Loom had: the ticker translation between Loom's market-data namespace and
+    T212's own, the currency and asset type ADR-0019's `Round-trip cost` needs to know whether FX
+    and stamp duty apply, and the minimum quantity an order must clear.
+
+    Synced on a schedule rather than looked up per call: this metadata changes rarely, and a
+    multi-thousand-row response on the path of every order would be a very different cost
+    profile."""
+
+    __tablename__ = "instruments"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    owner_id: Mapped[str | None] = mapped_column(String, nullable=True)
+
+    # Loom's canonical identifier — the market-data-style ticker strategies, signals and every
+    # other table already use ("TSLA", "VUSA.L").
+    loom_ticker: Mapped[str] = mapped_column(String, unique=True, index=True)
+    # Trading 212's own ticker ("TSLA_US_EQ", "VUSAl_EQ") — a different namespace entirely.
+    t212_ticker: Mapped[str] = mapped_column(String, unique=True, index=True)
+
+    name: Mapped[str] = mapped_column(String)
+    currency: Mapped[str] = mapped_column(String)  # ISO 4217, e.g. "GBP", "USD"
+    exchange: Mapped[str | None] = mapped_column(String, nullable=True)
+    asset_type: Mapped[AssetType] = mapped_column(Enum(AssetType), default=AssetType.other)
+    isin: Mapped[str | None] = mapped_column(String, nullable=True)
+    min_trade_quantity: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    synced_at: Mapped[datetime] = mapped_column(DateTime, default=_now)

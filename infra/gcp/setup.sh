@@ -166,6 +166,7 @@ declare -A JOB_COMMANDS=(
   [loom-screen-insights]="loom,screen-insights,--environment,demo"
   [loom-research-insights]="loom,research-insights,--environment,demo"
   [loom-reconcile]="loom,reconcile,--environment,demo"
+  [loom-sync-instruments]="loom,sync-instruments,--environment,demo"
 )
 
 for JOB in "${!JOB_COMMANDS[@]}"; do
@@ -210,6 +211,9 @@ declare -A SCHEDULES=(
   [loom-screen-insights]="15 8 * * 1-5"    # 15 min after trade-pass, so new signals exist
   [loom-research-insights]="30 8 * * 1-5"  # 15 min after screening
   [loom-reconcile]="0 18 * * 1-5"          # end of day
+  # Instrument metadata changes rarely (a new listing, a renamed fund), so weekly is ample —
+  # and it is the one job with no reason to run during market hours (ADR-0022).
+  [loom-sync-instruments]="0 6 * * 1"      # Monday before the week's first trade pass
 )
 
 for JOB in "${!SCHEDULES[@]}"; do

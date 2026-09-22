@@ -31,6 +31,7 @@ from loom.notifications.dispatch import (
 )
 from loom.config_versions import duplicate_version_numbers
 from loom.exit_pass import run_exit_pass
+from loom.instruments import sync_instruments
 from loom.reconciliation import manual_positions
 from loom.seed import seed_all_strategies
 from loom.settings import get_settings
@@ -221,6 +222,34 @@ def exit_pass(environment: str):
     for d in decisions:
         held = f", held {d.hold_days}d" if d.hold_days is not None else ""
         click.echo(f"  {d.instrument}: {d.exit_reason} @ {d.decision_price:.2f}{held}")
+
+
+@cli.command("sync-instruments")
+@click.option("--environment", type=click.Choice(["demo", "live"]), default="demo", show_default=True)
+def sync_instruments_cmd(environment: str):
+    """Sync Trading 212's instrument metadata into the instruments table (ADR-0022).
+
+    This is what lets Loom trade anything beyond the four hardcoded tickers, and it is where an
+    instrument's currency and asset type come from — which ADR-0019's cost model needs to know
+    whether FX conversion and UK stamp duty apply. Metadata changes rarely, so this belongs on a
+    slow schedule rather than on the path of an order.
+    """
+    db.init_db()
+    session = next(db.get_session())
+    env = Environment(environment)
+
+    result = sync_instruments(session, get_broker(env, session=session))
+    click.echo(
+        f"{result.total} instrument(s) for {environment}: "
+        f"{result.added} added, {result.updated} updated, {result.unchanged} unchanged."
+    )
+    for conflict in result.conflicts:
+        click.echo(f"  conflict (skipped): {conflict}")
+    if result.conflicts:
+        click.echo(
+            f"{len(result.conflicts)} instrument(s) skipped — two T212 tickers derived the same "
+            "Loom ticker. Storing either would make positions ambiguous."
+        )
 
 
 @cli.command("check-config-versions")

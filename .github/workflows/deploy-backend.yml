@@ -76,7 +76,7 @@ jobs:
 
       - name: Update Cloud Run Jobs to the new image
         run: |
-          for JOB in loom-trade-pass loom-exit-pass loom-screen-insights loom-research-insights loom-reconcile; do
+          for JOB in loom-trade-pass loom-exit-pass loom-screen-insights loom-research-insights loom-reconcile loom-sync-instruments; do
             gcloud run jobs update "$JOB" \
               --image "$IMAGE" \
               --region "${{ env.REGION }}" \

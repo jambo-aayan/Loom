@@ -22,8 +22,8 @@ import time
 
 import httpx
 
-from loom.execution.broker import BrokerClient, BrokerPosition, OrderResult
-from loom.execution.t212_tickers import from_t212, to_t212
+from loom.execution.broker import BrokerClient, BrokerInstrument, BrokerPosition, OrderResult
+from loom.execution.t212_tickers import StaticTickerMap, TickerMap, derive_loom_ticker
 
 logger = logging.getLogger("loom.t212")
 
@@ -41,11 +41,21 @@ _TERMINAL_ORDER_STATUSES = frozenset({"FILLED", "REJECTED", "CANCELLED", "PARTIA
 
 
 class Trading212Client(BrokerClient):
-    def __init__(self, base_url: str, api_key: str, api_secret: str, client: httpx.Client | None = None):
+    def __init__(
+        self,
+        base_url: str,
+        api_key: str,
+        api_secret: str,
+        client: httpx.Client | None = None,
+        tickers: TickerMap | None = None,
+    ):
         self.base_url = base_url
         self._client = client or httpx.Client(
             base_url=base_url, auth=httpx.BasicAuth(api_key, api_secret), timeout=15.0
         )
+        # Injected rather than imported so the client needs no database session of its own
+        # (ADR-0022). Production passes a DbTickerMap; the default keeps the pre-sync behaviour.
+        self._tickers = tickers or StaticTickerMap()
 
     _MAX_ATTEMPTS = 4
 
@@ -108,7 +118,7 @@ class Trading212Client(BrokerClient):
             "POST",
             "/equity/orders/market",
             json={
-                "ticker": to_t212(instrument),
+                "ticker": self._tickers.to_t212(instrument),
                 "quantity": rounded_quantity if side in ("buy", "add") else -rounded_quantity,
             },
         )
@@ -165,7 +175,7 @@ class Trading212Client(BrokerClient):
         # quote, and visibly diverges from what the T212 app shows.
         return [
             BrokerPosition(
-                instrument=from_t212(row["instrument"]["ticker"]),
+                instrument=self._tickers.from_t212(row["instrument"]["ticker"]),
                 quantity=row["quantity"],
                 average_price=row["averagePricePaid"],
                 current_price=row.get("currentPrice"),
@@ -186,3 +196,71 @@ class Trading212Client(BrokerClient):
                 f"unexpected /equity/account/summary shape, expected cash.availableToTrade: {payload!r}"
             )
         return float(cash["availableToTrade"])
+
+    # T212's own `type` values, mapped to the share/ETF distinction ADR-0019's cost model needs:
+    # UK stamp duty applies to the purchase of a share and not to an ETF, and getting this wrong
+    # misprices a round trip by 0.5%. Anything unrecognised becomes "other" rather than being
+    # guessed into a bracket — a wrong cost is worse than a conservative unknown.
+    _ASSET_TYPES = {
+        "STOCK": "share",
+        "EQUITY": "share",
+        "ETF": "etf",
+        "FUND": "etf",
+    }
+
+    def get_instruments(self) -> list[BrokerInstrument]:
+        """Reads `GET /equity/metadata/instruments` — a multi-thousand-row response, which is why
+        ADR-0022 syncs it on a schedule into the `instruments` table rather than calling it per
+        order.
+
+        NOTE: the field names below are T212's documented shape but have NOT been exercised
+        against a live response in this codebase yet. Every field except the ticker is read
+        defensively so an unexpected shape degrades to a usable row rather than an exception, and
+        a row whose venue `derive_loom_ticker` cannot name is skipped rather than stored under a
+        guessed Loom ticker. If the shape turns out to differ, this method is the only place that
+        needs to change — everything downstream works against `BrokerInstrument`."""
+        response = self._request("GET", "/equity/metadata/instruments")
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, list):
+            raise Trading212ResponseError(
+                f"unexpected /equity/metadata/instruments shape, expected a list: {payload!r:.300}"
+            )
+
+        instruments: list[BrokerInstrument] = []
+        skipped = 0
+        for row in payload:
+            if not isinstance(row, dict):
+                skipped += 1
+                continue
+            t212_ticker = row.get("ticker")
+            if not t212_ticker:
+                skipped += 1
+                continue
+            loom_ticker = derive_loom_ticker(t212_ticker, row.get("shortName"))
+            if loom_ticker is None:
+                skipped += 1  # a venue we cannot name confidently; see derive_loom_ticker
+                continue
+            raw_type = str(row.get("type") or "").upper()
+            instruments.append(
+                BrokerInstrument(
+                    loom_ticker=loom_ticker,
+                    t212_ticker=t212_ticker,
+                    name=str(row.get("name") or row.get("shortName") or loom_ticker),
+                    currency=str(row.get("currencyCode") or ""),
+                    asset_type=self._ASSET_TYPES.get(raw_type, "other"),
+                    exchange=row.get("exchange") or None,
+                    isin=row.get("isin") or None,
+                    min_trade_quantity=_optional_float(row.get("minTradeQuantity")),
+                )
+            )
+
+        logger.info("t212 instruments: %d usable, %d skipped", len(instruments), skipped)
+        return instruments
+
+
+def _optional_float(value: object) -> float | None:
+    try:
+        return float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
