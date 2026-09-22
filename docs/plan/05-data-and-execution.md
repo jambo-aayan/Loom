@@ -4,16 +4,26 @@
 
 | Source | Used for | Notes |
 |---|---|---|
-| **Twelve Data** (free: 800 calls/day, 8/min) | Daily and hourly bars for entry signals; latest price for sizing new entries | Primary. Existing `TwelveDataSource`. **Verify the free tier covers LSE listings** (T0.x); if not, Yahoo becomes primary for LSE and Twelve Data is kept for US. |
-| **Yahoo (yfinance)** | Fundamentals (P/E, yield, debt/equity, sector); fallback bars | Unofficial and fragile: never the only source for a live decision without a staleness check. Existing composite source handles fallback. |
+| **Yahoo (yfinance)** | **Primary for LSE** daily and hourly bars and latest price for sizing LSE entries; fundamentals (P/E, yield, debt/equity, sector) | Unofficial and fragile. Batch requests, back off on HTTP 429, and apply the freshness rules below. Decision D25. |
+| **Twelve Data** (free: 800 calls/day, 8/min) | **Primary for US stocks only**: daily bars and latest price | Free tier does not cover LSE listings (they need the paid Grow plan; checked 22 Sep 2026, `09-phase0-findings.md`). Not paid for. Supersedes ADR 0008 for LSE. |
 | **Trading 212 API** | Orders, positions, cash, `currentPrice` of held instruments, instrument metadata, transaction history (fees, FX) | No general quote feed: prices only for held instruments. Pies endpoints are deprecated; don't use. API keys have per-category scopes; log a 403 with the missing scope. |
 
-Research used Yahoo 60-minute bars (9 per LSE session). If Twelve Data hourly bars are aligned differently, document the difference and check signals on a sample day against a Yahoo-based recomputation.
+Research used Yahoo 60-minute bars (9 per LSE session), the same source live LSE scans now use.
+
+### Symbol mapping
+
+Each Loom instrument has one record mapping it to every external symbol: T212 ticker, Yahoo ticker (e.g. `VUSA.L`), Twelve Data symbol (exchange-qualified, e.g. `NVDA:NASDAQ`), exchange, currency and quoting unit. **Every data request uses an exchange-qualified symbol from this record**; an unqualified symbol like `VUSA` can resolve to a Munich or XETRA listing in EUR. Currency and unit are checked on every response; a mismatch rejects the response. Built in T0.3.
+
+### Freshness rules
+
+- **No data or stale data → no entries** for that instrument in that scan. Record the skip with its reason. Exits are unaffected: they use T212 prices (D15).
+- The **hourly scan runs a few minutes after the hour** (e.g. :05) and checks that the latest bar is the bar that just closed before using it. An older latest bar counts as stale.
+- Record, per scan, the share of instruments with fresh data. Surfaced later in the health endpoint (T2.8).
 
 ## Units and currency
 
 - LSE prices arrive in **GBp (pence)** or **GBP** depending on source and instrument. Normalise to GBP at the data boundary, with the unit recorded alongside every stored price.
-- A GBX/GBP mismatch between entry price (Twelve Data) and exit price (T212) would make every stop fire instantly or never. Add a guard: if a live price differs from the lot's entry price by more than 50%, refuse to act and alert.
+- A GBX/GBP mismatch between entry price (Yahoo or Twelve Data) and exit price (T212) would make every stop fire instantly or never. Add a guard: if a live price differs from the lot's entry price by more than 50%, refuse to act and alert.
 - Instrument currency comes from **T212 instrument metadata**. LSE lines priced in USD/EUR are excluded from GBP-only universes. Never infer currency from the exchange.
 
 ## Universe builder (weekly job)
@@ -27,13 +37,13 @@ Research used Yahoo 60-minute bars (9 per LSE session). If Twelve Data hourly ba
 
 ## Scheduling
 
-All jobs run on Cloud Scheduler and **must be captured in the repo** (e.g. `infra/scheduler.yaml` or a script) so the schedule is reviewable.
+All jobs run on Cloud Scheduler and **must be captured in the repo** (e.g. `infra/scheduler.yaml` or a script) so the schedule is reviewable. Every job uses time zone **`Europe/London`**, and each job checks the exchange calendar itself and exits early on a non-trading day (D31).
 
 | Job | When (UK time) | Does |
 |---|---|---|
 | Daily pre-open scan | 07:45 LSE days | Deep Dip, Crash-buyer (ETFs), Squeeze: evaluate on previous close; refresh Deep Dip targets; create signals; orders at the 08:00 open |
 | US pre-open scan | 14:15 NYSE days | Crash-buyer US stocks; orders at the 14:30 open |
-| Hourly scan | Top of each hour 09:00–16:00 on LSE days, after the hourly bar closes | Compounder evaluation; submit approved/auto-approved signals |
+| Hourly scan | A few minutes after each hour (e.g. :05) 09:05–16:05 on LSE days, after verifying the just-closed hourly bar is present | Compounder evaluation; submit approved/auto-approved signals |
 | Exit enforcer | Every 5 minutes during LSE 08:00–16:30 and NYSE 14:30–21:00 sessions | Read T212 positions + `currentPrice`; sell lots whose target, stop or `exit_by` is hit |
 | Signal expiry | With each scan | Expire unapproved signals past their window |
 | Reconcile | Hourly | Existing reconciliation; detect drift between Loom ledger and T212 |
@@ -42,7 +52,7 @@ All jobs run on Cloud Scheduler and **must be captured in the repo** (e.g. `infr
 | Research insights | As today | Existing |
 
 - Use an exchange calendar library (e.g. `exchange_calendars`) for sessions, holidays and early closes.
-- Hourly scan estimate: ~40 instruments × 8–9 scans ≈ 350–380 Twelve Data calls/day, within the 800 limit alongside daily scans. If the universe grows, use a **two-step scan**: the daily job flags instruments already weak (e.g. below their 20-day average); only those are fetched hourly.
+- Hourly LSE scans fetch from Yahoo in batches (one request per batch of symbols where possible), with backoff on 429s. Twelve Data's 800 calls/day now only covers US instruments, so there is no data-budget reason for a two-step scan (T4.3 dropped).
 
 ### Dead-man's switch
 Every scheduled job pings a heartbeat service (e.g. healthchecks.io, free) on success. A missed ping alerts Aayan by email. Configure expected intervals per job.

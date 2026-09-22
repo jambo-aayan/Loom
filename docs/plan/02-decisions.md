@@ -60,9 +60,14 @@ Each decision: what, why, and what it replaces. Evidence references point to `08
 
 ## Data
 
-**D25. Twelve Data for entry market data, Yahoo for fundamentals and fallback, T212 for execution and held-position prices.** The existing composite source already does Twelve Data → Yahoo. Normalise GBX/GBP at the boundary.
+**D25. Data sources by market (revised 22 Sep 2026, see `09-phase0-findings.md`).** Yahoo is the primary source for **LSE** daily and hourly bars; Twelve Data is primary for **US stocks only**; Yahoo also supplies fundamentals; T212 supplies execution and held-position prices. Do not pay for Twelve Data Grow. Why: Twelve Data's free tier doesn't cover LSE listings (paid "Grow" plan needed), and the research used Yahoo bars, so live and research data match. Rules:
+- Every data request uses an exchange-qualified symbol from the symbol mapping layer (T0.3); currency and unit are checked on every response. Normalise GBp/GBP at the boundary.
+- No data or stale data for an instrument → no entries for it in that scan. Exits are unaffected (they use T212 prices, D15).
+- The hourly scan runs a few minutes after the hour and checks that the latest bar is the bar that just closed before using it.
+- Yahoo requests are batched, back off on HTTP 429, and the share of scans with fresh data is recorded (surfaced later in the health endpoint, T2.8).
+Supersedes ADR 0008 for LSE instruments.
 
-**D26. Hourly, not 30-minute, bars for the Compounder.** Why: matches the tested data; fits the free Twelve Data budget (~380 of 800 calls/day at 42 instruments).
+**D26. Hourly, not 30-minute, bars for the Compounder.** Why: matches the tested data (Yahoo 60-minute bars). Hourly LSE bars come from Yahoo (D25), so the Twelve Data call budget no longer limits the Compounder.
 
 ## Features
 
@@ -73,6 +78,14 @@ Each decision: what, why, and what it replaces. Evidence references point to `08
 **D29. Settings spec** as in `06-ui-spec.md`: nine sections, all changes logged, strategy edits create versions, bounded fields.
 
 **D30. UI reference is the v4 design.** The frontend is rebuilt on existing plumbing: shared components first, then Approvals and Overview.
+
+## Operations (added 22 Sep 2026, from `09-phase0-findings.md`)
+
+**D31. Scheduler as code, UK time, calendar-aware jobs.** The live Cloud Scheduler jobs are captured in the repo; every job uses time zone `Europe/London`; each job checks the exchange calendar itself and exits early on a non-trading day (cron can't know about bank holidays or early closes).
+
+**D32. No spread check on the approval card for now.** No reliable free bid/ask source exists for LSE ETFs. Real spreads are measured from T212 fills in fee and fill reconciliation (T2.3).
+
+**D33. Kill switch UI is not investigated further.** The header Pause/Halt in the UI rebuild (D22, `06-ui-spec.md`) replaces it.
 
 ## ADRs to write
 
@@ -85,4 +98,5 @@ Each decision: what, why, and what it replaces. Evidence references point to `08
 | Sizing: sleeves, slots, instrument groups | Replaces cash-fraction sizing |
 | Pause vs Halt semantics | Relates to kill switch in CONTEXT.md |
 | Universe rules: GBP equity ETFs, currency from metadata | Relates to 0008 |
+| Data sources by market: Yahoo primary for LSE, Twelve Data for US only; symbol mapping layer; freshness rules (D25) | Supersedes 0008 for LSE |
 | In-app backtest hidden; research external; demo as forward test | New |

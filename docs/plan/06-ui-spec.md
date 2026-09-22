@@ -28,7 +28,7 @@ Legend for backend status: ✅ exists · 🔧 exists, needs change · 🆕 new b
 | Element | Data | Backend |
 |---|---|---|
 | Nav: Overview, Approvals (badge), Strategies, Insights; History & Settings as header icons | pending count | ✅ signals |
-| Health dot → popover: last pass per job, T212/Twelve Data/Yahoo status, Twelve Data calls used today, dead-man's switch | job heartbeats, source status | 🆕 health endpoint |
+| Health dot → popover: last pass per job, T212/Yahoo/Twelve Data status, share of recent scans with fresh data, Twelve Data calls used today (US only), dead-man's switch, build SHA | job heartbeats, source status, freshness record | 🆕 health endpoint |
 | Demo / Live switch (view only) | environment | ✅ |
 | Pause button (header) + banner "New trades paused — exits still protect open positions" + Resume | pause state + reason | 🆕 pause/halt |
 | Halt banner (red) | halt state | 🔧 kill switch → halt |
@@ -50,7 +50,6 @@ Legend for backend status: ✅ exists · 🔧 exists, needs change · 🆕 new b
 | Ticker, BUY, Demo/Live badge, strategy + version, fired time, expiry countdown | signal, config version, expiry | 🔧 expiry per strategy |
 | £ amount, % of Loom budget, fractional quantity @ price | sizing preview | 🆕 |
 | Why it fired: each condition with value and threshold (e.g. `−1.8σ · needs ≤ −1.5σ`) | per-condition values stored on the signal | 🆕 structured reasons |
-| Spread check (only if live spread data exists) | quote with bid/ask | 🆕, optional |
 | Exit plan: target (with rule and "updates daily" for Deep Dip), stop (with "catastrophe stop"), exit-by | proposed exit levels | 🆕 |
 | Round-trip cost (% and £) | cost model | 🆕 |
 | Group exposure after trade (`World group 14% → 25% · cap 25%`) | groups + exposure | 🆕 |
@@ -91,7 +90,7 @@ Sections 1 and 2 open by default; others collapsed with a one-line status on the
 4. **Strategy shortcuts**: link to each strategy's Parameters tab.
 5. **Schedule**: entry scan cadence (read-only: hourly), exit check interval, market sessions, daily summary time.
 6. **Notifications**: email and push toggles, each with **Send test**; per-event toggles (approvals, pause/halt, failed orders, missed runs, daily summary).
-7. **Connections & health** (read-only): T212 (environment, API key scopes), Twelve Data (calls used/800), Yahoo, last pass per job, dead-man's switch.
+7. **Connections & health** (read-only): T212 (environment, API key scopes), Yahoo (primary for LSE: fresh-data share, recent 429s), Twelve Data (US only: calls used/800), last pass per job, dead-man's switch, frontend and backend build SHA.
 8. **AI insights**: auto research on/off; monthly paid-research cap with spend so far.
 9. **Instrument groups**: auto groups, threshold (0.95), manual overrides.
 

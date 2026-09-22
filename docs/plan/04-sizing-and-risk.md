@@ -48,7 +48,7 @@ Process signals within a pass in order of **most negative z-score first** (deepe
 ### Quantity
 `quantity = per_trade_£ / fresh_price`, rounded down to the instrument's allowed precision from T212 metadata. Fractional quantities where T212 allows; instruments that don't support fractional trading and whose share price exceeds the per-trade size are excluded from the universe.
 
-`fresh_price` is fetched at submission, not taken from signal generation (fixes the stale `reference_price` issue in BACKLOG): T212 `currentPrice` if the instrument is already held in the account, otherwise the latest Twelve Data quote (Yahoo fallback), normalised to GBP.
+`fresh_price` is fetched at submission, not taken from signal generation (fixes the stale `reference_price` issue in BACKLOG): T212 `currentPrice` if the instrument is already held in the account, otherwise the latest quote from the instrument's primary source (Yahoo for LSE, Twelve Data for US; D25), normalised to GBP. No fresh price → no entry.
 
 ### Instrument groups
 - Built automatically: instruments whose daily returns over the last 250 trading days correlate ≥ 0.95 are in the same group (connected components). Recomputed weekly; manual overrides stored separately and applied on top.

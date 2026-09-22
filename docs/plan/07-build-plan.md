@@ -8,18 +8,18 @@ Work top to bottom. Each task has acceptance criteria; a task is done when they 
 
 Nothing else starts until Phase 0's exit condition is met.
 
-**T0.1 Deployment matches repo.** Confirm the Cloud Run services serve the current `main` (frontend and backend). Fix the deploy pipeline if not. Capture Cloud Scheduler jobs as code in the repo.
-- AC: a visible build identifier (commit SHA) in the app footer and `/health` matches `main`; scheduler config committed.
+**T0.1 Deployment matches repo.** Confirm the Vercel frontend and the Cloud Run backend serve the current `main` (checked 22 Sep 2026: both at `76770a6`). Fix the deploy pipeline if not. Capture the live Cloud Scheduler jobs as code in the repo, every job on time zone `Europe/London`; each job checks the exchange calendar itself (D31).
+- AC: a visible build identifier (commit SHA) in the app footer matches `main`, and the SHA in `/health` matches the last commit on `main` that touched `backend/` (the backend only redeploys on backend changes); scheduler config committed.
 
-**T0.2 Checks before building on assumptions.** Verify and record results in `01-current-state.md`:
-- Twelve Data free tier returns LSE ETFs (daily and 1h) for 5 tickers from the universe.
-- T212 API supports fractional quantities for those tickers (metadata precision).
-- Whether any source gives live bid/ask for LSE ETFs (for the optional spread check).
-- The four **(verify)** defects in `01-current-state.md`.
+**T0.2 Checks before building on assumptions.** *Done 22 Sep 2026 except the T212 metadata check; results in `09-phase0-findings.md` and `01-current-state.md`, decisions in D25, D31–D33.* Verify and record results in `01-current-state.md`:
+- Twelve Data free tier returns LSE ETFs (daily and 1h) for 5 tickers from the universe. → **No** (paid Grow plan needed). Yahoo is primary for LSE (D25).
+- T212 API supports fractional quantities for those tickers (metadata precision). → **Open**: needs the T212 demo key in the Claude Code environment.
+- Whether any source gives live bid/ask for LSE ETFs (for the optional spread check). → **No reliable free source.** Spread check dropped from the approval card (D32); real spreads come from T2.3.
+- The four **(verify)** defects in `01-current-state.md`. → Two confirmed (backtest fills, calendar-day time exits), two not defects (outputsize, registry keying).
 - AC: written results; build plan adjusted if Twelve Data lacks LSE (Yahoo primary for LSE).
 
-**T0.3 Units and calendars.** GBP normalisation at the data boundary with stored units; exchange calendar for LSE/NYSE; trading-day and trading-hour arithmetic helpers.
-- AC: tests for GBp→GBP, holiday/weekend counting, early closes. Invariants 8, 9.
+**T0.3 Units, symbols and calendars.** Symbol mapping layer: one record per Loom instrument with T212 ticker, Yahoo ticker, exchange-qualified Twelve Data symbol, exchange, currency and quoting unit. Market data routed by exchange (Yahoo for LSE, Twelve Data for US; D25); every request uses an exchange-qualified symbol; currency and unit checked on every response (mismatch → reject). GBP normalisation at the data boundary with stored units; exchange calendar for LSE/NYSE; trading-day and trading-hour arithmetic helpers; bar-freshness check (latest bar must be the just-closed bar, else no entries).
+- AC: tests for GBp→GBP, currency/unit mismatch rejection, an unqualified symbol never reaching a source, holiday/weekend counting, early closes, stale-bar detection. Invariants 8, 9.
 
 **T0.4 Loom lots and exit levels.** Each fill creates a lot in the strategy's Book with `target_price`, `stop_price`, `exit_by`, fill price, quantity. Strategies can update `target_price` on their own lots only.
 - AC: migration; invariant 7 test.
@@ -53,7 +53,7 @@ Nothing else starts until Phase 0's exit condition is met.
 
 ## Phase 1: Strategies into demo
 
-**T1.1 Engine timeframes.** Strategies declare `daily` or `hourly`; scheduler runs pre-open daily scans (LSE, NYSE) and hourly LSE scans per `05-data-and-execution.md`. Previous-close rule for daily indicators.
+**T1.1 Engine timeframes.** Strategies declare `daily` or `hourly`; scheduler runs pre-open daily scans (LSE, NYSE) and hourly LSE scans (a few minutes after the hour, Yahoo batched with 429 backoff, freshness recorded per scan) per `05-data-and-execution.md`. No fresh data → no entries that scan. Previous-close rule for daily indicators.
 - AC: a daily strategy produces identical signals whether the hourly scan runs or not.
 
 **T1.2 Market regime.** UK equal-weight index and SPY regime computed daily; exposed via endpoint.
@@ -96,7 +96,7 @@ Nothing else starts until Phase 0's exit condition is met.
 
 **T2.7 Settings** (nine sections) and settings audit log.
 
-**T2.8 Health endpoint** for the header dot (job heartbeats, source status, Twelve Data usage).
+**T2.8 Health endpoint** for the header dot (job heartbeats, source status, share of scans with fresh data, Yahoo 429s, Twelve Data usage for US, build SHA).
 
 **Operational checkpoint (week 4):** no missed exits, no duplicate orders, no fence breaches, no silent missed runs.
 
@@ -116,5 +116,5 @@ Claude Code does not enable live trading. When Aayan enables it: first two weeks
 
 - **T4.1 Capital lending** (prototype first).
 - **T4.2 More slots** as the budget grows (Settings only).
-- **T4.3 Two-step scan** if the universe exceeds the Twelve Data budget.
+- ~~T4.3 Two-step scan~~: dropped. LSE bars come from Yahoo (D25), so the Twelve Data budget no longer limits the universe.
 - **Research backlog:** intraday entry timing for Deep Dip; VIX as a Crash-buyer input; economic-calendar filter; wider ETF universe; Squeeze sample size.

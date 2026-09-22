@@ -1,8 +1,8 @@
 # 01 · Current state
 
-Verified by reading the repo snapshot (`Loom-main`, Sep 2026). Items marked **(verify)** came from an earlier audit and were not re-checked line by line; confirm before relying on them.
+Verified by reading the repo snapshot (`Loom-main`, Sep 2026). The four items an earlier audit marked **(verify)** were checked on 22 Sep 2026 against `main` at `76770a6`; results are inline below, with evidence in `09-phase0-findings.md`.
 
-Note: the snapshot contains ADRs 0001–0016. An earlier briefing referred to ADRs up to 0023 (Book design, expected-value ranking, capital budget, per-strategy configs). If those exist on `main`, read them; where they conflict with `02-decisions.md`, this plan wins.
+Note: `main` contains ADRs 0001–0016 only. The ADRs up to 0023 mentioned in an earlier briefing do not exist.
 
 ## Architecture
 
@@ -11,8 +11,8 @@ Note: the snapshot contains ADRs 0001–0016. An earlier briefing referred to AD
 | Frontend | Next.js 14 + Tailwind, `frontend/app/*`. Pages: overview, approvals, strategies (+ detail), backtest, insights, performance, history, settings. ~1,400 lines total. Only two components (`NavShell`, `RegisterServiceWorker`). PWA manifest + service worker. |
 | Backend | FastAPI, `backend/loom/`. SQLAlchemy models. Routers: signals, strategies (+ config versions, draft backtest), trading (kill switch, gates, run), portfolio (books), performance (+ correlation), insights (screen, research, ask, digest, position commentary), push, action-links, settings. |
 | CLI | `loom backtest`, `loom trade-pass`, `loom screen-insights`, `loom research-insights`, `loom reconcile` (`backend/loom/cli/main.py`). |
-| Hosting | Google Cloud Run. |
-| Scheduling | **Not in the repo.** Set by hand in GCP Cloud Scheduler. Originally `trade-pass` at 08:00 daily; later changed to every 30 minutes. Capture the actual current jobs in the repo (see build plan T0.1). |
+| Hosting | Frontend on **Vercel** (git integration, deploys every push to `main`). Backend API on **Cloud Run** service `loom-api` (`europe-west2`), deployed by GitHub Actions `deploy-backend.yml` on pushes to `main` that touch `backend/**`. Scheduled jobs are Cloud Run Jobs on the same image. Database on Neon. On 22 Sep 2026 both frontend and backend served `main` at `76770a6`. |
+| Scheduling | **Partly in the repo:** `infra/gcp/setup.sh` creates four Cloud Scheduler jobs (trade-pass 08:00, screen-insights 08:15, research-insights 08:30, reconcile 18:00, weekdays) with no time zone set, so they run in UTC. Trade-pass was later changed by hand to every 30 minutes, so the live jobs likely differ from the script. Capture the live jobs as code (T0.1). |
 
 ## Built and working (in code)
 
@@ -25,7 +25,7 @@ Note: the snapshot contains ADRs 0001–0016. An earlier briefing referred to AD
 - **Books**: per-strategy attribution; FIFO trade reconstruction (`trade_reconstruction.py`).
 - **Evaluation** (`evaluation.py`): drawdown, win rate, profit factor, expectancy, trade-level Sharpe/Sortino vs benchmark.
 - **Correlation between Books** (`correlation.py`), weekly-bucketed.
-- **Market data**: `PrimaryWithBackfillSource` = Twelve Data primary, yfinance fallback (`market_data/composite.py`). This matches the target design.
+- **Market data**: `PrimaryWithBackfillSource` = Twelve Data primary, yfinance fallback (`market_data/composite.py`). **No longer the target** for LSE: D25 makes Yahoo primary for LSE and Twelve Data primary for US only.
 - **Fundamentals** from yfinance (`fundamentals.py`): P/E, dividend yield, debt/equity, sector. Missing values are treated as "skip", never defaulted. Correct.
 - **Config versions**: draft → backtest → diff → promote; every version kept (`config_versions.py`, strategy detail page, JSON textarea).
 - **Confidence calibration** module (`calibration.py`): buckets historical signals by strength. Needs trade history to be useful.
@@ -34,7 +34,8 @@ Note: the snapshot contains ADRs 0001–0016. An earlier briefing referred to AD
 
 ## Built but not visible or not configured
 
-- **Kill switch UI** exists in `frontend/app/settings/page.tsx`, **hardcoded to `"demo"`**, and Aayan does not see it in the deployed app. Suspected deploy gap (deployed build behind repo).
+- **Kill switch UI** exists in `frontend/app/settings/page.tsx` ("Kill switch (demo)"), **hardcoded to `"demo"`**. It **is** deployed and Settings is in the nav; there is no deploy gap. Why Aayan doesn't see it is unknown and won't be investigated: the header Pause/Halt in the UI rebuild replaces it (D33).
+- **No build identifier.** `/health` returns only `{"status": "ok"}`; the frontend shows no commit SHA (T0.1).
 - **Notifications** (`notifications/`): email via SMTP with signed one-tap approve/reject links; Web Push via VAPID. Both default to **Fake senders** because `settings.py` has empty `smtp_host`, empty VAPID keys and a placeholder `notify_email`. Almost certainly nothing has ever been delivered.
 
 ## Broken
@@ -46,10 +47,17 @@ Note: the snapshot contains ADRs 0001–0016. An earlier briefing referred to AD
 | **Stale reference price** | `Signal.reference_price` set at generation, used for quantity at approval time (BACKLOG) | £ spent drifts from intended when approval is later. |
 | **Daily loss uses cost basis** | `daily_loss.py` | Blind to unrealised losses. |
 | **Daily loss snapshot poisoning** | `daily_loss.py` (BACKLOG) | A bad first snapshot of the day (e.g. misconfigured credentials) causes repeated false kill-switch trips; only fix was deleting the DB row. |
-| **Backtest fills at signal close** | `backtest/engine.py` **(verify)** | Overstates edge. Backtest is being hidden (decision D4), so this is parked, not fixed. |
-| **Time exits in calendar days** | **(verify)** | Hold periods wrong around weekends/holidays. |
-| **Twelve Data outputsize bug** | `market_data/twelve_data.py` **(verify)** | History requests may return less data than asked. |
-| **Strategy registry keying** | **(verify)** | Earlier audit: registry should be keyed on the strategy class key; matters for per-strategy configs. |
+| **Backtest fills at signal close** | `backtest/engine.py:196,208,212` (**confirmed**) | Overstates edge. Backtest is being hidden (decision D4), so this is parked, not fixed. |
+| **Time exits in calendar days** | `backtest/engine.py:127`, `trade_reconstruction.py:37` (**confirmed**; backtest and hold-length only, since there is no live time-exit code) | Hold periods wrong around weekends/holidays. Fixed by trading-day helpers (T0.3) and the exit enforcer (T0.5). |
+
+**Checked and not defects (22 Sep 2026):**
+- *Twelve Data outputsize*: with `start_date`/`end_date` set, Twelve Data returns the whole range up to its 5,000-point cap (a 2020–2026 daily request returned 1,674 bars). Removed.
+- *Strategy registry keying*: the registry is already keyed on the strategy class key (`trading_pass.py:45`) and looked up by the DB row's key (`:223`). Nothing broken today; revisit with shadow configs (T1.9).
+
+**Data-source defects found 22 Sep 2026:**
+- **Twelve Data's free tier doesn't cover LSE listings** (paid Grow plan needed). Decision D25: Yahoo becomes primary for LSE.
+- **Unqualified symbols.** The default universe uses Yahoo-format tickers (`VUSA.L`, `cli/main.py:63,110`) and `TwelveDataSource` passes them unchanged, which Twelve Data doesn't recognise. LSE bars in production have most likely come from the yfinance fallback. There is no symbol mapping layer (T0.3).
+- **Mixed units at source.** Twelve Data reports CSP1 and ISF in GBp and VUSA, VUAG and VWRL in GBP; nothing normalises this (T0.3).
 
 ## Missing
 
@@ -59,6 +67,7 @@ Note: the snapshot contains ADRs 0001–0016. An earlier briefing referred to AD
 - **Exclusion of personal holdings.** The Manual book is tracked but strategies can still buy the same instruments, and T212 merges positions.
 - **Fee reconciliation.** Costs are modelled only; T212 transaction history (fees, FX) is never pulled.
 - **Hourly strategy support** (Compounder), market-regime filter, instrument groups, sleeves/slots.
+- **Exchange calendar and trading-day arithmetic.** No holidays, early closes or session hours anywhere (T0.3).
 - **Frontend design.** The deployed UI is a functional scaffold; it does not implement the prototype or the v4 design.
 
 ## Strategies in code today

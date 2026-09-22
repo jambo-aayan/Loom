@@ -23,6 +23,7 @@ This folder is the output of a long planning session (22–23 Sep 2026) covering
 | `06-ui-spec.md` | Before touching the frontend |
 | `07-build-plan.md` | To pick the next task. Ordered, with acceptance criteria |
 | `08-research-log.md` | When tempted to change a rule. Every test run and its result |
+| `09-phase0-findings.md` | Phase 0 T0.1/T0.2 findings (22 Sep 2026) behind decisions D25, D31–D33 |
 | `LAUNCH-TIMELINE.md` | For Aayan. Phases, gates, go-live and budget rules |
 
 ## What Loom is (one paragraph)
