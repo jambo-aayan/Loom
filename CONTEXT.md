@@ -68,6 +68,18 @@ LLM-generated advisory content — commentary on why a specific `Signal` fired, 
 
 The **research** tier is gated by `Strategy` style, not just cost: it only ever runs for `investment`-style candidates (their longer-hold, conviction-based nature is exactly the case that needs company-level context beyond what a rules-based signal already expresses) — `trading`-style strategies never get more than the screening tier, regardless of confidence or how the tier is invoked. Within that gate, research has two invocation modes: a **free** pass that runs automatically once an `investment`-style candidate reaches `pending_approval`/`auto_approved`, and a **paid**, meaningfully stronger pass that is exclusively user-triggered — it is never scheduled, never batched, and never fires as a side effect of anything else; invoking it always asks the user to confirm first, since it costs real money per call.
 
+**Instrument registry**
+The single record, per instrument Loom can trade, of its identifier in every external system: its Trading 212 ticker, its Yahoo symbol, its Twelve Data symbol and exchange, plus the currency it trades in and the unit it is quoted in (e.g. `GBp`, pence). Loom's own instrument identifier (`VUSA.L`, `TSLA`) is never sent to an outside service directly; each service gets its own symbol from here. An instrument that isn't in the registry can't be priced or traded.
+
+**Quote unit**
+The unit a listing's price is quoted in on its exchange: `GBP`, `GBp` (pence) or `USD`. Every price entering Loom is checked against it and converted to the major currency (pence ÷ 100), so everything past the market-data boundary is in pounds or dollars. A price source reporting a different unit is rejected, never guessed.
+
+**Fresh data**
+Market data for an instrument whose latest bar is the latest bar that should exist by now, judged on the instrument's exchange calendar (so weekends, bank holidays and early closes never make data look stale). Without fresh data an instrument gets no new entries in that scan; exits are unaffected, since they use Trading 212's own prices.
+
+**Trading day / trading hour**
+Units for hold periods, counted on the instrument's exchange calendar, never in calendar days. A trading hour is one hourly bar: bars start at the open and every hour after it, and the last is cut short by the close, so a full LSE session (08:00–16:30) has nine.
+
 ## Open / not yet resolved
 
 - Vocabulary for the strategy's target universe (e.g. "low-volatility large caps and indices") — not yet formalized as a term.

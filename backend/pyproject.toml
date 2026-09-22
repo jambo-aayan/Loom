@@ -16,6 +16,7 @@ dependencies = [
     "python-dateutil>=2.9",
     "anthropic>=0.25",
     "yfinance>=0.2.37",
+    "exchange_calendars>=4.5",
     "pywebpush>=2.0",
     "google-genai>=1.0",
 ]

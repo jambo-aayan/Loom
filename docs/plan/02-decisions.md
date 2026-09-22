@@ -98,5 +98,5 @@ Supersedes ADR 0008 for LSE instruments.
 | Sizing: sleeves, slots, instrument groups | Replaces cash-fraction sizing |
 | Pause vs Halt semantics | Relates to kill switch in CONTEXT.md |
 | Universe rules: GBP equity ETFs, currency from metadata | Relates to 0008 |
-| Data sources by market: Yahoo primary for LSE, Twelve Data for US only; symbol mapping layer; freshness rules (D25) | Supersedes 0008 for LSE |
+| Data sources by market: Yahoo primary for LSE, Twelve Data for US only; symbol mapping layer; freshness rules (D25) | Supersedes 0008 for LSE. **Written: ADR 0017** |
 | In-app backtest hidden; research external; demo as forward test | New |

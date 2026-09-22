@@ -19,6 +19,7 @@ Nothing else starts until Phase 0's exit condition is met.
 - AC: written results; build plan adjusted if Twelve Data lacks LSE (Yahoo primary for LSE).
 
 **T0.3 Units, symbols and calendars.** Symbol mapping layer: one record per Loom instrument with T212 ticker, Yahoo ticker, exchange-qualified Twelve Data symbol, exchange, currency and quoting unit. Market data routed by exchange (Yahoo for LSE, Twelve Data for US; D25); every request uses an exchange-qualified symbol; currency and unit checked on every response (mismatch → reject). GBP normalisation at the data boundary with stored units; exchange calendar for LSE/NYSE; trading-day and trading-hour arithmetic helpers; bar-freshness check (latest bar must be the just-closed bar, else no entries).
+- *Status 22 Sep 2026: built (`loom/instruments.py`, `loom/calendars.py`, `loom/market_data/{boundary,routed,freshness}.py`; ADR 0017). Not yet done: storing a unit column on DB prices (all stored prices are now in the instrument's major currency, which the registry records; add explicit columns with the lots in T0.4); hourly bar fetching (T1.1).*
 - AC: tests for GBp→GBP, currency/unit mismatch rejection, an unqualified symbol never reaching a source, holiday/weekend counting, early closes, stale-bar detection. Invariants 8, 9.
 
 **T0.4 Loom lots and exit levels.** Each fill creates a lot in the strategy's Book with `target_price`, `stop_price`, `exit_by`, fill price, quantity. Strategies can update `target_price` on their own lots only.

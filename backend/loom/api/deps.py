@@ -49,14 +49,14 @@ def get_broker(environment: Environment = Environment.demo) -> BrokerClient:
 def get_market_data_source() -> MarketDataSource:
     settings = get_settings()
     if settings.twelve_data_api_key:
-        from loom.market_data.composite import PrimaryWithBackfillSource
+        from loom.market_data.routed import RoutedMarketDataSource
         from loom.market_data.twelve_data import TwelveDataSource
         from loom.market_data.yfinance_source import YFinanceSource
 
-        # Twelve Data primary (ADR-0008); yfinance is the backfill supplement (story 49) —
-        # never the primary dependency on its own.
-        return PrimaryWithBackfillSource(
-            primary=TwelveDataSource(api_key=settings.twelve_data_api_key), backfill=YFinanceSource()
+        # Routed by exchange (decision D25): Yahoo for LSE, Twelve Data for US with Yahoo fallback.
+        # A configured Twelve Data key is still what switches the app from fixture to real data.
+        return RoutedMarketDataSource(
+            yahoo=YFinanceSource(), twelve_data=TwelveDataSource(api_key=settings.twelve_data_api_key)
         )
     return FixtureMarketDataSource()
 

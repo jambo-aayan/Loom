@@ -1,24 +1,33 @@
-"""yfinance: a supplementary source for backtesting/backfill and instrument fundamentals
-(P/E, dividend yield, debt ratios — for the Value/Quality Dip-Buyer, M2 scope) and sector/industry
-classification (story 49, ADR-0008/0009). Never depended on for production/live order decisions —
-Twelve Data (market_data/twelve_data.py) is the primary provider; this is the backfill/fundamentals
-supplement the CLI backtest's acceptance criteria calls out."""
+"""yfinance: the primary price source for LSE listings (decision D25: Twelve Data's free tier
+doesn't cover them, and the research used Yahoo bars), the fallback for US listings, and the source
+of instrument fundamentals (P/E, dividend yield, debt ratios, sector) for the Crash-buyer.
+
+Unofficial and fragile: callers must never act on its data without the freshness check
+(loom.market_data.freshness). The currency Yahoo reports for the listing is passed through
+untouched for loom.market_data.boundary.normalise to check.
+"""
 
 from __future__ import annotations
 
 import math
+from datetime import date, timedelta
 
 from loom.fundamentals import FundamentalsProvider
-from loom.market_data.base import MarketDataSource
-from loom.strategy import Bar, InstrumentHistory
+from loom.instruments import Instrument, get_instrument
+from loom.market_data.boundary import RawHistory
+from loom.strategy import Bar
 
 
-class YFinanceSource(MarketDataSource, FundamentalsProvider):
-    def get_history(self, instrument: str, start: str, end: str) -> InstrumentHistory:
+class YFinanceSource(FundamentalsProvider):
+    name = "yahoo"
+
+    def fetch_daily(self, instrument: Instrument, start: str, end: str) -> RawHistory:
         import yfinance as yf
 
-        ticker = yf.Ticker(instrument)
-        df = ticker.history(start=start, end=end, interval="1d")
+        ticker = yf.Ticker(instrument.yahoo_symbol)
+        # yfinance's `end` is exclusive; Loom's contract (MarketDataSource.get_history) is inclusive.
+        exclusive_end = (date.fromisoformat(end) + timedelta(days=1)).isoformat()
+        df = ticker.history(start=start, end=exclusive_end, interval="1d")
         bars = []
         for index, row in df.iterrows():
             open_, high, low, close = float(row["Open"]), float(row["High"]), float(row["Low"]), float(row["Close"])
@@ -36,14 +45,15 @@ class YFinanceSource(MarketDataSource, FundamentalsProvider):
                     volume=float(row.get("Volume", 0.0)),
                 )
             )
-        return InstrumentHistory(instrument=instrument, bars=tuple(bars))
+        metadata = getattr(ticker, "history_metadata", None) or {}
+        return RawHistory(symbol=instrument.yahoo_symbol, reported_unit=metadata.get("currency"), bars=tuple(bars))
 
     def get_fundamentals(self, instrument: str) -> dict:
         """P/E, dividend yield, debt/equity, and sector/industry — used by the Value/Quality
         Dip-Buyer strategy (M2, ADR-0009 #5), not needed by any M1 strategy."""
         import yfinance as yf
 
-        info = yf.Ticker(instrument).info
+        info = yf.Ticker(get_instrument(instrument).yahoo_symbol).info
         return {
             "pe_ratio": info.get("trailingPE"),
             "dividend_yield": info.get("dividendYield"),

@@ -4,6 +4,7 @@ end-to-end through run_trading_pass with an `auto`-mode Harvester."""
 
 from loom import strategies  # noqa: F401
 from loom.execution.broker import FakeBrokerClient
+from loom.market_data.base import MarketDataSource
 from loom.models import (
     ApprovalMode,
     ConfigVersionStatus,
@@ -18,7 +19,7 @@ from loom.strategy import Bar, InstrumentHistory
 from loom.trading_pass import book_positions, get_or_create_book, run_trading_pass
 
 
-class _ScriptedSource:
+class _ScriptedSource(MarketDataSource):
     """A deterministic source built so the Harvester reads a deep-but-inside-stop-loss pullback
     on a held position — the scenario that should trigger add-on-weakness (see
     tests/test_volatility_harvester.py for the same construction, explained there)."""

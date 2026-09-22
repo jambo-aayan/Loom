@@ -29,6 +29,9 @@ class InstrumentHistory:
 
     instrument: str
     bars: tuple[Bar, ...]
+    # Major currency the prices are in ("GBP", never pence), set by the market-data boundary
+    # (loom.market_data.boundary). None for synthetic/fixture data.
+    currency: str | None = None
 
     @property
     def latest(self) -> Bar | None:

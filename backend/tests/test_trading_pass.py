@@ -194,3 +194,58 @@ def test_auto_trading_gate_off_forces_manual_approval_regardless_of_strategy_mod
     assert broker.calls == []
     # the strategy's own configured approval_mode is untouched — a non-destructive circuit breaker
     assert strategy.approval_mode == ApprovalMode.auto
+
+
+class _StaleFixtureSource(FixtureMarketDataSource):
+    """Fixture bars, but instruments in `stale` fail the freshness check and those in `down` fail
+    to fetch at all."""
+
+    def __init__(self, stale=(), down=()):
+        super().__init__()
+        self.stale, self.down = set(stale), set(down)
+
+    def get_history(self, instrument, start, end):
+        if instrument in self.down:
+            raise RuntimeError("provider down")
+        return super().get_history(instrument, start, end)
+
+    def check_fresh(self, history):
+        from loom.market_data.freshness import StaleDataError
+
+        if history.instrument in self.stale:
+            raise StaleDataError(f"{history.instrument}: stale")
+
+
+def test_stale_market_data_blocks_entries(session):
+    # Decision D25: no fresh data -> no entries for that instrument in that scan.
+    _seed_compounder(session, approval_mode=ApprovalMode.manual)
+    broker = FakeBrokerClient(starting_cash=10_000, fill_price=100.0)
+    universe = FixtureMarketDataSource().universe()
+
+    stale = _StaleFixtureSource(stale=universe)
+    signals = run_trading_pass(Environment.demo, session, broker, stale, universe=universe, as_of="2023-08-01")
+    assert [s for s in signals if s.signal_type == "entry"] == []
+
+    # The same pass on fresh data does produce entries, so the block above is the freshness check.
+    fresh = run_trading_pass(
+        Environment.demo, session, broker, FixtureMarketDataSource(), universe=universe, as_of="2023-08-01"
+    )
+    assert [s for s in fresh if s.signal_type == "entry"]
+
+
+def test_one_instruments_data_failure_does_not_stop_the_pass(session):
+    _seed_compounder(session, approval_mode=ApprovalMode.manual)
+    broker = FakeBrokerClient(starting_cash=10_000, fill_price=100.0)
+    universe = FixtureMarketDataSource().universe()
+
+    first = run_trading_pass(
+        Environment.demo, session, broker, _StaleFixtureSource(down={"VUSA.L"}), universe=universe, as_of="2023-08-01"
+    )
+    assert first, "the other instruments still produce signals"
+    assert "VUSA.L" not in {s.instrument for s in first}
+
+    # Once its data is back, VUSA.L gets its signal (the others are already pending, so not repeated).
+    second = run_trading_pass(
+        Environment.demo, session, broker, FixtureMarketDataSource(), universe=universe, as_of="2023-08-01"
+    )
+    assert {s.instrument for s in second} == {"VUSA.L"}

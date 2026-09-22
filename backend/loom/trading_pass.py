@@ -6,6 +6,7 @@ paths go through the exact same risk/sizing re-check and kill-switch gate (story
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timedelta
 
 from sqlalchemy import select
@@ -14,6 +15,7 @@ from sqlalchemy.orm import Session
 from loom import auto_trading_gate, calibration, killswitch, live_trading_gate
 from loom.execution.broker import BrokerClient
 from loom.market_data.base import MarketDataSource
+from loom.market_data.boundary import UnitMismatchError
 from loom.models import (
     ApprovalMode,
     Book,
@@ -40,6 +42,38 @@ from loom.strategy import (
 
 STRATEGY_REGISTRY: dict[str, type[Strategy]] = {}
 
+logger = logging.getLogger("loom.trading_pass")
+
+
+def _fetch_market_data(
+    source: MarketDataSource, universe: list[str], start: str, end: str
+) -> tuple[MarketData, set[str]]:
+    """Fetch every instrument's history, returning the market data and the set of instruments that
+    may take new entries this pass (decision D25: no data or stale data → no entries). A failed
+    fetch drops the instrument entirely rather than failing the whole pass; a stale one stays in
+    the market data so strategies can still see held positions, but gets no entries."""
+    histories = {}
+    entry_ok: set[str] = set()
+    for instrument in universe:
+        try:
+            history = source.get_history(instrument, start, end)
+        except UnitMismatchError:
+            # Invariant 9: a unit mismatch fails loudly. The instrument is skipped, the pass goes on.
+            logger.exception("unit mismatch for %s: skipped this pass", instrument)
+            continue
+        except Exception:  # noqa: BLE001 — one instrument's data failure must not stop the others
+            logger.warning("no market data for %s: skipped this pass", instrument, exc_info=True)
+            continue
+        histories[instrument] = history
+        try:
+            source.check_fresh(history)
+        except Exception as exc:  # noqa: BLE001 — stale (or unknowable) freshness blocks entries only
+            logger.warning("stale market data for %s: no entries this pass (%s)", instrument, exc)
+            continue
+        entry_ok.add(instrument)
+    logger.info("market data fresh for %d of %d instruments", len(entry_ok), len(universe))
+    return MarketData(histories=histories), entry_ok
+
 
 def register_strategy(cls: type[Strategy]) -> type[Strategy]:
     STRATEGY_REGISTRY[cls.key] = cls
@@ -63,9 +97,7 @@ def book_positions(session: Session, book_id: str) -> tuple[PositionSnapshot, ..
     is the source of truth for book attribution (ADR-0010); the live broker remains the source
     of truth for actual fills/positions overall (ADR-0003)."""
     orders = (
-        session.execute(
-            select(Order).where(Order.book_id == book_id, Order.status == OrderStatus.filled)
-        )
+        session.execute(select(Order).where(Order.book_id == book_id, Order.status == OrderStatus.filled))
         .scalars()
         .all()
     )
@@ -169,12 +201,16 @@ def refresh_counterfactuals(session: Session, environment: Environment, market_d
     scheduled-single-pass architecture (ADR-0002; there is no long-running daemon to host a
     literal background job) — a shadow position keeps updating on each subsequent pass until it
     resolves or hits its max horizon, exactly as story 67 describes."""
-    unresolved = session.execute(
-        select(Signal).where(
-            Signal.environment == environment,
-            Signal.status.in_((SignalStatus.rejected, SignalStatus.expired)),
+    unresolved = (
+        session.execute(
+            select(Signal).where(
+                Signal.environment == environment,
+                Signal.status.in_((SignalStatus.rejected, SignalStatus.expired)),
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     updated = 0
     for signal in unresolved:
@@ -213,9 +249,7 @@ def run_trading_pass(
     as_of_date = datetime.utcnow().date() if as_of is None else datetime.fromisoformat(as_of).date()
     start = (as_of_date - timedelta(days=lookback_days)).isoformat()
     end = as_of_date.isoformat()
-    market_data = MarketData(
-        histories={i: market_data_source.get_history(i, start, end) for i in universe}
-    )
+    market_data, entry_ok = _fetch_market_data(market_data_source, universe, start, end)
 
     created: list[Signal] = []
     strategy_rows = session.execute(select(StrategyModel)).scalars().all()
@@ -226,14 +260,18 @@ def run_trading_pass(
         if environment == Environment.live and not strategy_row.live_enabled:
             continue
 
-        config_version = session.execute(
-            select(StrategyConfigVersion)
-            .where(
-                StrategyConfigVersion.strategy_id == strategy_row.id,
-                StrategyConfigVersion.status == ConfigVersionStatus.promoted,
+        config_version = (
+            session.execute(
+                select(StrategyConfigVersion)
+                .where(
+                    StrategyConfigVersion.strategy_id == strategy_row.id,
+                    StrategyConfigVersion.status == ConfigVersionStatus.promoted,
+                )
+                .order_by(StrategyConfigVersion.version_number.desc())
             )
-            .order_by(StrategyConfigVersion.version_number.desc())
-        ).scalars().first()
+            .scalars()
+            .first()
+        )
         if config_version is None:
             continue
 
@@ -258,6 +296,8 @@ def run_trading_pass(
 
         for p in proposed:
             if (p.instrument, p.signal_type) in already_pending:
+                continue
+            if p.signal_type == "entry" and p.instrument not in entry_ok:
                 continue
             confidence = p.confidence
             if p.signal_type == "entry" and p.strength is not None:
