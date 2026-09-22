@@ -1,0 +1,24 @@
+
+===== DEEP DIP — mean gross per trade vs the 0.80% bar =====
+ entry         hold      n   target  mean gross  xcost          CI (xcost)    win      net
+ signal_close    3d    533   +1.41%      +0.24%   3.0x  [  1.7x,  4.3x]  60.8%   +0.16%
+ signal_close    5d    533   +1.41%      +0.32%   4.0x  [  2.3x,  5.6x]  64.0%   +0.24%
+ signal_close   10d    530   +1.41%      +0.52%   6.5x  [  4.3x,  8.8x]  74.7%   +0.44%
+ next_open       3d    516   +1.36%      +0.19%   2.4x  [  0.9x,  3.9x]  60.5%   +0.11%
+ next_open       5d    516   +1.36%      +0.27%   3.4x  [  1.5x,  5.3x]  65.9%   +0.19%
+ next_open      10d    513   +1.36%      +0.37%   4.7x  [  2.3x,  6.9x]  71.5%   +0.29%
+ next_close      3d    511   +1.19%      +0.17%   2.1x  [  0.7x,  3.4x]  61.8%   +0.09%
+ next_close      5d    511   +1.19%      +0.26%   3.3x  [  1.6x,  4.9x]  68.7%   +0.18%
+ next_close     10d    508   +1.18%      +0.33%   4.1x  [  2.1x,  6.3x]  75.8%   +0.25%
+
+===== STEADY DIP — mean gross per trade vs the 0.80% bar =====
+ entry         hold      n   target  mean gross  xcost          CI (xcost)    win      net
+ signal_close    3d   8101   +0.61%      -0.11%  -1.4x  [ -1.8x, -1.0x]  61.3%   -0.19%
+ signal_close    5d   8087   +0.61%      -0.12%  -1.5x  [ -2.1x, -0.9x]  67.1%   -0.20%
+ signal_close   10d   8062   +0.61%      -0.03%  -0.4x  [ -1.2x,  0.4x]  76.5%   -0.11%
+ next_open       3d   6091   +0.83%      -0.09%  -1.1x  [ -1.7x, -0.5x]  59.0%   -0.17%
+ next_open       5d   6078   +0.83%      -0.07%  -0.9x  [ -1.7x, -0.1x]  64.5%   -0.15%
+ next_open      10d   6053   +0.83%      +0.00%   0.0x  [ -1.0x,  1.0x]  73.3%   -0.08%
+ next_close      3d   6053   +0.86%      -0.03%  -0.4x  [ -0.9x,  0.1x]  60.2%   -0.11%
+ next_close      5d   6041   +0.86%      -0.01%  -0.2x  [ -0.9x,  0.6x]  65.3%   -0.09%
+ next_close     10d   6017   +0.86%      +0.08%   1.0x  [ -0.0x,  2.0x]  75.1%   +0.00%
